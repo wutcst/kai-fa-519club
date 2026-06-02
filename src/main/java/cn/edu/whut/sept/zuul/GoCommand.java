@@ -4,7 +4,7 @@ public class GoCommand extends Command
 {
     public boolean execute(Game game)
     {
-        if(!hasSecondWord()) {
+        if (!hasSecondWord()) {
             System.out.println("Go where?");
         }
 
