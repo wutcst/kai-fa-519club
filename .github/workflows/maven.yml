@@ -1,0 +1,65 @@
+# GitHub Actions 工作流名称
+name: CI Pipeline
+
+# 触发条件：推送到 dev 分支，或对 main/dev 发起 PR 时
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+# 环境变量，统一管理 Java 版本
+env:
+  JAVA_VERSION: '11'
+
+# 定义作业
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest   # 使用 GitHub 提供的 Ubuntu 虚拟机
+    steps:
+      # 第一步：拉取代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 第二步：设置 JDK 环境
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven   # 缓存 Maven 依赖，加速构建
+
+      # 第三步：缓存 Maven 本地仓库（可选，加速）
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      # 第四步：检查代码格式（Checkstyle）
+      - name: Check code style (Checkstyle)
+        run: mvn checkstyle:check
+
+      # 第五步：运行单元测试
+      - name: Run unit tests
+        run: mvn test
+
+      # 第六步：打包（生成 JAR 文件）
+      - name: Build and package
+        run: mvn package -DskipTests=false
+
+      # 第七步：上传生成的 JAR 作为临时工件（可下载）
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-jar
+          path: target/*.jar
+
+      # 第八步：上传测试报告（即使失败也上传）
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: target/surefire-reports/

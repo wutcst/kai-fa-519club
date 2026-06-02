@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- Maven 模型版本，固定为 4.0.0 -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 项目坐标：组ID、 artifact ID、版本号 -->
+    <groupId>com.zuul</groupId>
+    <artifactId>world-of-zuul</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>  <!-- 打包类型为 JAR -->
+
+    <!-- 项目名称和描述 -->
+    <name>World of Zuul - Extended Adventure Game</name>
+    <description>小组协同开发项目，扩展8项功能</description>
+
+    <!-- 全局属性，方便统一管理版本 -->
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>5.9.2</junit.version>
+        <checkstyle.version>3.3.0</checkstyle.version>
+        <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
+        <surefire.plugin.version>3.0.0-M9</surefire.plugin.version>
+        <assembly.plugin.version>3.6.0</assembly.plugin.version>
+    </properties>
+
+    <!-- 项目依赖 -->
+    <dependencies>
+        <!-- JUnit 5 单元测试 API -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>   <!-- 只在测试阶段使用 -->
+        </dependency>
+        <!-- JUnit 5 测试引擎 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- H2 嵌入式数据库，用于保存游戏状态 -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.1.214</version>
+        </dependency>
+    </dependencies>
+
+    <!-- 构建配置，包含插件 -->
+    <build>
+        <plugins>
+            <!-- Maven 编译插件，指定 Java 版本 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+
+            <!-- Checkstyle 插件：强制代码规范，在 validate 阶段执行 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle.version}</version>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>   <!-- 规则文件 -->
+                    <encoding>UTF-8</encoding>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>   <!-- 检查失败则构建失败 -->
+                    <linkXRef>false</linkXRef>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>   <!-- 在验证阶段自动执行 -->
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Surefire 插件：运行 JUnit 单元测试 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.plugin.version}</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>   <!-- 匹配所有 Test 结尾的测试类 -->
+                    </includes>
+                </configuration>
+            </plugin>
+
+            <!-- Assembly 插件：打包成可执行 JAR（包含依赖） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${assembly.plugin.version}</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.zuul.Main</mainClass>   <!-- 指定主类入口 -->
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>   <!-- 在打包阶段执行 -->
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
