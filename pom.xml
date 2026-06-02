@@ -72,8 +72,7 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${checkstyle.version}</version>
                 <configuration>
-                    <configLocation>checkstyle.xml</configLocation>   <!-- 规则文件 -->
-                    <encoding>UTF-8</encoding>
+                    <configLocation>checkstyle.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>   <!-- 检查失败则构建失败 -->
                     <linkXRef>false</linkXRef>
