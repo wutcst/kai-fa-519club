@@ -6,11 +6,15 @@
  */
 package cn.edu.whut.sept.zuul;
 
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 public class ParserTest {
     private CommandManager commandManager;
@@ -90,7 +94,8 @@ public class ParserTest {
      */
     @Test
     public void testParseCommandWithLongMultiWordParameter() {
-        InputStream inputStream = new ByteArrayInputStream("take a very long item name with multiple words\n".getBytes());
+        InputStream inputStream = new ByteArrayInputStream(
+                "take a very long item name with multiple words\n".getBytes());
         System.setIn(inputStream);
         parser = new Parser(commandManager);
 

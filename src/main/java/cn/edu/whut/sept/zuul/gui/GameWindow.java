@@ -9,13 +9,29 @@
  */
 package cn.edu.whut.sept.zuul.gui;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Item;
 import cn.edu.whut.sept.zuul.Player;
 import cn.edu.whut.sept.zuul.Room;
-import javax.swing.*;
-import java.awt.*;
-import java.util.List;
 
 /**
  * 游戏主窗口类，提供图形化游戏界面

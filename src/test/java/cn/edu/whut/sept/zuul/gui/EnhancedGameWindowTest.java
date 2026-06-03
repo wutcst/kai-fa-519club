@@ -8,14 +8,25 @@
  */
         package cn.edu.whut.sept.zuul.gui;
 
-import cn.edu.whut.sept.zuul.Game;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Component;
+import java.awt.GridLayout;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import static org.junit.jupiter.api.Assertions.*;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import cn.edu.whut.sept.zuul.Game;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * 测试增强图形界面功能
@@ -118,10 +129,18 @@ public class EnhancedGameWindowTest {
         boolean hasEat = false;
 
         for (String cmd : commands) {
-            if (cmd.equals("look")) hasLook = true;
-            if (cmd.equals("items")) hasItems = true;
-            if (cmd.equals("take")) hasTake = true;
-            if (cmd.equals("eat")) hasEat = true;
+            if (cmd.equals("look")) {
+                hasLook = true;
+            }
+            if (cmd.equals("items")) {
+                hasItems = true;
+            }
+            if (cmd.equals("take")) {
+                hasTake = true;
+            }
+            if (cmd.equals("eat")) {
+                hasEat = true;
+            }
         }
 
         assertTrue(hasLook, "应包含look命令");

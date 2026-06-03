@@ -2,7 +2,9 @@ package cn.edu.whut.sept.zuul;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class QuitCommandSingleTest {
     private Game game;
@@ -16,7 +18,7 @@ public class QuitCommandSingleTest {
 
     // 测试：Quit命令-无参数 → 触发退出（核心逻辑）
     @Test
-    void testQuitCommand_NoParam() {
+    void testQuitCommandNoParam() {
         Command quitCommand = new Command("quit", null);
         boolean isQuit = game.processCommand(quitCommand);
         // 核心断言：返回true（触发退出）
@@ -25,7 +27,7 @@ public class QuitCommandSingleTest {
 
     // 测试：Quit命令-带参数 → 不触发退出（核心逻辑）
     @Test
-    void testQuitCommand_WithParam() {
+    void testQuitCommandWithParam() {
         Command quitWithParamCommand = new Command("quit", "test");
         boolean isQuit = game.processCommand(quitWithParamCommand);
         // 核心断言：返回false

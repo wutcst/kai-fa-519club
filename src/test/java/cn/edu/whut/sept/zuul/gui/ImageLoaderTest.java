@@ -7,9 +7,13 @@
  */
         package cn.edu.whut.sept.zuul.gui;
 
-import org.junit.jupiter.api.Test;
 import javax.swing.ImageIcon;
-import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 测试图像加载器功能

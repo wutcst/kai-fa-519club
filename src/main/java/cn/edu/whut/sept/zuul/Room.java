@@ -9,10 +9,10 @@
  */
 package cn.edu.whut.sept.zuul;
 
-import java.util.Set;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 表示游戏中的房间，包含描述信息、出口连接关系和物品列表。

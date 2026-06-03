@@ -8,17 +8,37 @@
  */
 package cn.edu.whut.sept.zuul.gui;
 
-import cn.edu.whut.sept.zuul.Game;
-import cn.edu.whut.sept.zuul.Player;
-import cn.edu.whut.sept.zuul.Room;
-import cn.edu.whut.sept.zuul.Item;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+import cn.edu.whut.sept.zuul.Game;
+import cn.edu.whut.sept.zuul.Item;
+import cn.edu.whut.sept.zuul.Player;
+import cn.edu.whut.sept.zuul.Room;
 
 /**
  * 增强版游戏窗口类，提供更丰富的图形化功能
@@ -543,12 +563,24 @@ public class EnhancedGameWindow extends JFrame {
      */
     private String getRoomImageKey(Room room) {
         String desc = room.getShortDescription();
-        if (desc.contains("outside")) return "room_outside";
-        if (desc.contains("theater")) return "room_theater";
-        if (desc.contains("pub")) return "room_pub";
-        if (desc.contains("lab")) return "room_lab";
-        if (desc.contains("office")) return "room_office";
-        if (desc.contains("teleport")) return "room_teleport";
+        if (desc.contains("outside")) {
+            return "room_outside";
+        }
+        if (desc.contains("theater")) {
+            return "room_theater";
+        }
+        if (desc.contains("pub")) {
+            return "room_pub";
+        }
+        if (desc.contains("lab")) {
+            return "room_lab";
+        }
+        if (desc.contains("office")) {
+            return "room_office";
+        }
+        if (desc.contains("teleport")) {
+            return "room_teleport";
+        }
         return "room_outside";
     }
 

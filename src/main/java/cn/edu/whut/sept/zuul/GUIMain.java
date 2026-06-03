@@ -9,9 +9,12 @@
  */
 package cn.edu.whut.sept.zuul;
 
-import cn.edu.whut.sept.zuul.gui.GameWindow;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import cn.edu.whut.sept.zuul.gui.EnhancedGameWindow;
-import javax.swing.*;
+import cn.edu.whut.sept.zuul.gui.GameWindow;
 
 /**
  * 图形界面主入口类，提供游戏启动模式选择

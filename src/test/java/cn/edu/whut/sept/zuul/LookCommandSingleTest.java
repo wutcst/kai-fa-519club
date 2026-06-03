@@ -2,7 +2,9 @@ package cn.edu.whut.sept.zuul;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LookCommandSingleTest {
     private Game game;
@@ -16,7 +18,7 @@ public class LookCommandSingleTest {
 
     // 测试：Look命令 → 不触发退出 + 房间信息正确（核心逻辑）
     @Test
-    void testLookCommand_NoQuit() {
+    void testLookCommandNoQuit() {
         Command lookCommand = new Command("look", null);
         boolean isQuit = game.processCommand(lookCommand);
         // 核心断言1：不触发退出

@@ -6,13 +6,23 @@
  */
         package cn.edu.whut.sept.zuul.gui;
 
-import cn.edu.whut.sept.zuul.Game;
+import java.lang.reflect.Field;
+
+import javax.swing.JFrame;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import javax.swing.*;
-import java.awt.*;
-import java.lang.reflect.Field;
-import static org.junit.jupiter.api.Assertions.*;
+
+import cn.edu.whut.sept.zuul.Game;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * 测试图形界面功能
@@ -99,9 +109,15 @@ public class GameWindowTest {
             boolean hasHelp = false;
 
             for (String cmd : commands) {
-                if (cmd.equals("go")) hasGo = true;
-                if (cmd.equals("quit")) hasQuit = true;
-                if (cmd.equals("help")) hasHelp = true;
+                if (cmd.equals("go")) {
+                    hasGo = true;
+                }
+                if (cmd.equals("quit")) {
+                    hasQuit = true;
+                }
+                if (cmd.equals("help")) {
+                    hasHelp = true;
+                }
             }
 
             assertTrue(hasGo, "应包含go命令");

@@ -6,12 +6,14 @@
  */
 package cn.edu.whut.sept.zuul;
 
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class EatCookieCommandTest {
     private Game game;

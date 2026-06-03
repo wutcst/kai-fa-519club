@@ -7,14 +7,18 @@
  */
 package cn.edu.whut.sept.zuul;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
-import static org.junit.Assert.*;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class TeleportRoomTest {
     private TeleportRoom teleportRoom;
@@ -81,9 +85,15 @@ public class TeleportRoomTest {
             Room result = teleportRoom.teleport();
             assertTrue("传输结果必须在目标房间列表中", targetRooms.contains(result));
 
-            if (result == target1) hasTarget1 = true;
-            if (result == target2) hasTarget2 = true;
-            if (result == target3) hasTarget3 = true;
+            if (result == target1) {
+                hasTarget1 = true;
+            }
+            if (result == target2) {
+                hasTarget2 = true;
+            }
+            if (result == target3) {
+                hasTarget3 = true;
+            }
         }
 
         // 验证所有目标都有被选中的可能（在大样本下应成立）

@@ -2,7 +2,10 @@ package cn.edu.whut.sept.zuul;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 完全绕过Parser输入，直接构造Command测试Go命令核心逻辑
@@ -24,7 +27,7 @@ public class GoCommandSingleTest {
 
     // 测试：Go命令-有效方向（east）→ 房间切换（核心逻辑）
     @Test
-    void testGoCommand_ValidDirection_East() {
+    void testGoCommandValidDirectionEast() {
         // 直接构造Command对象，绕过Parser的输入读取（彻底避免阻塞）
         Command goEastCommand = new Command("go", "east");
         boolean isQuit = game.processCommand(goEastCommand);
@@ -39,7 +42,7 @@ public class GoCommandSingleTest {
 
     // 测试：Go命令-无效方向（up）→ 不切换房间（核心逻辑）
     @Test
-    void testGoCommand_InvalidDirection_Up() {
+    void testGoCommandInvalidDirectionUp() {
         // 保存初始房间
         Room initialRoom = game.getCurrentRoom();
         // 直接构造无效方向的Command
@@ -52,7 +55,7 @@ public class GoCommandSingleTest {
 
     // 测试：Go命令-无参数 → 不切换房间（核心逻辑）
     @Test
-    void testGoCommand_NoParam() {
+    void testGoCommandNoParam() {
         Room initialRoom = game.getCurrentRoom();
         Command goNoParamCommand = new Command("go", null);
         game.processCommand(goNoParamCommand);

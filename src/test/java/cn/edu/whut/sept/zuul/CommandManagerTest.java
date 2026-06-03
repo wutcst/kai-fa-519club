@@ -3,7 +3,9 @@ package cn.edu.whut.sept.zuul;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * CommandManager单元测试：验证命令注册、执行逻辑（兼容自定义扩展）
