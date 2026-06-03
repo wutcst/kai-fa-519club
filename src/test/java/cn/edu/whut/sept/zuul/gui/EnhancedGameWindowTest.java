@@ -9,6 +9,7 @@
         package cn.edu.whut.sept.zuul.gui;
 
 import java.awt.Component;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -17,6 +18,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +42,8 @@ public class EnhancedGameWindowTest {
      */
     @BeforeEach
     public void setUp() {
+        Assumptions.assumeFalse(GraphicsEnvironment.isHeadless(),
+                "Skipping GUI test: no display (headless CI)");
         game = new Game();
         // 在EDT中创建窗口但不显示
         try {

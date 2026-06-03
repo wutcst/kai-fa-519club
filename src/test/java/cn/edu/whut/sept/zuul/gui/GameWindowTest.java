@@ -6,6 +6,7 @@
  */
         package cn.edu.whut.sept.zuul.gui;
 
+import java.awt.GraphicsEnvironment;
 import java.lang.reflect.Field;
 
 import javax.swing.JFrame;
@@ -13,6 +14,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,6 +38,8 @@ public class GameWindowTest {
      */
     @BeforeEach
     public void setUp() {
+        Assumptions.assumeFalse(GraphicsEnvironment.isHeadless(),
+                "Skipping GUI test: no display (headless CI)");
         game = new Game();
         // 在EDT中创建窗口但不显示
         try {
