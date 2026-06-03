@@ -60,9 +60,9 @@ public class Game
         // execute them until the game is over.
 
         boolean finished = false;
-        while (! finished) {
+        while (!finished) {
             Command command = parser.getCommand();
-            if(command == null) {
+            if (command == null) {
                 System.out.println("I don't understand...");
             } else {
                 finished = command.execute(this);
@@ -86,7 +86,7 @@ public class Game
         return currentRoom;
     }
 
-    public void setCurrentRoom(Room room){
+    public void setCurrentRoom(Room room) {
         this.currentRoom = room;
     }
 }

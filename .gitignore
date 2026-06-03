@@ -32,6 +32,4 @@ Thumbs.db
 application-local.properties
 secret.properties
 
-# 测试报告
-target/surefire-reports/
-target/failsafe-reports/
+# 实训报告：提交 REPORT.pdf 或 REPORT.docx 到仓库（不要忽略）

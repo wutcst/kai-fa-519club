@@ -1,7 +1,6 @@
 package cn.edu.whut.sept.zuul;
 
 import java.util.HashMap;
-import java.util.Iterator;
 
 public class CommandWords
 {
@@ -9,7 +8,7 @@ public class CommandWords
 
     public CommandWords()
     {
-        commands = new HashMap<String, Command>();
+        commands = new HashMap<>();
         commands.put("go", new GoCommand());
         commands.put("help", new HelpCommand(this));
         commands.put("quit", new QuitCommand());
@@ -17,13 +16,13 @@ public class CommandWords
 
     public Command get(String word)
     {
-        return (Command)commands.get(word);
+        return commands.get(word);
     }
 
     public void showAll()
     {
-        for(Iterator i = commands.keySet().iterator(); i.hasNext(); ) {
-            System.out.print(i.next() + "  ");
+        for (String command : commands.keySet()) {
+            System.out.print(command + "  ");
         }
         System.out.println();
     }

@@ -24,15 +24,15 @@ public class Parser
         inputLine = reader.nextLine();
 
         Scanner tokenizer = new Scanner(inputLine);
-        if(tokenizer.hasNext()) {
+        if (tokenizer.hasNext()) {
             word1 = tokenizer.next();      // get first word
-            if(tokenizer.hasNext()) {
+            if (tokenizer.hasNext()) {
                 word2 = tokenizer.next();      // get second word
             }
         }
 
         Command command = commands.get(word1);
-        if(command != null) {
+        if (command != null) {
             command.setSecondWord(word2);
         }
         return command;

@@ -1,7 +1,7 @@
 package cn.edu.whut.sept.zuul;
 
-import java.util.Set;
 import java.util.HashMap;
+import java.util.Set;
 
 public class Room
 {
@@ -33,7 +33,7 @@ public class Room
     {
         String returnString = "Exits:";
         Set<String> keys = exits.keySet();
-        for(String exit : keys) {
+        for (String exit : keys) {
             returnString += " " + exit;
         }
         return returnString;

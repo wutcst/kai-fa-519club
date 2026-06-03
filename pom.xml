@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- 项目坐标：组ID、 artifact ID、版本号 -->
-    <groupId>com.zuul</groupId>
+    <groupId>cn.edu.whut.sept</groupId>
     <artifactId>world-of-zuul</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>  <!-- 打包类型为 JAR -->
@@ -72,8 +72,7 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${checkstyle.version}</version>
                 <configuration>
-                    <configLocation>checkstyle.xml</configLocation>   <!-- 规则文件 -->
-                    <encoding>UTF-8</encoding>
+                    <configLocation>checkstyle.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>   <!-- 检查失败则构建失败 -->
                     <linkXRef>false</linkXRef>
@@ -112,7 +111,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>com.zuul.Main</mainClass>   <!-- 指定主类入口 -->
+                            <mainClass>cn.edu.whut.sept.zuul.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
