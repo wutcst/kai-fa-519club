@@ -10,26 +10,23 @@
 package cn.edu.whut.sept.zuul;
 
 /**
- * 处理帮助信息的命令类
- * 新增：将原Game类中的printHelp逻辑拆分至此，
- * 遵循单一职责原则，实现命令逻辑模块化。
+ * 查看当前房间详情的命令类
+ * 新增：扩展命令示例，演示新增命令无需修改核心代码，
+ * 仅需实现CommandInterface并注册即可。
  *
  * @author liujing
  * @version 1.1
  */
-public class HelpCommand implements CommandInterface {
+public class LookCommand implements CommandInterface {
     @Override
     public boolean execute(Game game, String secondWord) {
-        System.out.println("You are lost. You are alone. You wander");
-        System.out.println("around at the university.");
-        System.out.println();
-        System.out.println("Your command words are:");
-        game.getParser().showCommands();
+        System.out.println("You look around...");
+        System.out.println(game.getCurrentRoom().getLongDescription());
         return false;
     }
 
     @Override
     public String getCommandName() {
-        return "help";
+        return "look";
     }
 }
