@@ -7,7 +7,8 @@ public class QuitCommand extends Command
         if (hasSecondWord()) {
             System.out.println("Quit what?");
             return false;
-        } else {
+        }
+        else {
             return true;  // signal that we want to quit
         }
     }

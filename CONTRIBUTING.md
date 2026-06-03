@@ -44,14 +44,14 @@ mvn package -DskipTests=false
 - 描述中写 `Closes #12` 关联 Issue
 - 填写 PR 模板中的测试与自查项
 
-## 5. 代码规范要点
+## 5. 代码规范要点（与 `checkstyle.xml` 一致）
 
 - 包名：`cn.edu.whut.sept.zuul`
-- 缩进：4 空格，禁止 Tab
+- 缩进：4 空格，禁止 Tab；类/方法左大括号可单独一行（BlueJ 风格）
 - 每行不超过 120 字符
-- 禁止 `import xxx.*` 星号导入
-- 新增 **public** 类/方法需补充 Javadoc
-- 文本游戏可使用 `System.out` 输出；新增模块优先考虑可测试性
+- 禁止 `import xxx.*` 星号导入；`java` → `javax` → `org` → `com` → `cn` 分组导入
+- `if/for/while` 必须使用大括号 `{ }`
+- 文本游戏可使用 `System.out`；新增 public API 建议补充 Javadoc
 
 ## 6. 面向对象要求
 

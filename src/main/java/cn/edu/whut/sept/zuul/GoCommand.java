@@ -13,7 +13,8 @@ public class GoCommand extends Command
 
         if (nextRoom == null) {
             System.out.println("There is no door!");
-        } else {
+        }
+        else {
             game.setCurrentRoom(nextRoom);
             System.out.println(nextRoom.getLongDescription());
         }
