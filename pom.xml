@@ -44,6 +44,13 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- JUnit 4 兼容：部分测试类仍使用 org.junit.* API -->
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
         <!-- H2 嵌入式数据库，用于保存游戏状态 -->
         <dependency>
             <groupId>com.h2database</groupId>
