@@ -5,7 +5,7 @@
 ## 来源分支
 
 - [ ] `feature/xmq` / `feature/lj` / `feature/phx` / `feature/pqj`（个人开发）
-- [ ] `feature/doc`（文档）
+- [ ] `feature/docs`（文档）
 - [ ] `debug`（调试）
 - [ ] `merge/conflict`（冲突解决）
 

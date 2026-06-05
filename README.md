@@ -116,7 +116,7 @@
 | 类型 | 分支 | 说明 |
 |------|------|------|
 | 个人开发 | `feature/xmq` `feature/lj` `feature/phx` `feature/pqj` | 每人一个，日常写代码 |
-| 文档 | `feature/doc` | 会议记录、README 等 |
+| 文档 | `feature/docs` | 会议记录、README 等 |
 | 调试 | `debug` | 临时实验，验证后合并或丢弃 |
 | 冲突解决 | `merge/conflict` | 仅合并冲突时用，解决后删除 |
 
@@ -130,7 +130,7 @@
    git checkout feature/lj
    git merge dev
    ```
-3. 文档改动在 `feature/doc` 分支提交，再 PR → `dev`。
+3. 文档改动在 `feature/docs` 分支提交，再 PR → `dev`。
 4. 本地门禁：`mvn checkstyle:check`、`mvn test`。
 5. 提交写清描述：`feat: 实现 submit 归寝单判定`。
 6. PR：`feature/你的分支` → `dev`，CI 通过后 Review 合并。

@@ -18,7 +18,7 @@
 | 类型 | 分支名 | 谁用 | 说明 |
 |------|--------|------|------|
 | **个人开发** | `feature/xmq` `feature/lj` `feature/phx` `feature/pqj` | 每人固定一个 | 日常写代码、修 Bug；**不另开** `feature/gui` 等第四分支 |
-| **文档** | `feature/doc` | 全员可提交 | 仅 `docs/`、`README.md`、`CONTRIBUTING.md` 等文档 |
+| **文档** | `feature/docs` | 全员可提交 | 仅 `docs/`、`README.md`、`CONTRIBUTING.md` 等文档 |
 | **调试** | `debug` | 需实验时 | 临时调试，**不得**合并进 `master`；验证完合并到 `dev` 或丢弃 |
 | **冲突解决** | `merge/conflict` | 发生冲突者 | 仅在 `dev` 合并冲突时创建，解决完毕立即 PR 合并并**删除** |
 
@@ -51,12 +51,12 @@ git checkout -b feature/xmq
 git push -u origin feature/xmq
 ```
 
-**写文档（在 feature/doc 分支）：**
+**写文档（在 feature/docs 分支）：**
 
 ```powershell
 git checkout dev
 git pull origin dev
-git checkout feature/doc
+git checkout feature/docs
 git merge dev
 ```
 
@@ -107,7 +107,7 @@ docs: 更新会议记录与分工
 ## 5. Pull Request
 
 - 个人开发：`feature/xmq`（或 lj/phx/pqj）→ **`dev`**
-- 文档：`feature/doc` → **`dev`**
+- 文档：`feature/docs` → **`dev`**
 - 冲突解决：`merge/conflict` → **`dev`**（合并后删分支）
 - 发布：**仅组长** `dev` → `master`
 - PR 描述须说明：改了什么、本地测了什么、是否影响熄灯计时 / 存档 / 联机
