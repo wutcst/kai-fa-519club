@@ -2,28 +2,74 @@
 
 本项目：《熄灯前归寝》— World of Zuul 扩展（五关解密 + 多人 + GUI + H2）。
 
-## 1. 开始工作前
+## 1. 分支模型（精简，禁止滥开分支）
+
+全仓库**只保留两类长期分支 + 四类辅助分支**，不为每个小功能单独开 `feature/xxx`。
+
+### 长期分支（禁止直接乱提交）
+
+| 分支 | 说明 |
+|------|------|
+| `master` | 答辩发布版，**仅组长**从 `dev` 提 PR 合并 |
+| `dev` | 集成分支，所有验收通过的代码合并到此 |
+
+### 辅助分支（全组最多四类）
+
+| 类型 | 分支名 | 谁用 | 说明 |
+|------|--------|------|------|
+| **个人开发** | `feature/xmq` `feature/lj` `feature/phx` `feature/pqj` | 每人固定一个 | 日常写代码、修 Bug；**不另开** `feature/gui` 等第四分支 |
+| **文档** | `feature/doc` | 全员可提交 | 仅 `docs/`、`README.md`、`CONTRIBUTING.md` 等文档 |
+| **调试** | `debug` | 需实验时 | 临时调试，**不得**合并进 `master`；验证完合并到 `dev` 或丢弃 |
+| **冲突解决** | `merge/conflict` | 发生冲突者 | 仅在 `dev` 合并冲突时创建，解决完毕立即 PR 合并并**删除** |
+
+**禁止：** 一人多个个人分支、随意新建 `feature/gui` 等功能向分支（仅允许上表四个 `feature/姓名拼音`；历史多余分支合并后应删除）。
+
+### 个人分支对照
+
+| 成员 | 个人开发分支 |
+|------|----------------|
+| 肖梦琪 | `feature/xmq` |
+| 刘晶 | `feature/lj` |
+| 彭慧星 | `feature/phx` |
+| 庞绮君 | `feature/pqj` |
+
+## 2. 开始工作前
+
+**写代码（在个人分支）：**
 
 ```powershell
 git checkout dev
 git pull origin dev
-git checkout -b feature/level-manager
+git checkout feature/xmq
+git merge dev
 ```
 
-### 分支命名
+若本地尚无个人分支：
 
-| 类型 | 格式 | 示例 |
-|------|------|------|
-| 功能开发 | `feature/xxx` | `feature/gui`、`feature/multiplayer`、`feature/level-3-4` |
-| 缺陷修复 | `fix/xxx` | `fix/timer-display`、`fix/west-building-door` |
+```powershell
+git checkout -b feature/xmq
+git push -u origin feature/xmq
+```
 
-说明：
+**写文档（在 feature/doc 分支）：**
 
-- `xxx` 为**简短表意**英文或拼音，见名知意即可。
-- **不强制** Issue 编号，也不使用 `feature/12-xxx` 旧格式。
-- 一人可同时开多个 `feature/*` 分支，合并后及时删除本地分支。
+```powershell
+git checkout dev
+git pull origin dev
+git checkout feature/doc
+git merge dev
+```
 
-## 2. 提交前本地门禁（必须）
+**解决合并冲突：**
+
+```powershell
+git checkout dev
+git pull origin dev
+git checkout -b merge/conflict
+# 合并各 feature/xxx 或手动解决冲突后提交
+```
+
+## 3. 提交前本地门禁（必须）
 
 ```powershell
 mvn checkstyle:check
@@ -33,9 +79,9 @@ mvn package -DskipTests=false
 
 任一步失败则**不要**推送。
 
-## 3. 提交信息格式
+## 4. 提交信息格式
 
-每次提交须写清**做了什么、为什么**（组员阅读 `git log` 能懂）。
+每次提交须写清**做了什么**（组员看 `git log` 能懂）。
 
 ```
 <type>: <简述>
@@ -50,66 +96,61 @@ mvn package -DskipTests=false
 | refactor | 重构 |
 | chore | 构建/配置 |
 
-**示例（推荐中文简述）：**
+**示例：**
 
 ```
 feat: 实现距熄灯23:00秒数倒计时
-feat: 第五关体育馆随机传送
-feat: H2 保存当前关卡与剩余秒数
-feat: JavaFX 状态栏显示背包与倒计时
 fix: 西楼合成锤子后出口仍锁定
 docs: 更新会议记录与分工
 ```
 
-可选在简述末尾注明 Issue：`feat: 图形界面主窗口 (#15)`，**非必须**。
+## 5. Pull Request
 
-## 4. Pull Request
-
-- 目标分支：`dev`（日常开发）；`dev` → `master`（发布，**仅组长肖梦琪**发起）
-- 标题与 commit 风格一致，例如：`feat: 简化版网络多人联机`
-- PR 描述须包含：
-  - 改动文件与原因（段落即可）
-  - 本地测试结果（checkstyle / test / 手动场景）
-  - 是否影响「距熄灯（23:00）」计时、存档或多人同步
+- 个人开发：`feature/xmq`（或 lj/phx/pqj）→ **`dev`**
+- 文档：`feature/doc` → **`dev`**
+- 冲突解决：`merge/conflict` → **`dev`**（合并后删分支）
+- 发布：**仅组长** `dev` → `master`
+- PR 描述须说明：改了什么、本地测了什么、是否影响熄灯计时 / 存档 / 联机
 - 填写 [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md)
 
-## 5. 代码规范要点（与 `checkstyle.xml` 一致）
+## 6. 代码冲突与解决
+
+1. 开发前先 `git pull origin dev` 并 `merge` 进个人分支，减少冲突。  
+2. 出现冲突时，在 `merge/conflict` 分支解决，**禁止**强行 `push --force` 到 `dev` / `master`。  
+3. 解决后重新 `mvn test`，PR 中注明冲突文件与验证结果。  
+4. 合并完成后删除 `merge/conflict`：`git branch -d merge/conflict`。
+
+## 7. 代码规范要点（与 `checkstyle.xml` 一致）
 
 - 包名：`cn.edu.whut.sept.zuul`
-- 缩进：4 空格，禁止 Tab；类/方法左大括号可单独一行（BlueJ 风格）
+- 缩进：4 空格，禁止 Tab
 - 每行不超过 120 字符
-- 禁止 `import xxx.*` 星号导入；`java` → `javax` → `org` → `com` → `cn` 分组导入
+- 禁止 `import xxx.*` 星号导入
 - `if/for/while` 必须使用大括号 `{ }`
-- 文本模式可使用 `System.out`；GUI 与 public API 建议补充 Javadoc
+- 计时文案统一：**距熄灯（23:00）还有 XXX 秒**
 
-## 6. 面向对象要求
+## 8. 面向对象要求
 
 - 新命令继承 `Command`，在 `CommandWords` 注册
-- 新游戏实体（物品、玩家、关卡配置等）独立成类，避免在 `Game` 中堆逻辑
-- 单元测试放在 `src/test/java`，类名以 `Test` 结尾
-- 计时统一走 `LevelTimer`，界面文案使用：**距熄灯（23:00）还有 XXX 秒**
+- 新实体独立成类，避免在 `Game` 中堆逻辑
+- 单元测试类名以 `Test` 结尾
 
-## 7. 合并后同步
+## 9. 合并后同步
 
 ```powershell
 git checkout dev
 git pull origin dev
-git branch -d feature/level-manager
+git checkout feature/xmq
+git merge dev
 ```
 
-## 8. 功能编号与建议分支
+## 10. 分工与功能编号
 
-**已实现（维护）：** F1—F5（`look`、单步/多步 `back`、传送房、`Player` 与 `take`/`drop`/`items`/`eat cookie`）。
+| 成员 | 个人分支 | 主责 |
+|------|----------|------|
+| 肖梦琪 | `feature/xmq` | 架构、计时、房间规则、H2/F7 对接、集成 |
+| 刘晶 | `feature/lj` | 拓展命令 E1—E8、第 1—3 关 |
+| 彭慧星 | `feature/phx` | 第 4 关、联调、F6 服务端 |
+| 庞绮君 | `feature/pqj` | 第 5 关、F7 界面、F8 DAO、文档维护 |
 
-**待开发拓展：** E1—E17（含 `use`、`submit`、`combine`、`unlock`、`feed`、`sleep`、五关与熄灯计时等）。
-
-**待开发高级：** F6 多人、F7 GUI、F8 H2。
-
-| 模块 | 建议分支 | 主要负责人 | 权重 |
-|------|----------|------------|------|
-| 关卡框架、计时、房间规则 E9—E13/E15、H2 核心、F7 对接 | `feature/level-manager`、`feature/room-rules`、`feature/h2-core` | 肖梦琪 | 32% |
-| 拓展命令 E1—E8、第 1—3 关、干扰物、命令测试 | `feature/use-submit`、`feature/level-1-2-3` | 刘晶 | 30% |
-| 第 4 关、E12—E14 联调、E17 传送、F6 服务端 | `feature/level-4`、`feature/multiplayer-server` | 彭慧星 | 19% |
-| 第 5 关数据、F7 界面、F8 DAO、文档 | `feature/level-5`、`feature/gui`、`feature/h2-dao` | 庞绮君 | 19% |
-
-完整列表见 [README.md](README.md) 与 [docs/会议记录.md](docs/会议记录.md)。
+功能清单见 [README.md](README.md)、[docs/会议记录.md](docs/会议记录.md)。

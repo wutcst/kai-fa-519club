@@ -10,8 +10,8 @@
 
 | 姓名 | 角色 | 权重 | 主要负责 |
 |------|------|------|----------|
-| 肖梦琪 | 组长 | **约 32%** | 架构集成、`LevelManager` / `LevelTimer`、房间规则底层、H2/F7 对接层、第 4 关规则、发布 |
-| 刘晶 | 组员 | **约 30%** | 拓展命令 E1—E8（`use` / `submit` 等）、第 1—3 关配置、干扰物与命令测试 |
+| 肖梦琪 | 组长 | **约 31%** | 架构集成、`LevelManager` / `LevelTimer`、房间规则底层、H2/F7 对接层、第 4 关规则、发布 |
+| 刘晶 | 组员 | **约 31%** | 拓展命令 E1—E8（`use` / `submit` 等）、第 1—3 关配置、干扰物与命令测试 |
 | 彭慧星 | 组员 | **约 19%** | 第 4 关、西楼/黑暗联调、F6 服务端、第五关传送 |
 | 庞绮君 | 组员 | **约 19%** | 第 5 关数据、F7 界面、F8 DAO、文档与部分测试 |
 
@@ -73,11 +73,11 @@
 
 **基础（已完成）**
 
-- [x] F1 房间物品 + `look`
-- [x] F2 单步 `back`
-- [x] F3 多步 `back`
-- [x] F4 随机传送房间
-- [x] F5 `Player` / `take` / `drop` / `items` / `eat cookie`
+- [√] F1 房间物品 + `look`
+- [√] F2 单步 `back`
+- [√] F3 多步 `back`
+- [√] F4 随机传送房间
+- [√] F5 `Player` / `take` / `drop` / `items` / `eat cookie`
 
 **拓展（待完成）**
 
@@ -107,34 +107,34 @@
 
 ---
 
-## 分支模型
+## 分支模型（精简）
 
-| 分支 | 说明 |
-|------|------|
-| `master` | 稳定发布版，**仅**接受来自 `dev` 的 PR（组长发起） |
-| `dev` | 开发集成分支，合并所有已验收功能 |
-| `feature/xxx` | 个人功能分支，`xxx` 为简短描述，**不强制 Issue 号** |
-| `fix/xxx` | 缺陷修复分支 |
+**长期分支：** `master`（发布）、`dev`（集成）。
 
-示例：`feature/use-submit`、`feature/level-manager`、`feature/gui`、`feature/multiplayer`、`feature/h2-save`
+**辅助分支仅四类（个人开发统一为 `feature/姓名拼音`）：**
+
+| 类型 | 分支 | 说明 |
+|------|------|------|
+| 个人开发 | `feature/xmq` `feature/lj` `feature/phx` `feature/pqj` | 每人一个，日常写代码 |
+| 文档 | `feature/doc` | 会议记录、README 等 |
+| 调试 | `debug` | 临时实验，验证后合并或丢弃 |
+| 冲突解决 | `merge/conflict` | 仅合并冲突时用，解决后删除 |
 
 ## 开发流程（组员必读）
 
-1. 确认分工与验收标准（见 [docs/会议记录.md](docs/会议记录.md)）。
-2. 从 `dev` 拉取最新代码，创建分支，例如：
+1. 确认分工（见 [docs/会议记录.md](docs/会议记录.md)）。
+2. 同步并进入**自己的**个人分支，例如刘晶：
    ```powershell
    git checkout dev
    git pull origin dev
-   git checkout -b feature/use-submit
+   git checkout feature/lj
+   git merge dev
    ```
-3. 本地通过门禁后再推送：
-   ```powershell
-   mvn checkstyle:check
-   mvn test
-   ```
-4. 提交时写清描述，例如：`feat: 实现 submit 归寝单与寝室通关判定`。
-5. 推送后发起 PR → `dev`，等待 **CI Pipeline** 全部通过。
-6. 组长 Review 后合并；其他人 `git pull origin dev` 同步。
+3. 文档改动在 `feature/doc` 分支提交，再 PR → `dev`。
+4. 本地门禁：`mvn checkstyle:check`、`mvn test`。
+5. 提交写清描述：`feat: 实现 submit 归寝单判定`。
+6. PR：`feature/你的分支` → `dev`，CI 通过后 Review 合并。
+7. 合并冲突用 `merge/conflict` 分支处理，**禁止** force push 到 `dev`/`master`。
 
 详细约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
