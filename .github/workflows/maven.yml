@@ -5,7 +5,8 @@ on:
     branches:
       - dev
       - "feature/**"
-      - "fix/**"
+      - debug
+      - "merge/**"
   pull_request:
     branches:
       - master
