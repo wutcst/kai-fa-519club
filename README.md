@@ -10,10 +10,10 @@
 
 | 姓名 | 角色 | 权重 | 主要负责 |
 |------|------|------|----------|
-| 肖梦琪 | 组长 | **约 31%** | 架构集成、`LevelManager` / `LevelTimer`、房间规则底层、H2/F7 对接层、第 4 关规则、发布 |
-| 刘晶 | 组员 | **约 31%** | 拓展命令 E1—E8（`use` / `submit` 等）、第 1—3 关配置、干扰物与命令测试 |
-| 彭慧星 | 组员 | **约 19%** | 第 4 关、西楼/黑暗联调、F6 服务端、第五关传送 |
-| 庞绮君 | 组员 | **约 19%** | 第 5 关数据、F7 界面、F8 DAO、文档与部分测试 |
+| 肖梦琪 | 组长 | **约 32%** | 架构 E9—E14（#12—#16）、**F6 联机服务端**、**F8 数据库框架**、F7 绑定层、集成发布 |
+| 刘晶 | 组员 | **约 30%** | 核心拓展命令（E1—E4/E8 等）、**F7 GUI**、F6 客户端 / F8 DAO 协作 |
+| 彭慧星 | 组员 | **约 19%** | E5 喂猫、E6 `sleep`、E17 传送、第 3—4 关与 E16（3—4 关） |
+| 庞绮君 | 组员 | **约 19%** | E15 房间解锁、E7 饼干加时、E14 西楼、第 1—2 关与 E16（1—2 关、5 关）、文档与测试 |
 
 > 肖梦琪、刘晶承担约 **62%** 核心开发量；详见 [docs/会议记录.md](docs/会议记录.md) 第三节。
 
@@ -105,6 +105,16 @@
 - [ ] F7 图形界面
 - [ ] F8 数据库 H2
 
+**测试与报告（GitHub #32—#38，详见 [docs/ISSUES.md](docs/ISSUES.md)）**
+
+- [ ] T1 单元测试 — 关卡与计时（#32）
+- [ ] T2 单元测试 — 拓展命令（#33）
+- [ ] T3 单元测试 — GUI 与 H2 存档（#34）
+- [ ] T4 集成测试（#35）
+- [ ] T5 系统测试（#36）
+- [ ] T6 联机与回归测试（#37）
+- [ ] T7 测试报告撰写（#38）
+
 ---
 
 ## 分支模型（精简）
@@ -138,16 +148,17 @@
 
 详细约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-## 技术栈
+## 架构与技术栈
 
-- Java 11
-- Maven 3.8+
-- JUnit 5
-- Checkstyle
-- GitHub Actions
-- H2 Database（F8）
-- JavaFX 或 Swing（F7）
-- Java Socket（F6）
+本项目采用 **混合架构**：Java 游戏内核（四层 + 命令模式）+ **Spring Boot / Spring MVC / RESTful API** 服务层 + **Swing** 主客户端 + **Vue 3** Web 辅前端。详见 [docs/系统架构设计.md](docs/系统架构设计.md)
+
+| 层次 | 技术 |
+|------|------|
+| 游戏内核 | Java 11、命令模式、JUnit 5、Checkstyle |
+| 服务后端 | Spring Boot、Spring MVC、RESTful API、H2 |
+| 主前端 | Swing（F7）、文本 Parser |
+| 辅前端 | Vue 3 + Axios（排行榜/存档/大厅） |
+| 工程 | Maven 3.8+、GitHub Actions CI/CD |
 
 ## 构建与运行
 
@@ -168,6 +179,8 @@ java -jar target/world-of-zuul-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 
 ## 参考文档
 
+- [系统架构设计](docs/系统架构设计.md)
+- [GitHub Issue 清单与实施顺序](docs/ISSUES.md)
 - [软件工程实践说明（架构 / DevOps / 分支 / 评审 / CI）](docs/软件工程实践说明.md)
 - [会议记录与分工时间表](docs/会议记录.md)
 - [贡献指南与分支规范](CONTRIBUTING.md)
