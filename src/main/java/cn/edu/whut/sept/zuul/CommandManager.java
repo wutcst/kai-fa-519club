@@ -12,6 +12,17 @@ package cn.edu.whut.sept.zuul;
 import java.util.HashMap;
 import java.util.Map;
 
+import cn.edu.whut.sept.zuul.command.BackCommand;
+import cn.edu.whut.sept.zuul.command.CommandInterface;
+import cn.edu.whut.sept.zuul.command.DropCommand;
+import cn.edu.whut.sept.zuul.command.EatCookieCommand;
+import cn.edu.whut.sept.zuul.command.GoCommand;
+import cn.edu.whut.sept.zuul.command.HelpCommand;
+import cn.edu.whut.sept.zuul.command.ItemsCommand;
+import cn.edu.whut.sept.zuul.command.LookCommand;
+import cn.edu.whut.sept.zuul.command.QuitCommand;
+import cn.edu.whut.sept.zuul.command.TakeCommand;
+
 /**
  * 命令管理器，负责注册、存储和分发命令
  * 新增：核心管理类，实现命令的动态注册与分发，

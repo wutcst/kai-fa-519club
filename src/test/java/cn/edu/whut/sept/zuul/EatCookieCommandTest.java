@@ -12,6 +12,8 @@ import java.io.PrintStream;
 import org.junit.Before;
 import org.junit.Test;
 
+import cn.edu.whut.sept.zuul.command.EatCookieCommand;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

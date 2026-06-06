@@ -13,6 +13,8 @@ import java.lang.reflect.Field;
 import org.junit.Before;
 import org.junit.Test;
 
+import cn.edu.whut.sept.zuul.command.ItemsCommand;
+
 import static org.junit.Assert.assertTrue;
 
 public class ItemsCommandTest {

@@ -1,18 +1,20 @@
 /**
- * 该包包含World-of-Zuul文本冒险游戏的核心实现类，
- * 涵盖游戏控制、命令解析、房间管理等功能模块，
- * 实现了玩家与文本界面的交互逻辑。
+ * 命令包：各游戏命令的实现类，采用命令模式扩展。
  *
- * @author Michael Kölling and David J. Barnes/liujing
+ * @author liujing
  * @version 1.5
  */
-package cn.edu.whut.sept.zuul;
+package cn.edu.whut.sept.zuul.command;
 
 import java.util.List;
 
+import cn.edu.whut.sept.zuul.Game;
+import cn.edu.whut.sept.zuul.Item;
+import cn.edu.whut.sept.zuul.Player;
+import cn.edu.whut.sept.zuul.Room;
+
 /**
  * 处理物品显示的命令类
- * 新增：实现items命令，显示当前房间和玩家携带的物品
  *
  * @author liujing
  * @version 1.5
@@ -23,7 +25,6 @@ public class ItemsCommand implements CommandInterface {
         Player player = game.getPlayer();
         Room currentRoom = player.getCurrentRoom();
 
-        // 显示房间物品
         System.out.println("\n=== 房间物品 ===");
         List<Item> roomItems = currentRoom.getItems();
         if (roomItems.isEmpty()) {
@@ -38,7 +39,6 @@ public class ItemsCommand implements CommandInterface {
             System.out.println("房间物品总重量: " + totalRoomWeight + "g");
         }
 
-        // 显示玩家物品
         System.out.println("\n=== 你的物品 ===");
         String inventoryDetails = player.getInventoryDetails();
         System.out.println(inventoryDetails);

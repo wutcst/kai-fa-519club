@@ -1,18 +1,15 @@
 /**
- * 该包包含World-of-Zuul文本冒险游戏的核心实现类，
- * 涵盖游戏控制、命令解析、房间管理等功能模块，
- * 实现了玩家与文本界面的交互逻辑。
- * 【新增】重构命令处理逻辑，采用命令模式实现命令模块化管理。
+ * 命令包：各游戏命令的实现类，采用命令模式扩展。
  *
- * @author Michael Kölling and David J. Barnes/liujing
+ * @author liujing
  * @version 1.1
  */
-package cn.edu.whut.sept.zuul;
+package cn.edu.whut.sept.zuul.command;
+
+import cn.edu.whut.sept.zuul.Game;
 
 /**
  * 处理帮助信息的命令类
- * 新增：将原Game类中的printHelp逻辑拆分至此，
- * 遵循单一职责原则，实现命令逻辑模块化。
  *
  * @author liujing
  * @version 1.1
