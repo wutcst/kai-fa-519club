@@ -25,14 +25,13 @@ package cn.edu.whut.sept.zuul;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import cn.edu.whut.sept.zuul.level.ActionTimeCost;
+import cn.edu.whut.sept.zuul.level.LevelConfig;
 import cn.edu.whut.sept.zuul.level.LevelManager;
 import cn.edu.whut.sept.zuul.level.LevelTimer;
 
@@ -89,7 +88,13 @@ public class Game
      * @return 成功进入或传送返回 true，被黑暗区域阻挡返回 false
      */
     public boolean setCurrentRoom(Room targetRoom) {
-        if (targetRoom instanceof DarkRoom) {
+        if (!isRoomAccessible(targetRoom)) {
+            System.out.println(LevelConfig.LOCKED_EXIT_MESSAGE);
+            return false;
+        }
+
+        if (targetRoom instanceof DarkRoom
+                && levelManager.getCurrentLevelConfig().isMainBuildingDark()) {
             DarkRoom darkRoom = (DarkRoom) targetRoom;
             if (!darkRoom.canEnter(player)) {
                 System.out.println(DarkRoom.PENALTY_MESSAGE);
@@ -137,85 +142,99 @@ public class Game
     }
 
     /**
-     * 创建所有房间对象并连接其出口用以构建迷宫.
+     * 创建十房固定校园地图并连接出口（拓扑不变，关卡差异由 LevelConfig 控制）。
      */
-    private void createRooms()
-    {
-        Room outside, theater, pub, lab, office, teleportRoom;
-        DarkRoom boxueMain;
-        GatedRoom library;
-        GatedRoom dormitory;
+    private void createRooms() {
+        Room gate = new Room("gate", "武汉理工大学校门",
+            "晚二十三点后凭一卡通与归寝单回寝。");
+        DarkRoom boxueMain = new DarkRoom("boxue_main", "博学主楼",
+            "大厅自习区。公告栏有停电通知，部分关卡会生效。");
+        Room boxueNorth = new Room("boxue_north", "博学北楼",
+            "志愿者服务台在二楼转角，楼梯口常有失物。");
+        Room supermarket = new Room("supermarket", "教育超市",
+            "卖日用品。收银台旁宿管可补办或兑换一卡通。");
+        GatedRoom dormitory = GatedRoom.dormitory();
+        GatedRoom library = GatedRoom.library();
+        Room boxueEast = new Room("boxue_east", "博学东楼",
+            "部分教室晚课结束，走廊较亮。");
+        Room boxueWest = new Room("boxue_west", "博学西楼",
+            "西侧旧教室，部分门锁锈蚀。");
+        Room gymnasium = new Room("gymnasium", "体育馆",
+            "器材室和失物招领在入口左手。");
+        Room canteen = new Room("canteen", "越苑食堂",
+            "晚食窗口二十二点三十分关闭，失物招领在餐盘回收处。");
 
-        // create the rooms
-        outside = new Room("outside the main entrance of the university");
-        theater = new Room("in a lecture theater");
-        pub = new Room("in the campus pub");
-        lab = new Room("in a computing lab");
-        office = new Room("in the computing admin office");
-        boxueMain = new DarkRoom("博学主楼，断电一片漆黑");
-        library = GatedRoom.library("图书馆");
-        dormitory = GatedRoom.dormitory("寝室");
+        gate.setExit("north", boxueMain);
+        gate.setExit("west", gymnasium);
+        gate.setExit("east", canteen);
 
-        // 创建传输房间，设置可能传送到的目标房间
-        List<Room> targetRooms = Arrays.asList(outside, theater, pub, lab, office);
-        teleportRoom = new TeleportRoom("in a mysterious teleportation room", targetRooms);
+        boxueMain.setExit("south", gate);
+        boxueMain.setExit("north", boxueNorth);
+        boxueMain.setExit("west", boxueWest);
+        boxueMain.setExit("east", boxueEast);
 
-        // 为房间添加物品【新增】
-        outside.addItem(new Item("一把旧钥匙", 50));
-        theater.addItem(new Item("一本教科书", 800));
-        pub.addItem(new Item("一个空酒杯", 200));
-        lab.addItem(new Item("一台旧电脑", 3000));
-        office.addItem(new Item("一张校园地图", 100));
-        teleportRoom.addItem(new Item("一个闪烁的传送水晶", 500));
+        boxueNorth.setExit("south", boxueMain);
+        boxueNorth.setExit("west", supermarket);
+        boxueNorth.setExit("east", library);
 
-        // 随机在一个房间添加魔法饼干【新增】
-        // 创建房间列表
-        List<Room> allRooms = Arrays.asList(outside, theater, pub, lab, office, teleportRoom);
-        // 随机选择房间
-        Random random = new Random();
-        int cookieRoomIndex = random.nextInt(allRooms.size());
-        Room cookieRoom = allRooms.get(cookieRoomIndex);
-        cookieRoom.addItem(new Item("magic cookie", 100));
-        System.out.println("提示：magic cookie已藏在 " + cookieRoom.getShortDescription() + " 中！");
+        supermarket.setExit("east", boxueNorth);
+        supermarket.setExit("north", dormitory);
 
-        // initialise room exits
-        outside.setExit("east", theater);
-        outside.setExit("south", lab);
-        outside.setExit("west", pub);
-        outside.setExit("north", teleportRoom);
+        dormitory.setExit("south", supermarket);
 
-        theater.setExit("west", outside);
-        theater.setExit("east", boxueMain);
-        boxueMain.setExit("west", theater);
+        library.setExit("west", boxueNorth);
+        library.setExit("south", boxueEast);
 
-        pub.setExit("east", outside);
-        pub.setExit("north", library);
-        library.setExit("south", pub);
+        boxueEast.setExit("north", library);
+        boxueEast.setExit("west", boxueMain);
 
-        lab.setExit("north", outside);
-        lab.setExit("east", office);
+        boxueWest.setExit("east", boxueMain);
 
-        office.setExit("west", lab);
-        office.setExit("north", dormitory);
-        dormitory.setExit("south", office);
+        gymnasium.setExit("east", gate);
+        canteen.setExit("west", gate);
 
-        // 设置传输房间的出口
-        teleportRoom.setExit("south", outside);
+        boxueNorth.addItem(new Item("三十元钱", 10));
 
-        currentRoom = outside;  // start game outside
-        player.setCurrentRoom(outside);// 设置玩家初始位置【新增】
+        currentRoom = gate;
+        player.setCurrentRoom(gate);
 
         roomRegistry = new HashMap<>();
-        roomRegistry.put("gate", outside);
-        roomRegistry.put("theater", theater);
-        roomRegistry.put("pub", pub);
-        roomRegistry.put("lab", lab);
-        roomRegistry.put("office", office);
-        roomRegistry.put("teleport", teleportRoom);
+        roomRegistry.put("gate", gate);
         roomRegistry.put("boxue_main", boxueMain);
-        roomRegistry.put("library", library);
+        roomRegistry.put("boxue_north", boxueNorth);
+        roomRegistry.put("supermarket", supermarket);
         roomRegistry.put("dormitory", dormitory);
+        roomRegistry.put("library", library);
+        roomRegistry.put("boxue_east", boxueEast);
+        roomRegistry.put("boxue_west", boxueWest);
+        roomRegistry.put("gymnasium", gymnasium);
+        roomRegistry.put("canteen", canteen);
+    }
 
+    /**
+     * 按关卡更新大门任务提示等房间状态。
+     *
+     * @param config 当前关卡配置
+     */
+    public void applyLevelRoomState(LevelConfig config) {
+        Room gate = getRoomById("gate");
+        if (gate != null && config != null) {
+            gate.setBulletin("晚二十三点后凭一卡通与归寝单回寝。\n【本关任务】"
+                + config.getMissionHint());
+        }
+    }
+
+    /**
+     * 当前关卡是否允许进入目标房间（E15 按关解锁出口）。
+     *
+     * @param targetRoom 目标房间
+     * @return 允许进入返回 true
+     */
+    public boolean isRoomAccessible(Room targetRoom) {
+        if (targetRoom == null) {
+            return false;
+        }
+        return levelManager.getCurrentLevelConfig().isRoomUnlocked(targetRoom.getRoomId());
     }
 
     /**

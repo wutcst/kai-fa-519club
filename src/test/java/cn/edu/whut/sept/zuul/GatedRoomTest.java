@@ -19,8 +19,8 @@ import static org.junit.Assert.assertTrue;
 public class GatedRoomTest {
 
     private Game game;
-    private Room pub;
-    private Room office;
+    private Room boxueNorth;
+    private Room supermarket;
     private GatedRoom library;
     private GatedRoom dormitory;
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -29,8 +29,8 @@ public class GatedRoomTest {
     @Before
     public void setUp() {
         game = new Game();
-        pub = game.getRoomById("pub");
-        office = game.getRoomById("office");
+        boxueNorth = game.getRoomById("boxue_north");
+        supermarket = game.getRoomById("supermarket");
         library = (GatedRoom) game.getRoomById("library");
         dormitory = (GatedRoom) game.getRoomById("dormitory");
         System.setOut(new PrintStream(out));
@@ -43,16 +43,18 @@ public class GatedRoomTest {
 
     @Test
     public void testLibraryDeniedWithoutCard() {
-        game.resetPlayerPosition(pub);
+        enterLevelFour();
+        game.resetPlayerPosition(boxueNorth);
 
         assertFalse(game.setCurrentRoom(library));
-        assertEquals(pub, game.getCurrentRoom());
+        assertEquals(boxueNorth, game.getCurrentRoom());
         assertTrue(out.toString().contains(GatedRoom.CARD_DENIED_MESSAGE));
     }
 
     @Test
     public void testLibraryAllowedWithCard() {
-        game.resetPlayerPosition(pub);
+        enterLevelFour();
+        game.resetPlayerPosition(boxueNorth);
         game.getPlayer().takeItem(new Item(GatedRoom.CAMPUS_CARD_ITEM, 50));
 
         assertTrue(game.setCurrentRoom(library));
@@ -61,16 +63,16 @@ public class GatedRoomTest {
 
     @Test
     public void testDormitoryDeniedWithoutCard() {
-        game.resetPlayerPosition(office);
+        game.resetPlayerPosition(supermarket);
 
         assertFalse(game.setCurrentRoom(dormitory));
-        assertEquals(office, game.getCurrentRoom());
+        assertEquals(supermarket, game.getCurrentRoom());
         assertTrue(out.toString().contains(GatedRoom.CARD_DENIED_MESSAGE));
     }
 
     @Test
     public void testDormitoryAllowedOnLevelOneWithoutSubmit() {
-        game.resetPlayerPosition(office);
+        game.resetPlayerPosition(supermarket);
         game.getPlayer().takeItem(new Item(GatedRoom.CAMPUS_CARD_ITEM, 50));
 
         assertTrue(game.setCurrentRoom(dormitory));
@@ -80,11 +82,11 @@ public class GatedRoomTest {
     @Test
     public void testDormitoryDeniedOnLevelTwoWithoutSubmit() {
         enterLevelTwo();
-        game.resetPlayerPosition(office);
+        game.resetPlayerPosition(supermarket);
         game.getPlayer().takeItem(new Item(GatedRoom.CAMPUS_CARD_ITEM, 50));
 
         assertFalse(game.setCurrentRoom(dormitory));
-        assertEquals(office, game.getCurrentRoom());
+        assertEquals(supermarket, game.getCurrentRoom());
         assertTrue(out.toString().contains(GatedRoom.SUBMIT_REQUIRED_MESSAGE));
     }
 
@@ -92,7 +94,7 @@ public class GatedRoomTest {
     public void testDormitoryAllowedOnLevelTwoAfterSubmit() {
         enterLevelTwo();
         game.getLevelManager().markDormitorySubmitCompleted();
-        game.resetPlayerPosition(office);
+        game.resetPlayerPosition(supermarket);
         game.getPlayer().takeItem(new Item(GatedRoom.CAMPUS_CARD_ITEM, 50));
 
         assertTrue(game.setCurrentRoom(dormitory));
@@ -101,12 +103,13 @@ public class GatedRoomTest {
 
     @Test
     public void testGoCommandToLibraryRequiresCard() {
-        game.resetPlayerPosition(pub);
+        enterLevelFour();
+        game.resetPlayerPosition(boxueNorth);
         GoCommand goCommand = new GoCommand();
 
-        goCommand.execute(game, "north");
+        goCommand.execute(game, "east");
 
-        assertEquals(pub, game.getCurrentRoom());
+        assertEquals(boxueNorth, game.getCurrentRoom());
         assertTrue(out.toString().contains(GatedRoom.CARD_DENIED_MESSAGE));
     }
 
@@ -122,5 +125,12 @@ public class GatedRoomTest {
     private void enterLevelTwo() {
         game.getLevelManager().completeCurrentLevel();
         assertEquals(2, game.getLevelManager().getCurrentLevel());
+    }
+
+    private void enterLevelFour() {
+        game.getLevelManager().completeCurrentLevel();
+        game.getLevelManager().completeCurrentLevel();
+        game.getLevelManager().completeCurrentLevel();
+        assertEquals(4, game.getLevelManager().getCurrentLevel());
     }
 }

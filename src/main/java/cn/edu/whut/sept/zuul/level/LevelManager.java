@@ -55,6 +55,7 @@ public class LevelManager {
         }
         game.resetPlayerPosition(startRoom);
         game.getLevelTimer().resetForLevel(currentConfig);
+        game.applyLevelRoomState(currentConfig);
 
         System.out.println();
         System.out.println("=== " + currentConfig.getTitle() + " ===");

@@ -249,16 +249,26 @@ public class ImageLoader {
      * @return 房间图标
      */
     public ImageIcon getRoomIcon(String roomDescription) {
-        if (roomDescription.contains("outside")) {
+        if (roomDescription.contains("校门")) {
             return getImage("room_outside");
-        } else if (roomDescription.contains("theater")) {
+        } else if (roomDescription.contains("博学主楼")) {
             return getImage("room_theater");
-        } else if (roomDescription.contains("pub")) {
-            return getImage("room_pub");
-        } else if (roomDescription.contains("lab")) {
-            return getImage("room_lab");
-        } else if (roomDescription.contains("office")) {
+        } else if (roomDescription.contains("博学北楼")) {
             return getImage("room_office");
+        } else if (roomDescription.contains("教育超市")) {
+            return getImage("room_pub");
+        } else if (roomDescription.contains("寝室")) {
+            return getImage("room_lab");
+        } else if (roomDescription.contains("图书馆")) {
+            return getImage("room_office");
+        } else if (roomDescription.contains("博学东楼")) {
+            return getImage("room_theater");
+        } else if (roomDescription.contains("博学西楼")) {
+            return getImage("room_lab");
+        } else if (roomDescription.contains("体育馆")) {
+            return getImage("room_teleport");
+        } else if (roomDescription.contains("越苑食堂")) {
+            return getImage("room_pub");
         } else if (roomDescription.contains("teleport")) {
             return getImage("room_teleport");
         } else {

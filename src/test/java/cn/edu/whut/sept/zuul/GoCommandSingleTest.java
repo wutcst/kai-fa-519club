@@ -25,19 +25,16 @@ public class GoCommandSingleTest {
         TestUtils.redirectOutput();
     }
 
-    // 测试：Go命令-有效方向（east）→ 房间切换（核心逻辑）
+    // 测试：Go命令-有效方向（north）→ 房间切换（核心逻辑）
     @Test
-    void testGoCommandValidDirectionEast() {
-        // 直接构造Command对象，绕过Parser的输入读取（彻底避免阻塞）
-        Command goEastCommand = new Command("go", "east");
-        boolean isQuit = game.processCommand(goEastCommand);
+    void testGoCommandValidDirectionNorth() {
+        Command goNorthCommand = new Command("go", "north");
+        boolean isQuit = game.processCommand(goNorthCommand);
 
-        // 核心断言1：执行go命令不触发退出
         assertFalse(isQuit);
-        // 核心断言2：房间切换（只校验关键词，忽略拼写theatre/theater）
-        String roomDesc = game.getCurrentRoom().getShortDescription().toLowerCase();
-        assertTrue(roomDesc.contains("lecture"),
-                "执行go east后房间应包含'lecture'，实际：" + roomDesc);
+        String roomDesc = game.getCurrentRoom().getShortDescription();
+        assertTrue(roomDesc.contains("博学主楼"),
+                "执行go north后房间应为主楼，实际：" + roomDesc);
     }
 
     // 测试：Go命令-无效方向（up）→ 不切换房间（核心逻辑）

@@ -48,9 +48,9 @@ public class LevelManagerTest {
 
     @Test
     public void testStartLevelResetsPositionAndHistory() {
-        Room theater = game.getRoomById("theater");
-        game.setCurrentRoom(theater);
-        assertEquals(theater, game.getCurrentRoom());
+        Room boxueMain = game.getRoomById("boxue_main");
+        game.setCurrentRoom(boxueMain);
+        assertEquals(boxueMain, game.getCurrentRoom());
 
         levelManager.restartCurrentLevel();
 

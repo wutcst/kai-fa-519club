@@ -564,20 +564,35 @@ public class EnhancedGameWindow extends JFrame {
      */
     private String getRoomImageKey(Room room) {
         String desc = room.getShortDescription();
-        if (desc.contains("outside")) {
+        if (desc.contains("校门")) {
             return "room_outside";
         }
-        if (desc.contains("theater")) {
+        if (desc.contains("博学主楼")) {
             return "room_theater";
         }
-        if (desc.contains("pub")) {
+        if (desc.contains("博学北楼")) {
+            return "room_office";
+        }
+        if (desc.contains("教育超市")) {
             return "room_pub";
         }
-        if (desc.contains("lab")) {
+        if (desc.contains("寝室")) {
             return "room_lab";
         }
-        if (desc.contains("office")) {
+        if (desc.contains("图书馆")) {
             return "room_office";
+        }
+        if (desc.contains("博学东楼")) {
+            return "room_theater";
+        }
+        if (desc.contains("博学西楼")) {
+            return "room_lab";
+        }
+        if (desc.contains("体育馆")) {
+            return "room_teleport";
+        }
+        if (desc.contains("越苑食堂")) {
+            return "room_pub";
         }
         if (desc.contains("teleport")) {
             return "room_teleport";

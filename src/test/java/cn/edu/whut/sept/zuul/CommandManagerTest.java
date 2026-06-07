@@ -56,14 +56,11 @@ public class CommandManagerTest {
      */
     @Test
     void testExecuteValidGoCommand() {
-        // 执行go east命令
-        boolean isQuit = commandManager.executeCommand("go", "east", game);
-        // 核心验证1：未触发退出
+        boolean isQuit = commandManager.executeCommand("go", "north", game);
         assertFalse(isQuit);
-        // 核心验证2：房间描述包含"lecture"（兼容theatre/theater）
         String roomDesc = game.getCurrentRoom().getShortDescription();
-        assertTrue(roomDesc.contains("lecture"),
-                "房间描述应包含'lecture'，实际：" + roomDesc);
+        assertTrue(roomDesc.contains("博学主楼"),
+                "房间描述应包含'博学主楼'，实际：" + roomDesc);
     }
 
     /**

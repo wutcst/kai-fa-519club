@@ -24,7 +24,7 @@ public class LookCommandSingleTest {
         // 核心断言1：不触发退出
         assertFalse(isQuit, "look命令不应触发退出");
         // 核心断言2：当前房间仍为初始房间（look不切换房间）
-        assertTrue(game.getCurrentRoom().getShortDescription().toLowerCase().contains("outside")
-                || game.getCurrentRoom().getShortDescription().toLowerCase().contains("university"));
+        assertTrue(game.getCurrentRoom().getShortDescription().contains("校门")
+                || game.getCurrentRoom().getShortDescription().contains("武汉理工大学"));
     }
 }
