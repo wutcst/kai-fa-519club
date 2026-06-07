@@ -82,6 +82,7 @@ public class Game
     /**
      * 设置玩家当前所在房间，并记录历史。
      * 若目标为黑暗区域且无手电筒，罚时并留在原房间。
+     * 若目标为条件门且未满足准入，提示并留在原房间。
      * 若目标为传输房间，则触发随机传送。
      *
      * @param targetRoom 目标房间实例
@@ -93,6 +94,15 @@ public class Game
             if (!darkRoom.canEnter(player)) {
                 System.out.println(DarkRoom.PENALTY_MESSAGE);
                 ActionTimeCost.deduct(this, ActionTimeCost.DARK_PENALTY);
+                return false;
+            }
+        }
+
+        if (targetRoom instanceof GatedRoom) {
+            GatedRoom gatedRoom = (GatedRoom) targetRoom;
+            String denialMessage = gatedRoom.getDenialMessage(this);
+            if (denialMessage != null) {
+                System.out.println(denialMessage);
                 return false;
             }
         }
@@ -133,6 +143,8 @@ public class Game
     {
         Room outside, theater, pub, lab, office, teleportRoom;
         DarkRoom boxueMain;
+        GatedRoom library;
+        GatedRoom dormitory;
 
         // create the rooms
         outside = new Room("outside the main entrance of the university");
@@ -141,6 +153,8 @@ public class Game
         lab = new Room("in a computing lab");
         office = new Room("in the computing admin office");
         boxueMain = new DarkRoom("博学主楼，断电一片漆黑");
+        library = GatedRoom.library("图书馆");
+        dormitory = GatedRoom.dormitory("寝室");
 
         // 创建传输房间，设置可能传送到的目标房间
         List<Room> targetRooms = Arrays.asList(outside, theater, pub, lab, office);
@@ -175,11 +189,15 @@ public class Game
         boxueMain.setExit("west", theater);
 
         pub.setExit("east", outside);
+        pub.setExit("north", library);
+        library.setExit("south", pub);
 
         lab.setExit("north", outside);
         lab.setExit("east", office);
 
         office.setExit("west", lab);
+        office.setExit("north", dormitory);
+        dormitory.setExit("south", office);
 
         // 设置传输房间的出口
         teleportRoom.setExit("south", outside);
@@ -195,6 +213,8 @@ public class Game
         roomRegistry.put("office", office);
         roomRegistry.put("teleport", teleportRoom);
         roomRegistry.put("boxue_main", boxueMain);
+        roomRegistry.put("library", library);
+        roomRegistry.put("dormitory", dormitory);
 
     }
 

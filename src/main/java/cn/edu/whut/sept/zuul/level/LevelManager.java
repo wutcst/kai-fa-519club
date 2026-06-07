@@ -13,6 +13,7 @@ public class LevelManager {
     private int highestUnlockedLevel;
     private LevelState state;
     private LevelConfig currentConfig;
+    private boolean dormitorySubmitCompleted;
 
     /**
      * 创建关卡管理器并绑定游戏实例。
@@ -44,6 +45,7 @@ public class LevelManager {
         currentLevel = levelNumber;
         currentConfig = LevelConfig.forLevel(levelNumber);
         state = LevelState.IN_PROGRESS;
+        dormitorySubmitCompleted = false;
 
         game.getPlayer().dropAllItems();
 
@@ -131,5 +133,21 @@ public class LevelManager {
 
     public boolean isLevelInProgress() {
         return state == LevelState.IN_PROGRESS;
+    }
+
+    /**
+     * 标记当前关寝室归寝单已提交（供 E19 submit 命令调用）。
+     */
+    public void markDormitorySubmitCompleted() {
+        dormitorySubmitCompleted = true;
+    }
+
+    /**
+     * 当前关是否已完成寝室归寝单提交。
+     *
+     * @return 已提交返回 true
+     */
+    public boolean isDormitorySubmitCompleted() {
+        return dormitorySubmitCompleted;
     }
 }

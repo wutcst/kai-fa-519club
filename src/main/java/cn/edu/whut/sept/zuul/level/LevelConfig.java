@@ -65,4 +65,13 @@ public final class LevelConfig {
     public String getTitle() {
         return title;
     }
+
+    /**
+     * 当前关进入寝室是否须先完成归寝单提交（第 2 关起）。
+     *
+     * @return 需要 submit 返回 true
+     */
+    public boolean requiresDormitorySubmit() {
+        return levelNumber >= 2;
+    }
 }
