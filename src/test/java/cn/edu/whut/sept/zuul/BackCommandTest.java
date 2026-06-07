@@ -18,8 +18,8 @@ public class BackCommandTest {
     private Game game;
     private BackCommand backCommand;
     private Room startRoom;
-    private Room theater;
-    private Room lab;
+    private Room boxueMain;
+    private Room boxueNorth;
 
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final PrintStream originalOut = System.out;
@@ -29,29 +29,24 @@ public class BackCommandTest {
         game = new Game();
         backCommand = new BackCommand();
 
-        // 获取游戏初始化的房间（根据Game类的createRooms()方法）
-        startRoom = game.getCurrentRoom(); // outside
-        theater = startRoom.getExit("east"); // theater
-        lab = startRoom.getExit("south"); // lab
+        startRoom = game.getCurrentRoom();
+        boxueMain = startRoom.getExit("north");
+        boxueNorth = boxueMain.getExit("north");
 
         System.setOut(new PrintStream(outContent));
     }
 
     @Test
     public void testBackMultipleSteps() {
-        // 移动路径：startRoom(outside) → theater（东）→ lab（从theater先回outside再南移到lab，或直接从outside南移）
-        // 正确路径应为：outside → theater（东），再回到outside，再南移到lab
-        game.setCurrentRoom(theater);  // 第一次移动：outside → theater（历史记录：[outside]）
-        backCommand.execute(game, null); // 回退到outside（历史记录清空）
-        game.setCurrentRoom(lab);      // 第二次移动：outside → lab（历史记录：[outside]）
+        game.setCurrentRoom(boxueMain);
+        backCommand.execute(game, null);
+        game.setCurrentRoom(boxueNorth);
 
-        // 第一次back：从lab回到outside
         outContent.reset();
         backCommand.execute(game, null);
         assertEquals(startRoom.getShortDescription(), game.getCurrentRoom().getShortDescription());
         assertTrue(outContent.toString().contains("你回到了上一个房间。"));
 
-        // 第二次back：已在起始房间，无法再回退
         outContent.reset();
         backCommand.execute(game, null);
         assertEquals(startRoom.getShortDescription(), game.getCurrentRoom().getShortDescription());
@@ -65,24 +60,19 @@ public class BackCommandTest {
             historyField.setAccessible(true);
             List<Room> roomHistory = (List<Room>) historyField.get(game);
 
-            // 初始状态历史为空
             assertTrue(roomHistory.isEmpty());
 
-            // 第一次移动：startRoom → theater
-            game.setCurrentRoom(theater);
+            game.setCurrentRoom(boxueMain);
             assertEquals(1, roomHistory.size());
             assertEquals(startRoom.getShortDescription(), roomHistory.get(0).getShortDescription());
 
-            // 第二次移动：theater → startRoom（回退）
             game.goBack();
             assertTrue(roomHistory.isEmpty());
 
-            // 第三次移动：startRoom → lab
-            game.setCurrentRoom(lab);
+            game.setCurrentRoom(boxueNorth);
             assertEquals(1, roomHistory.size());
             assertEquals(startRoom.getShortDescription(), roomHistory.get(0).getShortDescription());
 
-            // 第三次back：lab → startRoom
             game.goBack();
             assertTrue(roomHistory.isEmpty());
 
@@ -100,7 +90,7 @@ public class BackCommandTest {
 
     @Test
     public void testBackAfterOneMove() {
-        game.setCurrentRoom(theater);
+        game.setCurrentRoom(boxueMain);
         backCommand.execute(game, null);
         assertEquals(startRoom.getShortDescription(), game.getCurrentRoom().getShortDescription());
         assertTrue(outContent.toString().contains("你回到了上一个房间。"));
@@ -108,7 +98,7 @@ public class BackCommandTest {
 
     @Test
     public void testBackWithParameters() {
-        game.setCurrentRoom(theater);
+        game.setCurrentRoom(boxueMain);
         Room current = game.getCurrentRoom();
         outContent.reset();
         backCommand.execute(game, "参数");

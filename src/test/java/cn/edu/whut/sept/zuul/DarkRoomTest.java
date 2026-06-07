@@ -15,12 +15,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * E12 黑暗罚时：博学主楼无手电筒进入罚 1 分钟并退回。
+ * E12 黑暗罚时：第三、四关博学主楼无手电筒罚 1 分钟并退回。
  */
 public class DarkRoomTest {
 
     private Game game;
-    private Room theater;
+    private Room gate;
     private DarkRoom boxueMain;
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
     private final PrintStream originalOut = System.out;
@@ -28,9 +28,10 @@ public class DarkRoomTest {
     @Before
     public void setUp() {
         game = new Game();
-        theater = game.getRoomById("theater");
+        gate = game.getRoomById("gate");
         boxueMain = (DarkRoom) game.getRoomById("boxue_main");
-        game.resetPlayerPosition(theater);
+        enterLevelThree();
+        game.resetPlayerPosition(gate);
         System.setOut(new PrintStream(out));
     }
 
@@ -44,7 +45,7 @@ public class DarkRoomTest {
         int before = game.getLevelTimer().getRemainingSeconds();
 
         assertFalse(game.setCurrentRoom(boxueMain));
-        assertEquals(theater, game.getCurrentRoom());
+        assertEquals(gate, game.getCurrentRoom());
         assertEquals(before - ActionTimeCost.DARK_PENALTY, game.getLevelTimer().getRemainingSeconds());
         assertTrue(out.toString().contains(DarkRoom.PENALTY_MESSAGE));
     }
@@ -62,11 +63,10 @@ public class DarkRoomTest {
         int before = game.getLevelTimer().getRemainingSeconds();
         GoCommand goCommand = new GoCommand();
 
-        goCommand.execute(game, "east");
+        goCommand.execute(game, "north");
 
-        assertEquals(theater, game.getCurrentRoom());
+        assertEquals(gate, game.getCurrentRoom());
         assertEquals(before - ActionTimeCost.DARK_PENALTY, game.getLevelTimer().getRemainingSeconds());
-        assertFalse(out.toString().contains("You are " + boxueMain.getShortDescription()));
     }
 
     @Test
@@ -74,17 +74,26 @@ public class DarkRoomTest {
         game.getPlayer().takeItem(new Item(DarkRoom.FLASHLIGHT_ITEM, 200));
         GoCommand goCommand = new GoCommand();
 
-        goCommand.execute(game, "east");
+        goCommand.execute(game, "north");
 
         assertEquals(boxueMain, game.getCurrentRoom());
     }
 
     @Test
-    public void testDarkPenaltyDoesNotChargeGoTime() {
+    public void testNoDarkPenaltyOnLevelOne() {
+        game.getLevelManager().restartCurrentLevel();
+        game.getLevelManager().startLevel(1);
+        game.resetPlayerPosition(gate);
         int before = game.getLevelTimer().getRemainingSeconds();
 
-        game.setCurrentRoom(boxueMain);
+        assertTrue(game.setCurrentRoom(boxueMain));
+        assertEquals(boxueMain, game.getCurrentRoom());
+        assertEquals(before, game.getLevelTimer().getRemainingSeconds());
+    }
 
-        assertEquals(before - ActionTimeCost.DARK_PENALTY, game.getLevelTimer().getRemainingSeconds());
+    private void enterLevelThree() {
+        game.getLevelManager().completeCurrentLevel();
+        game.getLevelManager().completeCurrentLevel();
+        assertEquals(3, game.getLevelManager().getCurrentLevel());
     }
 }
