@@ -8,6 +8,7 @@ package cn.edu.whut.sept.zuul.command;
 
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Room;
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 /**
  * 处理玩家移动的命令类
@@ -32,6 +33,7 @@ public class GoCommand implements CommandInterface {
         } else {
             game.setCurrentRoom(nextRoom);
             game.printLocationInfo();
+            ActionTimeCost.deduct(game, ActionTimeCost.GO);
         }
         return false;
     }
