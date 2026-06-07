@@ -19,6 +19,8 @@ public final class ActionTimeCost {
     public static final int USE = 25;
     /** NPC 对话 */
     public static final int NPC = 30;
+    /** 黑暗区域罚时（E12 博学主楼） */
+    public static final int DARK_PENALTY = 60;
 
     private ActionTimeCost() {
     }

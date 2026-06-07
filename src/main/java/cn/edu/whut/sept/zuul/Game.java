@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 import cn.edu.whut.sept.zuul.level.LevelManager;
 import cn.edu.whut.sept.zuul.level.LevelTimer;
 
@@ -79,28 +80,40 @@ public class Game
     }
 
     /**
-     * 设置玩家当前所在房间，并记录历史
-     * 如果房间是传输房间，则触发传输
+     * 设置玩家当前所在房间，并记录历史。
+     * 若目标为黑暗区域且无手电筒，罚时并留在原房间。
+     * 若目标为传输房间，则触发随机传送。
      *
-     * @param currentRoom 目标房间实例
+     * @param targetRoom 目标房间实例
+     * @return 成功进入或传送返回 true，被黑暗区域阻挡返回 false
      */
-    public void setCurrentRoom(Room currentRoom) {
+    public boolean setCurrentRoom(Room targetRoom) {
+        if (targetRoom instanceof DarkRoom) {
+            DarkRoom darkRoom = (DarkRoom) targetRoom;
+            if (!darkRoom.canEnter(player)) {
+                System.out.println(DarkRoom.PENALTY_MESSAGE);
+                ActionTimeCost.deduct(this, ActionTimeCost.DARK_PENALTY);
+                return false;
+            }
+        }
+
         // 在切换房间前，将当前房间加入历史记录（如果当前房间不为null）
         if (this.currentRoom != null) {
             roomHistory.add(this.currentRoom);
         }
 
         // 检查是否是传输房间，如果是则触发传输
-        if (currentRoom instanceof TeleportRoom) {
-            TeleportRoom teleportRoom = (TeleportRoom) currentRoom;
-            Room targetRoom = teleportRoom.teleport();
-            this.currentRoom = targetRoom;
-            player.setCurrentRoom(targetRoom); // 更新玩家位置【新增】
+        if (targetRoom instanceof TeleportRoom) {
+            TeleportRoom teleportRoom = (TeleportRoom) targetRoom;
+            Room teleportedRoom = teleportRoom.teleport();
+            this.currentRoom = teleportedRoom;
+            player.setCurrentRoom(teleportedRoom);
             System.out.println("你进入了一个神秘的房间，突然被传送到了其他地方！");
         } else {
-            this.currentRoom = currentRoom;
-            player.setCurrentRoom(currentRoom); // 更新玩家位置【新增】
+            this.currentRoom = targetRoom;
+            player.setCurrentRoom(targetRoom);
         }
+        return true;
     }
 
 
@@ -118,7 +131,8 @@ public class Game
      */
     private void createRooms()
     {
-        Room outside, theater, pub, lab, office,teleportRoom;
+        Room outside, theater, pub, lab, office, teleportRoom;
+        DarkRoom boxueMain;
 
         // create the rooms
         outside = new Room("outside the main entrance of the university");
@@ -126,6 +140,7 @@ public class Game
         pub = new Room("in the campus pub");
         lab = new Room("in a computing lab");
         office = new Room("in the computing admin office");
+        boxueMain = new DarkRoom("博学主楼，断电一片漆黑");
 
         // 创建传输房间，设置可能传送到的目标房间
         List<Room> targetRooms = Arrays.asList(outside, theater, pub, lab, office);
@@ -156,6 +171,8 @@ public class Game
         outside.setExit("north", teleportRoom);
 
         theater.setExit("west", outside);
+        theater.setExit("east", boxueMain);
+        boxueMain.setExit("west", theater);
 
         pub.setExit("east", outside);
 
@@ -177,6 +194,7 @@ public class Game
         roomRegistry.put("lab", lab);
         roomRegistry.put("office", office);
         roomRegistry.put("teleport", teleportRoom);
+        roomRegistry.put("boxue_main", boxueMain);
 
     }
 

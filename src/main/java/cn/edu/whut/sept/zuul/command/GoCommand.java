@@ -30,8 +30,7 @@ public class GoCommand implements CommandInterface {
         Room nextRoom = game.getCurrentRoom().getExit(actualDirection);
         if (nextRoom == null) {
             System.out.println("There is no door!");
-        } else {
-            game.setCurrentRoom(nextRoom);
+        } else if (game.setCurrentRoom(nextRoom)) {
             game.printLocationInfo();
             ActionTimeCost.deduct(game, ActionTimeCost.GO);
         }
