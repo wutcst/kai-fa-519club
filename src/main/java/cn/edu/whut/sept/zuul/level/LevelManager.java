@@ -14,6 +14,8 @@ public class LevelManager {
     private LevelState state;
     private LevelConfig currentConfig;
     private boolean dormitorySubmitCompleted;
+    private boolean westBuildingExitLocked;
+    private boolean westBuildingLockBroken;
 
     /**
      * 创建关卡管理器并绑定游戏实例。
@@ -46,6 +48,8 @@ public class LevelManager {
         currentConfig = LevelConfig.forLevel(levelNumber);
         state = LevelState.IN_PROGRESS;
         dormitorySubmitCompleted = false;
+        westBuildingExitLocked = false;
+        westBuildingLockBroken = false;
 
         game.getPlayer().dropAllItems();
 
@@ -150,5 +154,32 @@ public class LevelManager {
      */
     public boolean isDormitorySubmitCompleted() {
         return dormitorySubmitCompleted;
+    }
+
+    /**
+     * 进入博学西楼时触发困锁（E14，第三关起生效）。
+     */
+    public void onEnterWestBuilding() {
+        if (currentLevel >= 3 && !westBuildingLockBroken) {
+            westBuildingExitLocked = true;
+            System.out.println("门从身后锁上了，你需要想办法破门而出。");
+        }
+    }
+
+    /**
+     * 西楼东侧出口是否被门锁阻挡。
+     *
+     * @return 被锁返回 true
+     */
+    public boolean isWestBuildingExitLocked() {
+        return westBuildingExitLocked;
+    }
+
+    /**
+     * use 锤子成功后解除西楼困锁（供 E1 use 调用）。
+     */
+    public void unlockWestBuildingExit() {
+        westBuildingLockBroken = true;
+        westBuildingExitLocked = false;
     }
 }

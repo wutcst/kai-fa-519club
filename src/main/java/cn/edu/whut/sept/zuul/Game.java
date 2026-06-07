@@ -127,6 +127,9 @@ public class Game
         } else {
             this.currentRoom = targetRoom;
             player.setCurrentRoom(targetRoom);
+            if ("boxue_west".equals(targetRoom.getRoomId())) {
+                levelManager.onEnterWestBuilding();
+            }
         }
         return true;
     }
