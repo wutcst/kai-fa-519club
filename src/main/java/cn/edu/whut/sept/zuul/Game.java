@@ -26,8 +26,14 @@ package cn.edu.whut.sept.zuul;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+
+import cn.edu.whut.sept.zuul.level.LevelManager;
+import cn.edu.whut.sept.zuul.level.LevelTimer;
 
 /**
  * 游戏的主控制器类，负责协调各组件、管理游戏流程和房间状态。
@@ -44,6 +50,9 @@ public class Game
     private CommandManager commandManager;// 新增命令管理器
     private List<Room> roomHistory; // 存储玩家访问过的房间历史
     private Player player; // 玩家实例【新增】
+    private Map<String, Room> roomRegistry; // 房间 ID 注册表，供关卡配置引用
+    private LevelManager levelManager; // 五关进度管理
+    private LevelTimer levelTimer; // 熄灯倒计时
 
     /**
      * 创建游戏并初始化内部数据和解析器.
@@ -54,6 +63,9 @@ public class Game
         roomHistory = new ArrayList<>(); // 初始化房间历史记录列表
         player = new Player("冒险者", currentRoom); // 初始化玩家【新增】
         createRooms(); // 构建游戏房间地图
+        levelManager = new LevelManager(this);
+        levelTimer = new LevelTimer(this);
+        levelManager.startLevel(1); // 从第一关开始
 
     }
 
@@ -158,6 +170,14 @@ public class Game
         currentRoom = outside;  // start game outside
         player.setCurrentRoom(outside);// 设置玩家初始位置【新增】
 
+        roomRegistry = new HashMap<>();
+        roomRegistry.put("gate", outside);
+        roomRegistry.put("theater", theater);
+        roomRegistry.put("pub", pub);
+        roomRegistry.put("lab", lab);
+        roomRegistry.put("office", office);
+        roomRegistry.put("teleport", teleportRoom);
+
     }
 
     /**
@@ -246,6 +266,60 @@ public class Game
      */
     public CommandManager getCommandManager() {
         return commandManager;
+    }
+
+    /**
+     * 获取关卡管理器实例。
+     *
+     * @return LevelManager 实例
+     */
+    public LevelManager getLevelManager() {
+        return levelManager;
+    }
+
+    /**
+     * 获取熄灯倒计时实例。
+     *
+     * @return LevelTimer 实例
+     */
+    public LevelTimer getLevelTimer() {
+        return levelTimer;
+    }
+
+    /**
+     * 根据房间 ID 获取房间，供 LevelConfig 与后续 E15 按关解锁使用。
+     *
+     * @param roomId 房间标识
+     * @return 房间实例，不存在时返回 null
+     */
+    public Room getRoomById(String roomId) {
+        if (roomRegistry == null || roomId == null) {
+            return null;
+        }
+        return roomRegistry.get(roomId);
+    }
+
+    /**
+     * 获取房间注册表只读视图。
+     *
+     * @return 不可修改的房间 ID 映射
+     */
+    public Map<String, Room> getRoomRegistry() {
+        if (roomRegistry == null) {
+            return Collections.emptyMap();
+        }
+        return Collections.unmodifiableMap(roomRegistry);
+    }
+
+    /**
+     * 关卡加载或重开时重置玩家位置，不记录历史、不触发传送。
+     *
+     * @param room 目标房间
+     */
+    public void resetPlayerPosition(Room room) {
+        this.currentRoom = room;
+        player.setCurrentRoom(room);
+        roomHistory.clear();
     }
 
 }
