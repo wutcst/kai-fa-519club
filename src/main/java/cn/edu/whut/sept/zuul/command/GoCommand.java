@@ -28,9 +28,14 @@ public class GoCommand implements CommandInterface {
         String[] words = direction.split(" ");
         String actualDirection = words[0];
 
-        Room nextRoom = game.getCurrentRoom().getExit(actualDirection);
+        Room currentRoom = game.getCurrentRoom();
+        Room nextRoom = currentRoom.getExit(actualDirection);
         if (nextRoom == null) {
             System.out.println("There is no door!");
+        } else if ("boxue_west".equals(currentRoom.getRoomId())
+                && "east".equalsIgnoreCase(actualDirection)
+                && game.getLevelManager().isWestBuildingExitLocked()) {
+            System.out.println("门被从内侧锁死了，你需要找到工具破门。");
         } else if (!game.isRoomAccessible(nextRoom)) {
             System.out.println(LevelConfig.LOCKED_EXIT_MESSAGE);
         } else if (game.setCurrentRoom(nextRoom)) {

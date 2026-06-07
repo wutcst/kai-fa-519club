@@ -22,6 +22,7 @@ import cn.edu.whut.sept.zuul.command.ItemsCommand;
 import cn.edu.whut.sept.zuul.command.LookCommand;
 import cn.edu.whut.sept.zuul.command.QuitCommand;
 import cn.edu.whut.sept.zuul.command.TakeCommand;
+import cn.edu.whut.sept.zuul.command.UseCommand;
 
 /**
  * 命令管理器，负责注册、存储和分发命令
@@ -49,6 +50,7 @@ public class CommandManager {
         registerCommand(new DropCommand());
         registerCommand(new ItemsCommand());
         registerCommand(new EatCookieCommand());
+        registerCommand(new UseCommand());
     }
 
     /**
