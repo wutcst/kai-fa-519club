@@ -1,18 +1,20 @@
 /**
- * 该包包含World-of-Zuul文本冒险游戏的核心实现类，
- * 涵盖游戏控制、命令解析、房间管理等功能模块，
- * 实现了玩家与文本界面的交互逻辑。
+ * 命令包：各游戏命令的实现类，采用命令模式扩展。
  *
- * @author Michael Kölling and David J. Barnes/liujing
+ * @author liujing
  * @version 1.5
  */
-package cn.edu.whut.sept.zuul;
+package cn.edu.whut.sept.zuul.command;
 
 import java.util.List;
 
+import cn.edu.whut.sept.zuul.Game;
+import cn.edu.whut.sept.zuul.Item;
+import cn.edu.whut.sept.zuul.Player;
+import cn.edu.whut.sept.zuul.Room;
+
 /**
  * 处理拾取物品的命令类
- * 新增：实现take命令，允许玩家拾取当前房间内的物品
  *
  * @author liujing
  * @version 1.5
@@ -29,7 +31,6 @@ public class TakeCommand implements CommandInterface {
         Room currentRoom = player.getCurrentRoom();
         List<Item> roomItems = currentRoom.getItems();
 
-        // 查找房间中的物品
         Item targetItem = null;
         for (Item item : roomItems) {
             if (item.getDescription().equalsIgnoreCase(itemName.trim())) {
@@ -43,32 +44,23 @@ public class TakeCommand implements CommandInterface {
             return false;
         }
 
-        // 尝试拾取物品
         if (player.takeItem(targetItem)) {
-            // 从房间中移除物品
             removeItemFromRoom(currentRoom, targetItem);
             System.out.println("你拾取了: " + targetItem.getDetails());
 
-            // 显示剩余负重
             int remaining = player.getRemainingCapacity();
             System.out.println("剩余负重: " + remaining + "g / " + player.getMaxWeight() + "g");
         } else {
             System.out.println("你无法拾取 '" + itemName + "', 它太重了！");
-            System.out.println("当前负重: " + player.getCurrentWeight() + "g / " +
-                    player.getMaxWeight() + "g");
-            System.out.println("需要: " + targetItem.getWeight() + "g, 但只剩: " +
-                    player.getRemainingCapacity() + "g");
+            System.out.println("当前负重: " + player.getCurrentWeight() + "g / "
+                    + player.getMaxWeight() + "g");
+            System.out.println("需要: " + targetItem.getWeight() + "g, 但只剩: "
+                    + player.getRemainingCapacity() + "g");
         }
 
         return false;
     }
 
-    /**
-     * 从房间中移除指定物品
-     *
-     * @param room 房间实例
-     * @param itemToRemove 要移除的物品
-     */
     private void removeItemFromRoom(Room room, Item itemToRemove) {
         try {
             java.lang.reflect.Field itemsField = Room.class.getDeclaredField("items");

@@ -131,7 +131,7 @@ docs: 更新会议记录与分工
 
 ## 8. 面向对象要求
 
-- 新命令继承 `Command`，在 `CommandWords` 注册
+- 新命令实现 `CommandInterface`，在 `CommandManager` 中注册（包路径 `command/`）
 - 新实体独立成类，避免在 `Game` 中堆逻辑
 - 单元测试类名以 `Test` 结尾
 
@@ -148,9 +148,9 @@ git merge dev
 
 | 成员 | 个人分支 | 主责 |
 |------|----------|------|
-| 肖梦琪 | `feature/xmq` | 架构、计时、房间规则、H2/F7 对接、集成 |
-| 刘晶 | `feature/lj` | 拓展命令 E1—E8、第 1—3 关 |
-| 彭慧星 | `feature/phx` | 第 4 关、联调、F6 服务端 |
-| 庞绮君 | `feature/pqj` | 第 5 关、F7 界面、F8 DAO、文档维护 |
+| 肖梦琪 | `feature/xmq` | 架构 E9—E14（#12—#16）、**F6 服务端**、**F8 框架**、F7 绑定层 |
+| 刘晶 | `feature/lj` | 核心命令 E1—E4/E8 等、**F7 GUI**、F6 客户端 / F8 DAO 协作 |
+| 彭慧星 | `feature/phx` | E5、E6 `sleep`、E17、第 3—4 关与 E16 |
+| 庞绮君 | `feature/pqj` | E15、E7、E14、第 1—2 关与 E16（5 关）、文档与测试 |
 
 功能清单见 [README.md](README.md)、[docs/会议记录.md](docs/会议记录.md)。
