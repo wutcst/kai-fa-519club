@@ -298,7 +298,22 @@ public class Game
      *
      * @return 如果成功返回上一个房间则为true，否则为false
      */
+    /**
+     * 当前是否困在博学西楼内（E14：困锁时 go/back 均不可离开）。
+     *
+     * @return 困锁中返回 true
+     */
+    public boolean isTrappedInWestBuilding() {
+        return currentRoom != null
+            && LevelManager.WEST_BUILDING_ROOM_ID.equals(currentRoom.getRoomId())
+            && levelManager.isWestBuildingExitLocked();
+    }
+
     public boolean goBack() {
+        if (isTrappedInWestBuilding()) {
+            System.out.println(LevelManager.WEST_BUILDING_TRAP_MESSAGE);
+            return false;
+        }
         // 检查是否有可返回的房间
         if (!roomHistory.isEmpty()) {
             // 从历史记录中取出最后一个房间并设为当前房间

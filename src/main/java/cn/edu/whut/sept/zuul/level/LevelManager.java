@@ -8,6 +8,11 @@ import cn.edu.whut.sept.zuul.Room;
  */
 public class LevelManager {
 
+    /** 博学西楼房间 ID（E14 困锁） */
+    public static final String WEST_BUILDING_ROOM_ID = "boxue_west";
+    /** 西楼困锁时无法离开的提示 */
+    public static final String WEST_BUILDING_TRAP_MESSAGE = "门被从内侧锁死了，你需要找到工具破门。";
+
     private final Game game;
     private int currentLevel;
     private int highestUnlockedLevel;
