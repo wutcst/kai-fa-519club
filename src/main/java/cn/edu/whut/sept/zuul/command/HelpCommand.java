@@ -24,6 +24,8 @@ public class HelpCommand implements CommandInterface {
         game.getParser().showCommands();
         System.out.println();
         System.out.println(UseCommand.getUsageDescription());
+        System.out.println(TalkCommand.getUsageDescription());
+        System.out.println(RegisterCommand.getUsageDescription());
         return false;
     }
 
