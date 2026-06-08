@@ -13,8 +13,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import cn.edu.whut.sept.zuul.command.EatCookieCommand;
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class EatCookieCommandTest {
@@ -44,16 +46,16 @@ public class EatCookieCommandTest {
 
         int initialMaxWeight = player.getMaxWeight();
         int initialCurrentWeight = player.getCurrentWeight();
+        int beforeTime = game.getLevelTimer().getRemainingSeconds();
 
-        // 清空输出
         outContent.reset();
-
-        // 执行eat cookie命令
         eatCookieCommand.execute(game, "cookie");
 
-        // 验证输出
         String output = outContent.toString();
         assertTrue("应显示吃掉饼干信息", output.contains("你吃掉了 magic cookie"));
+        assertTrue("应显示加时信息", output.contains("魔法饼干让你多争取了 " + ActionTimeCost.COOKIE_BONUS + " 秒"));
+        assertTrue("应显示倒计时", output.contains("距熄灯（23:00）还有"));
+        assertEquals(beforeTime + ActionTimeCost.COOKIE_BONUS, game.getLevelTimer().getRemainingSeconds());
         assertTrue("应显示负重增加", output.contains("最大负重增加了 1000g"));
         assertTrue("应显示当前最大负重", output.contains("当前最大负重: " + (initialMaxWeight + 1000) + "g"));
         assertTrue("应显示当前负重", output.contains("当前负重: " + (initialCurrentWeight - 100) + "g"));
@@ -144,5 +146,44 @@ public class EatCookieCommandTest {
         assertEquals(initialMaxWeight + 1000, player.getMaxWeight());
         assertEquals(initialCurrentWeight - 100, player.getCurrentWeight());
         assertEquals(player.getMaxWeight() - player.getCurrentWeight(), player.getRemainingCapacity());
+    }
+
+    /**
+     * 测试本关第二次吃饼干不再加时（E7 每关限一次）。
+     */
+    @Test
+    public void testEatCookieBonusOncePerLevel() {
+        player.takeItem(new Item("magic cookie", 100));
+        eatCookieCommand.execute(game, "cookie");
+        int afterFirstEat = game.getLevelTimer().getRemainingSeconds();
+
+        player.takeItem(new Item("magic cookie", 100));
+        outContent.reset();
+        eatCookieCommand.execute(game, "cookie");
+
+        String output = outContent.toString();
+        assertTrue("应提示本关加时已用完", output.contains("本关魔法饼干加时效果已用完"));
+        assertEquals(afterFirstEat, game.getLevelTimer().getRemainingSeconds());
+        assertFalse(game.getLevelManager().isMagicCookieBonusAvailable());
+    }
+
+    /**
+     * 测试重开本关后魔法饼干加时可再次使用。
+     */
+    @Test
+    public void testEatCookieBonusResetsOnLevelRestart() {
+        player.takeItem(new Item("magic cookie", 100));
+        eatCookieCommand.execute(game, "cookie");
+        assertFalse(game.getLevelManager().isMagicCookieBonusAvailable());
+
+        game.getLevelManager().restartCurrentLevel();
+        assertTrue(game.getLevelManager().isMagicCookieBonusAvailable());
+
+        int beforeTime = game.getLevelTimer().getRemainingSeconds();
+        player.takeItem(new Item("magic cookie", 100));
+        outContent.reset();
+        eatCookieCommand.execute(game, "cookie");
+
+        assertEquals(beforeTime + ActionTimeCost.COOKIE_BONUS, game.getLevelTimer().getRemainingSeconds());
     }
 }

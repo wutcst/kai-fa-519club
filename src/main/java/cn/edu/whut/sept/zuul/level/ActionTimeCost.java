@@ -27,6 +27,8 @@ public final class ActionTimeCost {
     public static final int NPC = 30;
     /** 黑暗区域罚时（E12 博学主楼） */
     public static final int DARK_PENALTY = 60;
+    /** 魔法饼干加时（E7） */
+    public static final int COOKIE_BONUS = 300;
 
     private ActionTimeCost() {
     }

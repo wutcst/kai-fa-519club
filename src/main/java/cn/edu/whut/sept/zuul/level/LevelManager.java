@@ -18,6 +18,7 @@ public class LevelManager {
     private boolean westBuildingLockBroken;
     private boolean gymStorageUnlocked;
     private boolean dormitoryPasswordUnlocked;
+    private boolean magicCookieBonusUsed;
 
     /**
      * 创建关卡管理器并绑定游戏实例。
@@ -54,6 +55,7 @@ public class LevelManager {
         westBuildingLockBroken = false;
         gymStorageUnlocked = false;
         dormitoryPasswordUnlocked = false;
+        magicCookieBonusUsed = false;
         game.resetUnlockRoomState();
 
         game.getPlayer().dropAllItems();
@@ -218,5 +220,21 @@ public class LevelManager {
      */
     public void markDormitoryPasswordUnlocked() {
         dormitoryPasswordUnlocked = true;
+    }
+
+    /**
+     * 当前关是否仍可使用魔法饼干加时（E7，每关限一次）。
+     *
+     * @return 未使用过加时返回 true
+     */
+    public boolean isMagicCookieBonusAvailable() {
+        return !magicCookieBonusUsed;
+    }
+
+    /**
+     * 标记本关魔法饼干加时已使用。
+     */
+    public void markMagicCookieBonusUsed() {
+        magicCookieBonusUsed = true;
     }
 }

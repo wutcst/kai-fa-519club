@@ -758,7 +758,7 @@ public class EnhancedGameWindow extends JFrame {
                         "  drop all - 丢弃所有物品\n" +
                         "  items - 查看所有物品\n\n" +
                         "特殊命令:\n" +
-                        "  eat cookie - 吃魔法饼干增加负重\n" +
+                        "  eat cookie - 吃魔法饼干（每关首次+300秒，增负重）\n" +
                         "  help - 显示帮助\n" +
                         "  quit - 退出游戏";
 
