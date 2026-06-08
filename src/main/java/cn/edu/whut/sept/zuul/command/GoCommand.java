@@ -10,6 +10,7 @@ import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Room;
 import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 import cn.edu.whut.sept.zuul.level.LevelConfig;
+import cn.edu.whut.sept.zuul.level.LevelManager;
 
 /**
  * 处理玩家移动的命令类
@@ -32,10 +33,9 @@ public class GoCommand implements CommandInterface {
         Room nextRoom = currentRoom.getExit(actualDirection);
         if (nextRoom == null) {
             System.out.println("There is no door!");
-        } else if ("boxue_west".equals(currentRoom.getRoomId())
-                && "east".equalsIgnoreCase(actualDirection)
-                && game.getLevelManager().isWestBuildingExitLocked()) {
-            System.out.println("门被从内侧锁死了，你需要找到工具破门。");
+        } else if ("east".equalsIgnoreCase(actualDirection)
+                && game.isTrappedInWestBuilding()) {
+            System.out.println(LevelManager.WEST_BUILDING_TRAP_MESSAGE);
         } else if (!game.isRoomAccessible(nextRoom)) {
             System.out.println(LevelConfig.LOCKED_EXIT_MESSAGE);
         } else if (game.setCurrentRoom(nextRoom)) {

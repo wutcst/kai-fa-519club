@@ -25,7 +25,7 @@ public class BackCommand implements CommandInterface {
         if (game.goBack()) {
             System.out.println("你回到了上一个房间。");
             game.printLocationInfo();
-        } else {
+        } else if (!game.isTrappedInWestBuilding()) {
             System.out.println("无法返回，这是你的起始房间！");
         }
         return false;
