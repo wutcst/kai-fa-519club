@@ -16,6 +16,8 @@ public class LevelManager {
     private boolean dormitorySubmitCompleted;
     private boolean westBuildingExitLocked;
     private boolean westBuildingLockBroken;
+    private boolean gymStorageUnlocked;
+    private boolean dormitoryPasswordUnlocked;
 
     /**
      * 创建关卡管理器并绑定游戏实例。
@@ -50,6 +52,9 @@ public class LevelManager {
         dormitorySubmitCompleted = false;
         westBuildingExitLocked = false;
         westBuildingLockBroken = false;
+        gymStorageUnlocked = false;
+        dormitoryPasswordUnlocked = false;
+        game.resetUnlockRoomState();
 
         game.getPlayer().dropAllItems();
 
@@ -181,5 +186,37 @@ public class LevelManager {
     public void unlockWestBuildingExit() {
         westBuildingLockBroken = true;
         westBuildingExitLocked = false;
+    }
+
+    /**
+     * 体育馆器材室是否已解锁（供 E4 unlock 调用）。
+     *
+     * @return 已解锁返回 true
+     */
+    public boolean isGymStorageUnlocked() {
+        return gymStorageUnlocked;
+    }
+
+    /**
+     * 标记体育馆器材室已解锁。
+     */
+    public void markGymStorageUnlocked() {
+        gymStorageUnlocked = true;
+    }
+
+    /**
+     * 第五关寝室智能锁是否已打开（供 E4 unlock 与 E6 sleep 调用）。
+     *
+     * @return 已解锁返回 true
+     */
+    public boolean isDormitoryPasswordUnlocked() {
+        return dormitoryPasswordUnlocked;
+    }
+
+    /**
+     * 标记第五关寝室智能锁已打开。
+     */
+    public void markDormitoryPasswordUnlocked() {
+        dormitoryPasswordUnlocked = true;
     }
 }

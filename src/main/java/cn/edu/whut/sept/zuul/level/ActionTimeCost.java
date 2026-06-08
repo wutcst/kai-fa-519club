@@ -19,6 +19,8 @@ public final class ActionTimeCost {
     public static final int USE = 25;
     /** 合成 combine */
     public static final int COMBINE = 25;
+    /** 密码错误罚时 */
+    public static final int WRONG_PASSWORD = 30;
     /** NPC 对话 */
     public static final int NPC = 30;
     /** 黑暗区域罚时（E12 博学主楼） */
