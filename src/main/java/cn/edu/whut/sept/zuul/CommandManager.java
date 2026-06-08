@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cn.edu.whut.sept.zuul.command.BackCommand;
+import cn.edu.whut.sept.zuul.command.CombineCommand;
 import cn.edu.whut.sept.zuul.command.CommandInterface;
 import cn.edu.whut.sept.zuul.command.DropCommand;
 import cn.edu.whut.sept.zuul.command.EatCookieCommand;
@@ -55,6 +56,7 @@ public class CommandManager {
         registerCommand(new UseCommand());
         registerCommand(new TalkCommand());
         registerCommand(new RegisterCommand());
+        registerCommand(new CombineCommand());
     }
 
     /**
