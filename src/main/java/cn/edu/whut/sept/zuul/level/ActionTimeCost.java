@@ -17,6 +17,8 @@ public final class ActionTimeCost {
     public static final int DROP = 10;
     /** 使用 use */
     public static final int USE = 25;
+    /** 合成 combine */
+    public static final int COMBINE = 25;
     /** NPC 对话 */
     public static final int NPC = 30;
     /** 黑暗区域罚时（E12 博学主楼） */

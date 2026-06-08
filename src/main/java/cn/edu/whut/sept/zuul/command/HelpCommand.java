@@ -26,6 +26,7 @@ public class HelpCommand implements CommandInterface {
         System.out.println(UseCommand.getUsageDescription());
         System.out.println(TalkCommand.getUsageDescription());
         System.out.println(RegisterCommand.getUsageDescription());
+        System.out.println(CombineCommand.getUsageDescription());
         return false;
     }
 
