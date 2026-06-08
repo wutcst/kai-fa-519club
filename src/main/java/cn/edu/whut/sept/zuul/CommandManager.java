@@ -25,6 +25,7 @@ import cn.edu.whut.sept.zuul.command.QuitCommand;
 import cn.edu.whut.sept.zuul.command.RegisterCommand;
 import cn.edu.whut.sept.zuul.command.TakeCommand;
 import cn.edu.whut.sept.zuul.command.TalkCommand;
+import cn.edu.whut.sept.zuul.command.UnlockCommand;
 import cn.edu.whut.sept.zuul.command.UseCommand;
 
 /**
@@ -57,6 +58,7 @@ public class CommandManager {
         registerCommand(new TalkCommand());
         registerCommand(new RegisterCommand());
         registerCommand(new CombineCommand());
+        registerCommand(new UnlockCommand());
     }
 
     /**

@@ -34,6 +34,7 @@ import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 import cn.edu.whut.sept.zuul.level.LevelConfig;
 import cn.edu.whut.sept.zuul.level.LevelManager;
 import cn.edu.whut.sept.zuul.level.LevelTimer;
+import cn.edu.whut.sept.zuul.unlock.UnlockService;
 
 /**
  * 游戏的主控制器类，负责协调各组件、管理游戏流程和房间状态。
@@ -195,6 +196,8 @@ public class Game
 
         gymnasium.setExit("east", gate);
         canteen.setExit("west", gate);
+
+        canteen.addItem(new Item(UnlockService.CANTEEN_NOTE_ITEM, 5));
 
         boxueNorth.addItem(new Item("三十元钱", 10));
 
@@ -380,6 +383,16 @@ public class Game
         this.currentRoom = room;
         player.setCurrentRoom(room);
         roomHistory.clear();
+    }
+
+    /**
+     * 关卡切换时重置与 unlock 相关的房间物品（如体育馆手电筒）。
+     */
+    public void resetUnlockRoomState() {
+        Room gym = getRoomById(UnlockService.GYM_ROOM_ID);
+        if (gym != null) {
+            gym.removeItemByDescription(DarkRoom.FLASHLIGHT_ITEM);
+        }
     }
 
 }

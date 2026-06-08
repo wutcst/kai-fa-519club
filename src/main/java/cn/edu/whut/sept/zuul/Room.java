@@ -56,6 +56,43 @@ public class Room {
         return new ArrayList<>(items);
     }
 
+    /**
+     * 房间中是否已有指定名称的物品。
+     *
+     * @param itemDescription 物品描述
+     * @return 存在返回 true
+     */
+    public boolean containsItem(String itemDescription) {
+        if (itemDescription == null) {
+            return false;
+        }
+        for (Item item : items) {
+            if (item.getDescription().equalsIgnoreCase(itemDescription.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 按描述从房间移除物品。
+     *
+     * @param itemDescription 物品描述
+     * @return 被移除的物品，未找到返回 null
+     */
+    public Item removeItemByDescription(String itemDescription) {
+        if (itemDescription == null) {
+            return null;
+        }
+        for (int i = 0; i < items.size(); i++) {
+            Item item = items.get(i);
+            if (item.getDescription().equalsIgnoreCase(itemDescription.trim())) {
+                return items.remove(i);
+            }
+        }
+        return null;
+    }
+
     public void setExit(String direction, Room neighbor) {
         exits.put(direction, neighbor);
     }
