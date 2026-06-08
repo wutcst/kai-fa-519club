@@ -17,6 +17,8 @@ public final class ActionTimeCost {
     public static final int DROP = 10;
     /** 使用 use */
     public static final int USE = 25;
+    /** 提交 submit */
+    public static final int SUBMIT = 25;
     /** 合成 combine */
     public static final int COMBINE = 25;
     /** 密码错误罚时 */
