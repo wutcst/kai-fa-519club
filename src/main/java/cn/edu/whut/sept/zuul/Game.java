@@ -118,13 +118,18 @@ public class Game
             roomHistory.add(this.currentRoom);
         }
 
-        // 检查是否是传输房间，如果是则触发传输
+        // 检查是否是已启用的传输房间，如果是则触发传输（E17 第五关体育馆）
         if (targetRoom instanceof TeleportRoom) {
             TeleportRoom teleportRoom = (TeleportRoom) targetRoom;
-            Room teleportedRoom = teleportRoom.teleport();
-            this.currentRoom = teleportedRoom;
-            player.setCurrentRoom(teleportedRoom);
-            System.out.println("你进入了一个神秘的房间，突然被传送到了其他地方！");
+            if (teleportRoom.isTeleportEnabled()) {
+                Room teleportedRoom = teleportRoom.teleport();
+                this.currentRoom = teleportedRoom;
+                player.setCurrentRoom(teleportedRoom);
+                System.out.println("你进入了一个神秘的房间，突然被传送到了其他地方！");
+            } else {
+                this.currentRoom = targetRoom;
+                player.setCurrentRoom(targetRoom);
+            }
         } else {
             this.currentRoom = targetRoom;
             player.setCurrentRoom(targetRoom);
@@ -163,8 +168,8 @@ public class Game
             "部分教室晚课结束，走廊较亮。");
         Room boxueWest = new Room("boxue_west", "博学西楼",
             "西侧旧教室，部分门锁锈蚀。");
-        Room gymnasium = new Room("gymnasium", "体育馆",
-            "器材室和失物招领在入口左手。");
+        TeleportRoom gymnasium = new TeleportRoom("gymnasium", "体育馆",
+            "器材室和失物招领在入口左手。", new ArrayList<>());
         Room canteen = new Room("canteen", "越苑食堂",
             "晚食窗口二十二点三十分关闭，失物招领在餐盘回收处。");
 
@@ -228,6 +233,36 @@ public class Game
             gate.setBulletin("晚二十三点后凭一卡通与归寝单回寝。\n【本关任务】"
                 + config.getMissionHint());
         }
+        configureGymnasiumTeleport(config);
+    }
+
+    /**
+     * 按关卡配置体育馆传送（E17）：仅第五关启用，目标为除寝室外的全部房间。
+     *
+     * @param config 当前关卡配置
+     */
+    private void configureGymnasiumTeleport(LevelConfig config) {
+        Room gym = getRoomById(UnlockService.GYM_ROOM_ID);
+        if (!(gym instanceof TeleportRoom) || config == null) {
+            return;
+        }
+        TeleportRoom teleportGym = (TeleportRoom) gym;
+        if (config.getLevelNumber() == LevelConfig.MAX_LEVEL) {
+            teleportGym.setTargetRooms(buildGymTeleportTargets());
+            teleportGym.setTeleportEnabled(true);
+        } else {
+            teleportGym.setTeleportEnabled(false);
+        }
+    }
+
+    private List<Room> buildGymTeleportTargets() {
+        List<Room> targets = new ArrayList<>();
+        for (Map.Entry<String, Room> entry : roomRegistry.entrySet()) {
+            if (!UnlockService.DORMITORY_ROOM_ID.equals(entry.getKey())) {
+                targets.add(entry.getValue());
+            }
+        }
+        return targets;
     }
 
     /**
