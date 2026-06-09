@@ -24,6 +24,7 @@ import cn.edu.whut.sept.zuul.command.ItemsCommand;
 import cn.edu.whut.sept.zuul.command.LookCommand;
 import cn.edu.whut.sept.zuul.command.QuitCommand;
 import cn.edu.whut.sept.zuul.command.RegisterCommand;
+import cn.edu.whut.sept.zuul.command.SleepCommand;
 import cn.edu.whut.sept.zuul.command.SubmitCommand;
 import cn.edu.whut.sept.zuul.command.TakeCommand;
 import cn.edu.whut.sept.zuul.command.TalkCommand;
@@ -63,6 +64,7 @@ public class CommandManager {
         registerCommand(new UnlockCommand());
         registerCommand(new SubmitCommand());
         registerCommand(new FeedCommand());
+        registerCommand(new SleepCommand());
     }
 
     /**
