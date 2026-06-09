@@ -17,6 +17,7 @@ import cn.edu.whut.sept.zuul.command.CombineCommand;
 import cn.edu.whut.sept.zuul.command.CommandInterface;
 import cn.edu.whut.sept.zuul.command.DropCommand;
 import cn.edu.whut.sept.zuul.command.EatCookieCommand;
+import cn.edu.whut.sept.zuul.command.FeedCommand;
 import cn.edu.whut.sept.zuul.command.GoCommand;
 import cn.edu.whut.sept.zuul.command.HelpCommand;
 import cn.edu.whut.sept.zuul.command.ItemsCommand;
@@ -61,6 +62,7 @@ public class CommandManager {
         registerCommand(new CombineCommand());
         registerCommand(new UnlockCommand());
         registerCommand(new SubmitCommand());
+        registerCommand(new FeedCommand());
     }
 
     /**
