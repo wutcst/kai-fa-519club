@@ -29,6 +29,10 @@ public final class ActionTimeCost {
     public static final int DARK_PENALTY = 60;
     /** 喂猫（E5） */
     public static final int FEED = 60;
+    /** 食用食物（eat） */
+    public static final int EAT = 25;
+    /** 一杯奶茶拉肚子额外罚时（E16） */
+    public static final int MILK_TEA_DIARRHEA = 30;
     /** 魔法饼干加时（E7） */
     public static final int COOKIE_BONUS = 300;
 

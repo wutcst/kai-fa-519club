@@ -281,7 +281,7 @@ public class EnhancedGameWindow extends JFrame {
                 {"help", "帮助", "显示帮助信息"},
                 {"take", "拾取", "拾取房间内物品"},
                 {"drop", "丢弃", "丢弃携带物品"},
-                {"eat cookie", "吃饼干", "吃掉魔法饼干"},
+                {"eat", "eat", "吃掉背包中的食物"},
                 {"quit", "退出", "退出游戏"}
         };
 
@@ -295,10 +295,11 @@ public class EnhancedGameWindow extends JFrame {
             // 特殊处理拾取、丢弃和帮助按钮
             if (command.equals("take") || command.equals("drop")) {
                 button.addActionListener(e -> {
+                    String dialogTitle = command.equals("take") ? "拾取物品" : "丢弃物品";
                     String itemName = JOptionPane.showInputDialog(
                             EnhancedGameWindow.this,
                             "请输入物品名称:",
-                            command.equals("take") ? "拾取物品" : "丢弃物品",
+                            dialogTitle,
                             JOptionPane.QUESTION_MESSAGE
                     );
                     if (itemName != null && !itemName.trim().isEmpty()) {
@@ -758,7 +759,7 @@ public class EnhancedGameWindow extends JFrame {
                         "  drop all - 丢弃所有物品\n" +
                         "  items - 查看所有物品\n\n" +
                         "特殊命令:\n" +
-                        "  eat cookie - 吃魔法饼干（每关首次+300秒，增负重）\n" +
+                        "  eat - 食用背包中的食物（耗时25秒；magic cookie 同步+300秒）\n" +
                         "  help - 显示帮助\n" +
                         "  quit - 退出游戏";
 

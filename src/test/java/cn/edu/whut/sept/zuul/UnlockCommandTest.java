@@ -114,6 +114,7 @@ public class UnlockCommandTest {
 
     @Test
     public void testCanteenHasDistractionNote() {
+        advanceToLevel(2);
         Room canteen = game.getRoomById("canteen");
         assertTrue(canteen.containsItem(UnlockService.CANTEEN_NOTE_ITEM));
     }

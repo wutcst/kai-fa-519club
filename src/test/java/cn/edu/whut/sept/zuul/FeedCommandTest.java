@@ -14,6 +14,7 @@ import cn.edu.whut.sept.zuul.command.FeedCommand;
 import cn.edu.whut.sept.zuul.npc.NpcService;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -46,6 +47,7 @@ public class FeedCommandTest {
 
     @Test
     public void testFeedWithoutSausage() throws Exception {
+        goToLevel(4);
         Room northBuilding = game.getRoomById(NpcService.NORTH_BUILDING_ROOM_ID);
         setCurrentRoom(northBuilding);
 
@@ -71,7 +73,34 @@ public class FeedCommandTest {
     }
 
     @Test
+    public void testFeedNotAvailableBeforeLevel4() throws Exception {
+        assertFalse(game.getCommandManager().isFeedCommandAvailable());
+        Room northBuilding = game.getRoomById(NpcService.NORTH_BUILDING_ROOM_ID);
+        setCurrentRoom(northBuilding);
+        player.takeItem(new Item(FeedCommand.SAUSAGE_ITEM, 10));
+
+        game.getCommandManager().executeCommand("feed", null, game);
+
+        assertTrue(outContent.toString().contains("I don't know"));
+        assertNotNull(player.findItemInInventory(FeedCommand.SAUSAGE_ITEM));
+        assertNull(player.findMagicCookie());
+    }
+
+    @Test
+    public void testFeedAvailableFromLevel4() {
+        goToLevel(4);
+        assertTrue(game.getCommandManager().isFeedCommandAvailable());
+    }
+
+    private void goToLevel(int level) {
+        while (game.getLevelManager().getCurrentLevel() < level) {
+            game.getLevelManager().completeCurrentLevel();
+        }
+    }
+
+    @Test
     public void testFeedSuccess() throws Exception {
+        goToLevel(4);
         Room northBuilding = game.getRoomById(NpcService.NORTH_BUILDING_ROOM_ID);
         setCurrentRoom(northBuilding);
         player.takeItem(new Item(FeedCommand.SAUSAGE_ITEM, 10));

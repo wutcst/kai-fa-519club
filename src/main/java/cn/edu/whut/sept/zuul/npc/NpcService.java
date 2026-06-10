@@ -81,6 +81,10 @@ public final class NpcService {
     }
 
     private static boolean talkVolunteer(int level) {
+        if (level == 1) {
+            System.out.println("志愿者：本关只需一卡通即可归寝。");
+            return true;
+        }
         if (level >= MIN_DORM_FORM_VOLUNTEER_LEVEL && level <= MAX_DORM_FORM_VOLUNTEER_LEVEL) {
             System.out.println("志愿者：需要归寝单请 register 登记领取。");
             return true;
