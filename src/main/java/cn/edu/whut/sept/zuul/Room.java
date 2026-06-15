@@ -57,6 +57,13 @@ public class Room {
     }
 
     /**
+     * 清空房间内所有物品（E16 按关刷新物品栏）。
+     */
+    public void clearItems() {
+        items.clear();
+    }
+
+    /**
      * 房间中是否已有指定名称的物品。
      *
      * @param itemDescription 物品描述

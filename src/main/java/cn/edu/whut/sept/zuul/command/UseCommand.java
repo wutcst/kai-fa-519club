@@ -2,7 +2,7 @@
  * 命令包：各游戏命令的实现类，采用命令模式扩展。
  *
  * @author liujing
- * @version 1.0
+ * @version 1.1
  */
 package cn.edu.whut.sept.zuul.command;
 
@@ -14,18 +14,20 @@ import cn.edu.whut.sept.zuul.Room;
 import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 /**
- * 处理使用物品的命令类（E1）：超市换卡、西楼砸锁、图书馆盖章领归寝单。
+ * 处理使用物品的命令类（E1/E16）：超市换卡、西楼砸锁、图书馆盖章、秒表与遥控器等。
  *
  * @author liujing
- * @version 1.0
+ * @version 1.1
  */
 public class UseCommand implements CommandInterface {
 
-    public static final String MONEY_ITEM = "三十元钱";
+    public static final String MONEY_ITEM = "湿漉漉的三十元钱";
     public static final String REGISTRATION_SLIP_ITEM = "登记条";
     public static final String HAMMER_ITEM = "锤子";
     public static final String RECEIPT_ITEM = "回执";
     public static final String DORM_FORM_ITEM = "归寝单";
+    public static final String STOPWATCH_ITEM = "一块遗弃的秒表";
+    public static final String PROJECTOR_REMOTE_ITEM = "投影仪遥控器";
 
     public static final String SUPERMARKET_ROOM_ID = "supermarket";
     public static final String WEST_BUILDING_ROOM_ID = "boxue_west";
@@ -41,7 +43,18 @@ public class UseCommand implements CommandInterface {
      */
     public static String getUsageDescription() {
         return "use <物品> - 使用物品（超市用三十元/登记条换一卡通，"
-            + "西楼用锤子砸锁，图书馆用回执盖章领归寝单）";
+            + "西楼用锤子砸锁，图书馆用回执盖章领归寝单，秒表查看剩余时间）";
+    }
+
+    /**
+     * 判断是否为可换卡的纸币物品。
+     */
+    public static boolean isMoneyItem(String itemDescription) {
+        if (itemDescription == null) {
+            return false;
+        }
+        String trimmed = itemDescription.trim();
+        return MONEY_ITEM.equalsIgnoreCase(trimmed) || "三十元钱".equalsIgnoreCase(trimmed);
     }
 
     @Override
@@ -52,7 +65,6 @@ public class UseCommand implements CommandInterface {
         }
 
         Player player = game.getPlayer();
-        Room room = player.getCurrentRoom();
         String trimmedName = itemName.trim();
         Item item = player.findItemInInventory(trimmedName);
         if (item == null) {
@@ -60,6 +72,21 @@ public class UseCommand implements CommandInterface {
             return false;
         }
 
+        if (STOPWATCH_ITEM.equalsIgnoreCase(trimmedName)) {
+            ActionTimeCost.deduct(game, ActionTimeCost.USE);
+            int seconds = game.getLevelTimer().getRemainingSeconds();
+            int minutes = (seconds + 59) / 60;
+            System.out.println("surprise！你的时间还剩 " + minutes + " 分钟");
+            return false;
+        }
+
+        if (PROJECTOR_REMOTE_ITEM.equalsIgnoreCase(trimmedName)) {
+            ActionTimeCost.deduct(game, ActionTimeCost.USE);
+            System.out.println("你对着投影仪按了半天，什么都没有发生。");
+            return false;
+        }
+
+        Room room = player.getCurrentRoom();
         String roomId = room.getRoomId();
         boolean success;
         if (SUPERMARKET_ROOM_ID.equals(roomId)) {
@@ -81,9 +108,9 @@ public class UseCommand implements CommandInterface {
 
     private boolean useInSupermarket(Player player, Item item) {
         String itemDescription = item.getDescription();
-        if (!MONEY_ITEM.equalsIgnoreCase(itemDescription)
+        if (!isMoneyItem(itemDescription)
                 && !REGISTRATION_SLIP_ITEM.equalsIgnoreCase(itemDescription)) {
-            System.out.println("在超市只能使用三十元钱或登记条兑换一卡通。");
+            System.out.println("在超市只能使用湿漉漉的三十元钱或登记条兑换一卡通。");
             return false;
         }
 

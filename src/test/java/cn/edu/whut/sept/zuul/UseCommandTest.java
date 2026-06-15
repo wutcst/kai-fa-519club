@@ -159,6 +159,30 @@ public class UseCommandTest {
     }
 
     @Test
+    public void testUseStopwatchShowsRemainingMinutes() throws Exception {
+        advanceToLevel(4);
+        setCurrentRoom(game.getRoomById("gate"));
+        player.takeItem(new Item(UseCommand.STOPWATCH_ITEM, 50));
+
+        useCommand.execute(game, UseCommand.STOPWATCH_ITEM);
+
+        assertTrue(outContent.toString().contains("surprise！你的时间还剩"));
+    }
+
+    @Test
+    public void testUseProjectorRemoteWastesTime() throws Exception {
+        advanceToLevel(3);
+        setCurrentRoom(game.getRoomById("gate"));
+        player.takeItem(new Item(UseCommand.PROJECTOR_REMOTE_ITEM, 30));
+        int before = game.getLevelTimer().getRemainingSeconds();
+
+        useCommand.execute(game, UseCommand.PROJECTOR_REMOTE_ITEM);
+
+        assertTrue(outContent.toString().contains("什么都没有发生"));
+        assertEquals(before - 25, game.getLevelTimer().getRemainingSeconds());
+    }
+
+    @Test
     public void testHelpShowsUseDescription() {
         outContent.reset();
         game.processCommand(new Command("help", null));

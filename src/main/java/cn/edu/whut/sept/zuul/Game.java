@@ -33,6 +33,7 @@ import java.util.Map;
 import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 import cn.edu.whut.sept.zuul.level.LevelConfig;
 import cn.edu.whut.sept.zuul.level.LevelManager;
+import cn.edu.whut.sept.zuul.level.LevelRoomContent;
 import cn.edu.whut.sept.zuul.level.LevelTimer;
 import cn.edu.whut.sept.zuul.unlock.UnlockService;
 
@@ -202,10 +203,6 @@ public class Game
         gymnasium.setExit("east", gate);
         canteen.setExit("west", gate);
 
-        canteen.addItem(new Item(UnlockService.CANTEEN_NOTE_ITEM, 5));
-
-        boxueNorth.addItem(new Item("三十元钱", 10));
-
         currentRoom = gate;
         player.setCurrentRoom(gate);
 
@@ -228,11 +225,7 @@ public class Game
      * @param config 当前关卡配置
      */
     public void applyLevelRoomState(LevelConfig config) {
-        Room gate = getRoomById("gate");
-        if (gate != null && config != null) {
-            gate.setBulletin("晚二十三点后凭一卡通与归寝单回寝。\n【本关任务】"
-                + config.getMissionHint());
-        }
+        LevelRoomContent.apply(this, config);
         configureGymnasiumTeleport(config);
     }
 

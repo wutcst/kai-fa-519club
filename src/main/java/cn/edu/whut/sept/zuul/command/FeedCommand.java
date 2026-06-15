@@ -15,8 +15,10 @@ import cn.edu.whut.sept.zuul.npc.NpcService;
  */
 public class FeedCommand implements CommandInterface {
 
-    public static final String SAUSAGE_ITEM = "火腿肠";
+    public static final String SAUSAGE_ITEM = "一根火腿肠";
     public static final String MAGIC_COOKIE_ITEM = "magic cookie";
+    /** 猫学长现身后（第四关起）才注册 feed 命令 */
+    public static final int MIN_FEED_LEVEL = 4;
     private static final int MAGIC_COOKIE_WEIGHT = 100;
 
     /**

@@ -72,6 +72,7 @@ public class LevelManager {
         game.resetPlayerPosition(startRoom);
         game.getLevelTimer().resetForLevel(currentConfig);
         game.applyLevelRoomState(currentConfig);
+        game.getCommandManager().updateFeedCommandAvailability(levelNumber);
 
         System.out.println();
         System.out.println("=== " + currentConfig.getTitle() + " ===");

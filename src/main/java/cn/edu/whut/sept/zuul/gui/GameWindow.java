@@ -181,13 +181,13 @@ public class GameWindow extends JFrame {
         String[] commands = {
                 "go north", "go south", "go east", "go west",
                 "look", "items", "back", "help",
-                "take", "drop", "eat cookie", "quit"  // 修改这里：添加 "eat cookie"，移除 "clear"
+                "take", "drop", "eat", "quit"
         };
 
         String[] buttonTexts = {
                 "向北", "向南", "向东", "向西",
                 "查看", "物品", "返回", "帮助",
-                "拾取", "丢弃", "吃饼干", "退出"  // 修改这里："清屏" → "吃饼干"
+                "拾取", "丢弃", "eat", "退出"
         };
 
         for (int i = 0; i < commands.length; i++) {
@@ -198,10 +198,11 @@ public class GameWindow extends JFrame {
             // 特殊处理拾取、丢弃和帮助按钮
             if (command.equals("take") || command.equals("drop")) {
                 button.addActionListener(e -> {
+                    String dialogTitle = command.equals("take") ? "拾取物品" : "丢弃物品";
                     String itemName = JOptionPane.showInputDialog(
                             this,
                             "请输入物品名称:",
-                            command.equals("take") ? "拾取物品" : "丢弃物品",
+                            dialogTitle,
                             JOptionPane.QUESTION_MESSAGE
                     );
                     if (itemName != null && !itemName.trim().isEmpty()) {

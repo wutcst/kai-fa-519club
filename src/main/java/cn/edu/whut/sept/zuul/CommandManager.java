@@ -41,6 +41,7 @@ import cn.edu.whut.sept.zuul.command.UseCommand;
  */
 public class CommandManager {
     private Map<String, CommandInterface> commandMap; // 命令映射表
+    private final FeedCommand feedCommand = new FeedCommand();
 
     /**
      * 初始化命令管理器并注册默认命令
@@ -63,7 +64,6 @@ public class CommandManager {
         registerCommand(new CombineCommand());
         registerCommand(new UnlockCommand());
         registerCommand(new SubmitCommand());
-        registerCommand(new FeedCommand());
         registerCommand(new SleepCommand());
     }
 
@@ -73,6 +73,26 @@ public class CommandManager {
      */
     public void registerCommand(CommandInterface command) {
         commandMap.put(command.getCommandName(), command);
+    }
+
+    /**
+     * 按关卡启用或禁用 feed（猫学长第四关起现身）。
+     *
+     * @param level 当前关卡号
+     */
+    public void updateFeedCommandAvailability(int level) {
+        if (level >= FeedCommand.MIN_FEED_LEVEL) {
+            registerCommand(feedCommand);
+        } else {
+            commandMap.remove(feedCommand.getCommandName());
+        }
+    }
+
+    /**
+     * 当前关卡是否已开放 feed 命令。
+     */
+    public boolean isFeedCommandAvailable() {
+        return commandMap.containsKey(feedCommand.getCommandName());
     }
 
     /**
