@@ -47,8 +47,8 @@ public class LevelRoomContentTest {
         assertTrue(main.containsItem(FoodItems.MILK_TEA_ITEM));
         assertTrue(main.containsItem("失物招领号码牌"));
         assertTrue(gym.containsItem("赛事纪念帽"));
-        assertTrue(gym.getBulletin().contains("器材柜里的手电"));
-        assertFalse(gym.containsItem("手电筒"));
+        assertTrue(gym.containsItem("手电筒"));
+        assertTrue(gym.getBulletin().contains("手电"));
         assertTrue(game.getRoomById("canteen").containsItem(UnlockService.CANTEEN_NOTE_ITEM));
     }
 
@@ -58,18 +58,18 @@ public class LevelRoomContentTest {
         assertTrue(game.getRoomById("gymnasium").containsItem("赛事纪念帽"));
         assertTrue(game.getRoomById("boxue_main").containsItem(FoodItems.MILK_TEA_ITEM));
         assertTrue(game.getRoomById("boxue_west").containsItem(CombineCommand.STICK_ITEM));
-        assertTrue(game.getRoomById("boxue_north").containsItem("一个抱枕"));
+        assertTrue(game.getRoomById("boxue_north").containsItem("晚安玛卡巴卡抱枕"));
         assertTrue(game.getRoomById("boxue_north").containsItem("志愿者马甲"));
         assertTrue(hasMagicCookieInRandomRoom());
         assertTrue(game.getRoomById("boxue_main").getBulletin().contains("停电"));
-        assertTrue(game.getRoomById("boxue_north").getBulletin().contains("领取归寝单"));
-        assertTrue(game.getRoomById("gymnasium").getBulletin().contains("器材柜里的手电"));
+        assertTrue(game.getRoomById("boxue_north").getBulletin().contains("归寝单"));
+        assertTrue(game.getRoomById("gymnasium").getBulletin().contains("手电"));
     }
 
     @Test
     public void level4KeepsEarlierDistractionsAndAddsLevel4() {
         goToLevel(4);
-        assertTrue(game.getRoomById("boxue_north").containsItem("一个抱枕"));
+        assertTrue(game.getRoomById("boxue_north").containsItem("晚安玛卡巴卡抱枕"));
         assertTrue(hasMagicCookieInRandomRoom());
         assertTrue(game.getRoomById("gymnasium").containsItem(UseCommand.STOPWATCH_ITEM));
         assertTrue(game.getRoomById("gymnasium").containsItem("赛事纪念帽"));
@@ -80,7 +80,7 @@ public class LevelRoomContentTest {
     public void level5KeepsEarlierDistractionsAndAddsLevel5() {
         goToLevel(5);
         assertTrue(game.getRoomById("gymnasium").containsItem(UseCommand.STOPWATCH_ITEM));
-        assertTrue(game.getRoomById("gymnasium").containsItem("一张写了“吉”的抽签条"));
+        assertTrue(game.getRoomById("gymnasium").containsItem(UseCommand.FORTUNE_SLIP_ITEM));
         assertTrue(game.getRoomById("gate").containsItem("一份外卖"));
         assertFalse(game.getLevelManager().getCurrentLevelConfig().isMainBuildingDark());
         assertTrue(game.getRoomById("boxue_main").getBulletin().contains("一卡通与归寝单"));

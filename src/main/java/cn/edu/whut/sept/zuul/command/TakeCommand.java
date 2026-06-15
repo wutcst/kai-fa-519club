@@ -12,7 +12,6 @@ import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Item;
 import cn.edu.whut.sept.zuul.Player;
 import cn.edu.whut.sept.zuul.Room;
-import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 /**
  * 处理拾取物品的命令类
@@ -51,7 +50,6 @@ public class TakeCommand implements CommandInterface {
 
             int remaining = player.getRemainingCapacity();
             System.out.println("剩余负重: " + remaining + "g / " + player.getMaxWeight() + "g");
-            ActionTimeCost.deduct(game, ActionTimeCost.TAKE);
         } else {
             System.out.println("你无法拾取 '" + itemName + "', 它太重了！");
             System.out.println("当前负重: " + player.getCurrentWeight() + "g / "

@@ -48,7 +48,7 @@ public class GatedRoomTest {
 
         assertFalse(game.setCurrentRoom(library));
         assertEquals(boxueNorth, game.getCurrentRoom());
-        assertTrue(out.toString().contains(GatedRoom.CARD_DENIED_MESSAGE));
+        assertTrue(out.toString().contains(GatedRoom.LIBRARY_CARD_DENIED_MESSAGE));
     }
 
     @Test
@@ -110,7 +110,7 @@ public class GatedRoomTest {
         goCommand.execute(game, "east");
 
         assertEquals(boxueNorth, game.getCurrentRoom());
-        assertTrue(out.toString().contains(GatedRoom.CARD_DENIED_MESSAGE));
+        assertTrue(out.toString().contains(GatedRoom.LIBRARY_CARD_DENIED_MESSAGE));
     }
 
     @Test

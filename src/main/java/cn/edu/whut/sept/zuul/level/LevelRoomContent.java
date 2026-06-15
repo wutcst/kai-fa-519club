@@ -2,11 +2,13 @@ package cn.edu.whut.sept.zuul.level;
 
 import java.util.Random;
 
+import cn.edu.whut.sept.zuul.DarkRoom;
 import cn.edu.whut.sept.zuul.FoodItems;
 import cn.edu.whut.sept.zuul.Game;
-import cn.edu.whut.sept.zuul.Item;
+import cn.edu.whut.sept.zuul.ItemCatalog;
 import cn.edu.whut.sept.zuul.Room;
 import cn.edu.whut.sept.zuul.command.CombineCommand;
+import cn.edu.whut.sept.zuul.command.FeedCommand;
 import cn.edu.whut.sept.zuul.command.UseCommand;
 import cn.edu.whut.sept.zuul.unlock.UnlockService;
 
@@ -56,8 +58,8 @@ public final class LevelRoomContent {
         setBulletin(game, "gate", "晚上11点后请凭一卡通与归寝单回寝。");
         setBulletin(game, "boxue_main", "请努力拿到一卡通回寝吧！");
         setBulletin(game, "boxue_north", "温馨提示：志愿者服务台位于二楼转角处。");
-        setBulletin(game, "supermarket", "此处日用品售卖，可补办或兑换一卡通。");
-        setBulletin(game, "dormitory", "进门请刷卡。");
+        setBulletin(game, "supermarket", "日用品售卖。宿管阿姨：有钱就能办卡。");
+        setBulletin(game, "dormitory", "进门请刷一卡通。");
         setBulletin(game, "library", "请刷校园卡入内。进入后请查看电子公告。");
         setBulletin(game, "boxue_east", "欢迎来到博学东楼。");
         setBulletin(game, "boxue_west", "请解开谜题。");
@@ -83,42 +85,50 @@ public final class LevelRoomContent {
                 setBulletin(game, "boxue_main", "请努力拿到一卡通回寝吧！");
                 setBulletin(game, "boxue_north",
                     "温馨提示：志愿者服务台位于二楼转角处。"
-                    + "\n【线索】志愿者台：本关只需一卡通即可归寝。");
+                    + "\n【线索】志愿者台：本关只需一卡通，归寝单下周才查。");
                 break;
             case 2:
                 setBulletin(game, "gate",
                     "晚上11点后请凭一卡通与归寝单回寝。"
                     + "本关增开体育馆、越苑食堂，请尽情探索吧！");
                 setBulletin(game, "gymnasium",
-                    "因羽毛球社训练，占用一天。"
-                    + "\n【线索】器材柜里的手电：在黑暗中似乎格外重要，借出请记得归还。");
+                    "今晚羽毛球社训练，手电在左手器材柜。"
+                    + "\n【线索】贴条：借出请还——反正没人还。");
+                setBulletin(game, "canteen",
+                    "火腿肠特价。纸条别当真，那是同学占座。");
                 setBulletin(game, "boxue_north",
                     "温馨提示：志愿者服务台位于二楼转角处。"
-                    + "\n【线索】志愿者：请在此处领取归寝单。");
+                    + "\n【线索】志愿者：请在此处对话领取归寝单。");
                 break;
             case 3:
                 setBulletin(game, "gate",
                     "晚上11点后请凭一卡通与归寝单回寝。"
                     + "本关增开博学东楼、博学西楼，请尽情探索吧！");
-                setBulletin(game, "boxue_main", "因电路老化维修，本楼今日停电一天。");
+                setBulletin(game, "boxue_main",
+                    "因电路老化维修，本楼今日停电一天。"
+                    + "\n【线索】停电通知：手电在体育馆。");
                 setBulletin(game, "boxue_west",
-                    "请解开谜题。\n【线索】一张海报：请先合成锤子。");
+                    "请解开谜题。\n【线索】海报：请先合成锤子。");
                 break;
             case 4:
                 setBulletin(game, "gate", "晚上11点后请凭一卡通与归寝单回寝。");
                 setBulletin(game, "boxue_main", "因电路老化维修，本楼今日停电一天。");
                 setBulletin(game, "boxue_north",
                     "温馨提示：志愿者服务台位于二楼转角处。"
-                    + "\n【线索】志愿者：请在图书馆领取归寝单。"
-                    + "\n【线索】神秘的猫学长：喵喵喵，有没有带上本喵最爱吃的火腿肠？（喂食有惊喜）");
+                    + "\n【线索】志愿者：请在图书馆刷卡领取归寝单。"
+                    + "\n【线索】猫学长：喵喵喵，有没有火腿肠？（喂食有惊喜）");
                 setBulletin(game, "library",
-                    "请刷校园卡入内。进入后请查看电子公告。"
-                    + "\n【线索】图书馆电子公告屏：武汉理工大学溯源于1898年创办的湖北工艺学堂，"
-                    + "于2000年5月27日由原武汉工业大学、武汉交通科技大学、武汉汽车工业大学"
-                    + "合并组建而成，是教育部直属、国家“211工程”建设的全国重点大学。");
+                    "请刷校园卡入内，查看电子公告屏。"
+                    + "\n【线索】武汉理工大学于2000年5月27日合并组建……");
                 break;
             case 5:
-                setBulletin(game, "boxue_main", "请努力拿到一卡通与归寝单回寝吧！");
+                setBulletin(game, "gate",
+                    "除一卡通与归寝单外，寝室门锁好像升级了，需八位密码。"
+                    + "请尽情探索全图！");
+                setBulletin(game, "boxue_main", "请努力拿到一卡通与归寝单回寝吧！本关主楼供电正常。");
+                setBulletin(game, "dormitory",
+                    "智能锁：请输入八位离校验证码（与校史相关，别用食堂纸条生日）。");
+                setBulletin(game, "gymnasium", "进入后可能传送到校园任意角落（寝室除外）。");
                 break;
             default:
                 break;
@@ -138,7 +148,8 @@ public final class LevelRoomContent {
             addItem(game, "boxue_north", UseCommand.MONEY_ITEM, 10);
         }
         if (level >= 2) {
-            addItem(game, "canteen", "一根火腿肠", 80);
+            addItem(game, "gymnasium", DarkRoom.FLASHLIGHT_ITEM, 200);
+            addItem(game, "canteen", FeedCommand.SAUSAGE_ITEM, 80);
             addItem(game, "canteen", UnlockService.CANTEEN_NOTE_ITEM, 5);
         }
         if (level >= 3) {
@@ -159,10 +170,11 @@ public final class LevelRoomContent {
     private static void applyDistractionItemsForLevel(Game game, int level) {
         switch (level) {
             case 1:
-                addItem(game, "boxue_main", "高数及格祈福黄纸", 30);
+                addItem(game, "boxue_main", UseCommand.PRAYER_PAPER_ITEM, 30);
                 addItem(game, "boxue_main", FoodItems.MILK_TEA_ITEM, 100);
                 addItem(game, "boxue_main", "社团传单", 30);
                 addItem(game, "boxue_north", "一根二手数据线", 80);
+                addItem(game, "boxue_north", "寝室省电攻略", 20);
                 addItem(game, "boxue_north", "一台打开的电脑", 2500);
                 addItem(game, "dormitory", "墙上的一张A4纸", 10);
                 break;
@@ -177,7 +189,7 @@ public final class LevelRoomContent {
                 addItem(game, "boxue_west", "一把生锈的钥匙", 50);
                 addItem(game, "boxue_west", UseCommand.PROJECTOR_REMOTE_ITEM, 30);
                 addItem(game, "boxue_west", "一张英语四级准考证", 10);
-                addItem(game, "boxue_north", "一个抱枕", 400);
+                addItem(game, "boxue_north", "晚安玛卡巴卡抱枕", 400);
                 placeMagicCookie(game);
                 break;
             case 4:
@@ -194,8 +206,8 @@ public final class LevelRoomContent {
                 addItem(game, "boxue_west", "一块闪闪发光的金块", 500);
                 addItem(game, "boxue_north", "一张猫学长的照片", 20);
                 addItem(game, "supermarket", "一张购物小票", 5);
-                addItem(game, "gymnasium", "一张写了“吉”的抽签条", 5);
-                addItem(game, "canteen", "一个辣椒包", 30);
+                addItem(game, "gymnasium", UseCommand.FORTUNE_SLIP_ITEM, 5);
+                addItem(game, "canteen", UseCommand.CHILI_PACKET_ITEM, 30);
                 break;
             default:
                 break;
@@ -219,7 +231,7 @@ public final class LevelRoomContent {
     private static void addItem(Game game, String roomId, String name, int weight) {
         Room room = game.getRoomById(roomId);
         if (room != null) {
-            room.addItem(new Item(name, weight));
+            room.addItem(ItemCatalog.create(name, weight));
         }
     }
 }

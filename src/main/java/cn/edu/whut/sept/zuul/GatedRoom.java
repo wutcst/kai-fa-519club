@@ -8,7 +8,8 @@ import cn.edu.whut.sept.zuul.level.LevelConfig;
 public class GatedRoom extends Room {
 
     public static final String CAMPUS_CARD_ITEM = "一卡通";
-    public static final String CARD_DENIED_MESSAGE = "请刷卡";
+    public static final String CARD_DENIED_MESSAGE = "请刷一卡通";
+    public static final String LIBRARY_CARD_DENIED_MESSAGE = "未拿到一卡通，无法进入图书馆。";
     public static final String SUBMIT_REQUIRED_MESSAGE = "请先提交归寝单";
 
     public enum AccessRule {
@@ -50,6 +51,9 @@ public class GatedRoom extends Room {
             return CARD_DENIED_MESSAGE;
         }
         if (!hasCampusCard(game.getPlayer())) {
+            if (accessRule == AccessRule.LIBRARY) {
+                return LIBRARY_CARD_DENIED_MESSAGE;
+            }
             return CARD_DENIED_MESSAGE;
         }
         if (accessRule == AccessRule.DORMITORY && requiresSubmitForCurrentLevel(game)) {

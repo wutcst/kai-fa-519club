@@ -14,41 +14,31 @@ import cn.edu.whut.sept.zuul.Room;
 import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 /**
- * 处理使用物品的命令类（E1/E16）：超市换卡、西楼砸锁、图书馆盖章、秒表与遥控器等。
- *
- * @author liujing
- * @version 1.1
+ * 处理使用物品的命令类（E1/E16）：超市换卡、西楼砸锁、秒表与干扰物等。
  */
 public class UseCommand implements CommandInterface {
 
     public static final String MONEY_ITEM = "湿漉漉的三十元钱";
-    public static final String REGISTRATION_SLIP_ITEM = "登记条";
     public static final String HAMMER_ITEM = "锤子";
-    public static final String RECEIPT_ITEM = "回执";
     public static final String DORM_FORM_ITEM = "归寝单";
     public static final String STOPWATCH_ITEM = "一块遗弃的秒表";
     public static final String PROJECTOR_REMOTE_ITEM = "投影仪遥控器";
+    public static final String PRAYER_PAPER_ITEM = "高数及格祈福黄纸";
+    public static final String CHILI_PACKET_ITEM = "一个辣椒包";
+    public static final String FORTUNE_SLIP_ITEM = "一张写了“吉”的抽签条";
 
     public static final String SUPERMARKET_ROOM_ID = "supermarket";
+    public static final String NORTH_BUILDING_ROOM_ID = "boxue_north";
     public static final String WEST_BUILDING_ROOM_ID = "boxue_west";
     public static final String LIBRARY_ROOM_ID = "library";
 
     private static final int CAMPUS_CARD_WEIGHT = 5;
-    private static final int DORM_FORM_WEIGHT = 5;
 
-    /**
-     * help 中展示的 use 命令说明。
-     *
-     * @return 用法说明文本
-     */
     public static String getUsageDescription() {
-        return "use <物品> - 使用物品（超市用三十元/登记条换一卡通，"
-            + "西楼用锤子砸锁，图书馆用回执盖章领归寝单，秒表查看剩余时间）";
+        return "use <物品> - 使用物品（超市用三十元换一卡通，西楼用锤子砸锁，"
+            + "秒表查看剩余时间；部分干扰物 use 会有彩蛋）";
     }
 
-    /**
-     * 判断是否为可换卡的纸币物品。
-     */
     public static boolean isMoneyItem(String itemDescription) {
         if (itemDescription == null) {
             return false;
@@ -72,6 +62,11 @@ public class UseCommand implements CommandInterface {
             return false;
         }
 
+        if (tryUseGlobalDistraction(game, item)) {
+            ActionTimeCost.deduct(game, ActionTimeCost.USE);
+            return false;
+        }
+
         if (STOPWATCH_ITEM.equalsIgnoreCase(trimmedName)) {
             ActionTimeCost.deduct(game, ActionTimeCost.USE);
             int seconds = game.getLevelTimer().getRemainingSeconds();
@@ -82,7 +77,7 @@ public class UseCommand implements CommandInterface {
 
         if (PROJECTOR_REMOTE_ITEM.equalsIgnoreCase(trimmedName)) {
             ActionTimeCost.deduct(game, ActionTimeCost.USE);
-            System.out.println("你对着投影仪按了半天，什么都没有发生。");
+            System.out.println("你对着投影仪按了半天，电量又少了些，什么都没有发生。");
             return false;
         }
 
@@ -93,8 +88,6 @@ public class UseCommand implements CommandInterface {
             success = useInSupermarket(player, item);
         } else if (WEST_BUILDING_ROOM_ID.equals(roomId)) {
             success = useInWestBuilding(game, player, item);
-        } else if (LIBRARY_ROOM_ID.equals(roomId)) {
-            success = useInLibrary(player, item);
         } else {
             System.out.println("在这里无法使用 '" + trimmedName + "'。");
             return false;
@@ -106,11 +99,29 @@ public class UseCommand implements CommandInterface {
         return false;
     }
 
+    private boolean tryUseGlobalDistraction(Game game, Item item) {
+        String name = item.getDescription();
+        if (PRAYER_PAPER_ITEM.equalsIgnoreCase(name)) {
+            System.out.println("你在黄纸上写下 lim x→∞ hope = ?，"
+                + "宿管阿姨路过说：极限不存在，别在这许愿了。");
+            return true;
+        }
+        if (CHILI_PACKET_ITEM.equalsIgnoreCase(name) || "辣椒包".equalsIgnoreCase(name)) {
+            ActionTimeCost.deduct(game, ActionTimeCost.MILK_TEA_DIARRHEA);
+            System.out.println("你撕开辣椒包猛吸一口，辣得喷火，"
+                + "多耗了 " + ActionTimeCost.MILK_TEA_DIARRHEA + " 秒缓劲。");
+            return true;
+        }
+        if (FORTUNE_SLIP_ITEM.equalsIgnoreCase(name)) {
+            System.out.println("签文写着「大吉」，可惜对智能锁和传送门都没有加成。");
+            return true;
+        }
+        return false;
+    }
+
     private boolean useInSupermarket(Player player, Item item) {
-        String itemDescription = item.getDescription();
-        if (!isMoneyItem(itemDescription)
-                && !REGISTRATION_SLIP_ITEM.equalsIgnoreCase(itemDescription)) {
-            System.out.println("在超市只能使用湿漉漉的三十元钱或登记条兑换一卡通。");
+        if (!isMoneyItem(item.getDescription())) {
+            System.out.println("在超市只能使用湿漉漉的三十元钱兑换一卡通。");
             return false;
         }
 
@@ -121,7 +132,7 @@ public class UseCommand implements CommandInterface {
 
         player.removeItemFromInventory(item);
         player.takeItem(new Item(GatedRoom.CAMPUS_CARD_ITEM, CAMPUS_CARD_WEIGHT));
-        System.out.println("宿管为你办好了一卡通，请妥善保管。");
+        System.out.println("宿管收下三十元，为你办好了一卡通，请妥善保管。");
         return true;
     }
 
@@ -144,23 +155,6 @@ public class UseCommand implements CommandInterface {
         player.removeItemFromInventory(item);
         game.getLevelManager().unlockWestBuildingExit();
         System.out.println("你用锤子砸开了生锈的门锁，可以从东侧离开了。");
-        return true;
-    }
-
-    private boolean useInLibrary(Player player, Item item) {
-        if (!RECEIPT_ITEM.equalsIgnoreCase(item.getDescription())) {
-            System.out.println("在图书馆只能使用回执办理盖章。");
-            return false;
-        }
-
-        if (player.findItemInInventory(DORM_FORM_ITEM) != null) {
-            System.out.println("你已经领过归寝单了。");
-            return false;
-        }
-
-        player.removeItemFromInventory(item);
-        player.takeItem(new Item(DORM_FORM_ITEM, DORM_FORM_WEIGHT));
-        System.out.println("工作人员在你的回执上盖了章，你领到了归寝单。");
         return true;
     }
 

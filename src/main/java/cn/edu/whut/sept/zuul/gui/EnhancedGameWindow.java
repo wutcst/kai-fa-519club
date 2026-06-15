@@ -695,14 +695,18 @@ public class EnhancedGameWindow extends JFrame {
      * 保存游戏
      */
     private void saveGame() {
-        JOptionPane.showMessageDialog(this, "保存功能开发中", "保存", JOptionPane.INFORMATION_MESSAGE);
+        GameSaveUiHelper.saveGame(this, game);
     }
 
     /**
      * 加载游戏
      */
     private void loadGame() {
-        JOptionPane.showMessageDialog(this, "加载功能开发中", "加载", JOptionPane.INFORMATION_MESSAGE);
+        GameSaveUiHelper.loadGame(this, game, () -> {
+            appendOutput("\n读档成功，继续游戏。");
+            updateGameDisplay();
+            inputField.setEnabled(true);
+        });
     }
 
     /**

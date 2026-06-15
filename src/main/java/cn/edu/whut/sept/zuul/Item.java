@@ -10,47 +10,58 @@
 package cn.edu.whut.sept.zuul;
 
 /**
- * 表示游戏中的物品，包含描述和重量属性。
- * 新增：用于实现房间物品存储功能，支持玩家查看物品信息。
+ * 表示游戏中的物品，包含短名、重量与详细介绍。
  *
  * @author liujing
- * @version 1.2
+ * @version 1.3
  */
 public class Item {
-    private String description; // 物品描述
-    private int weight; // 物品重量（单位：克）
+    private final String description;
+    private final int weight;
+    private final String longDescription;
 
     /**
-     * 初始化物品实例
+     * 初始化物品实例（自动从 ItemCatalog 补全详细介绍）。
      *
-     * @param description 物品的文本描述
-     * @param weight 物品的重量值
+     * @param description 物品短名
+     * @param weight 物品重量（克）
      */
     public Item(String description, int weight) {
-        this.description = description;
-        this.weight = weight;
+        this(description, weight, ItemCatalog.getLongDescription(description));
     }
 
     /**
-     * 获取物品的描述信息
+     * 初始化物品实例并指定详细介绍。
      *
-     * @return 物品描述字符串
+     * @param description 物品短名
+     * @param weight 物品重量（克）
+     * @param longDescription 详细介绍
      */
+    public Item(String description, int weight, String longDescription) {
+        this.description = description;
+        this.weight = weight;
+        this.longDescription = longDescription;
+    }
+
     public String getDescription() {
         return description;
     }
 
-    /**
-     * 获取物品的重量
-     *
-     * @return 重量数值
-     */
     public int getWeight() {
         return weight;
     }
 
     /**
-     * 获取物品的详细信息（包含描述和重量）
+     * 获取物品详细介绍（供 inspect 命令使用）。
+     *
+     * @return 详细介绍文本
+     */
+    public String getLongDescription() {
+        return longDescription;
+    }
+
+    /**
+     * 获取物品列表行摘要（短名 + 重量）。
      *
      * @return 格式化的物品信息字符串
      */
