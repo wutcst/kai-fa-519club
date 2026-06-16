@@ -25,10 +25,13 @@ package cn.edu.whut.sept.zuul;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import cn.edu.whut.sept.zuul.infrastructure.InfrastructureServices;
 import cn.edu.whut.sept.zuul.infrastructure.auth.AuthService;
@@ -40,6 +43,8 @@ import cn.edu.whut.sept.zuul.level.LevelManager;
 import cn.edu.whut.sept.zuul.level.LevelRoomContent;
 import cn.edu.whut.sept.zuul.level.LevelTimer;
 import cn.edu.whut.sept.zuul.level.TimerAuthority;
+import cn.edu.whut.sept.zuul.multiplayer.GameStateSnapshot;
+import cn.edu.whut.sept.zuul.multiplayer.PlayerStateSnapshot;
 import cn.edu.whut.sept.zuul.unlock.UnlockService;
 
 /**
@@ -64,6 +69,10 @@ public class Game
     private GamePersistenceService persistenceService; // 兼容测试注入
     private AuthService authService; // 兼容测试注入
     private AuthSession authSession; // 当前登录会话
+    private boolean multiplayerSessionActive; // F6 联机会话
+    private final Map<String, Player> onlinePlayers = new LinkedHashMap<>();
+    private final Map<String, List<Room>> onlineRoomHistories = new LinkedHashMap<>();
+    private String activeOnlinePlayerId;
 
     /**
      * 创建游戏并初始化内部数据和解析器.
@@ -86,6 +95,12 @@ public class Game
      * @return 当前房间实例
      */
     public Room getCurrentRoom() {
+        if (multiplayerSessionActive && activeOnlinePlayerId != null) {
+            Player active = onlinePlayers.get(activeOnlinePlayerId);
+            if (active != null) {
+                return active.getCurrentRoom();
+            }
+        }
         return currentRoom;
     }
 
@@ -369,6 +384,12 @@ public class Game
      * @return 玩家实例
      */
     public Player getPlayer() {
+        if (multiplayerSessionActive && activeOnlinePlayerId != null) {
+            Player active = onlinePlayers.get(activeOnlinePlayerId);
+            if (active != null) {
+                return active;
+            }
+        }
         return player;
     }
 
@@ -431,6 +452,18 @@ public class Game
      * @param room 目标房间
      */
     public void resetPlayerPosition(Room room) {
+        if (multiplayerSessionActive) {
+            for (Map.Entry<String, Player> entry : onlinePlayers.entrySet()) {
+                entry.getValue().setCurrentRoom(room);
+                onlineRoomHistories.put(entry.getKey(), new ArrayList<>());
+            }
+            if (activeOnlinePlayerId != null) {
+                currentRoom = room;
+                roomHistory = onlineRoomHistories.computeIfAbsent(
+                    activeOnlinePlayerId, key -> new ArrayList<>());
+            }
+            return;
+        }
         this.currentRoom = room;
         player.setCurrentRoom(room);
         roomHistory.clear();
@@ -512,6 +545,61 @@ public class Game
     }
 
     /**
+     * 联机客户端：根据服务端快照刷新本地展示（房间、计时、关卡号）。
+     *
+     * @param snapshot 服务端状态
+     * @param localPlayerId 本机玩家 ID
+     */
+    public void syncClientViewFromSnapshot(GameStateSnapshot snapshot, String localPlayerId) {
+        if (snapshot == null || localPlayerId == null) {
+            return;
+        }
+        startMultiplayerSession();
+        useServerTimerAuthority();
+        getLevelTimer().setAutoTickEnabled(false);
+        applyServerRemainingSeconds(snapshot.getRemainingSeconds());
+        getLevelManager().syncDisplayFromServer(snapshot.getLevel(), snapshot.getLevelState());
+
+        String localName = snapshot.getPlayers().stream()
+            .filter(player -> localPlayerId.equals(player.getPlayerId()))
+            .map(PlayerStateSnapshot::getDisplayName)
+            .findFirst()
+            .orElse("联机玩家");
+        ensureOnlinePlayer(localPlayerId, localName);
+        setActiveOnlinePlayer(localPlayerId);
+
+        Room room = getRoomById(snapshot.getRoomId());
+        if (room != null) {
+            currentRoom = room;
+            Player local = onlinePlayers.get(localPlayerId);
+            if (local != null) {
+                local.setCurrentRoom(room);
+                getPlayer().setName(local.getName());
+            }
+        }
+    }
+
+    /**
+     * 确保联机玩家存在于本地镜像（客户端展示用）。
+     */
+    public void ensureOnlinePlayer(String playerId, String displayName) {
+        if (playerId == null) {
+            return;
+        }
+        if (!multiplayerSessionActive) {
+            startMultiplayerSession();
+        }
+        if (!onlinePlayers.containsKey(playerId)) {
+            Room gate = getRoomById("gate");
+            Player onlinePlayer = new Player(
+                displayName == null || displayName.trim().isEmpty() ? "联机玩家" : displayName.trim(),
+                gate);
+            onlinePlayers.put(playerId, onlinePlayer);
+            onlineRoomHistories.put(playerId, new ArrayList<>());
+        }
+    }
+
+    /**
      * 获取 H2 持久化服务。
      */
     public GamePersistenceService getPersistenceService() {
@@ -588,6 +676,117 @@ public class Game
      */
     public boolean isLoggedIn() {
         return authSession != null;
+    }
+
+    /**
+     * 启用 F6 联机会话（共享世界、独立玩家位置与背包）。
+     */
+    public void startMultiplayerSession() {
+        multiplayerSessionActive = true;
+    }
+
+    public boolean isMultiplayerSessionActive() {
+        return multiplayerSessionActive;
+    }
+
+    /**
+     * 向联机房间添加玩家，初始在校门。
+     *
+     * @param displayName 显示昵称
+     * @return 玩家 ID
+     */
+    public String addOnlinePlayer(String displayName) {
+        if (!multiplayerSessionActive) {
+            startMultiplayerSession();
+        }
+        if (displayName == null || displayName.trim().isEmpty()) {
+            throw new IllegalArgumentException("玩家昵称不能为空");
+        }
+        String playerId = UUID.randomUUID().toString();
+        Room gate = getRoomById("gate");
+        Player onlinePlayer = new Player(displayName.trim(), gate);
+        onlinePlayers.put(playerId, onlinePlayer);
+        onlineRoomHistories.put(playerId, new ArrayList<>());
+        if (activeOnlinePlayerId == null) {
+            setActiveOnlinePlayer(playerId);
+        }
+        return playerId;
+    }
+
+    public void removeOnlinePlayer(String playerId) {
+        if (playerId == null) {
+            return;
+        }
+        onlinePlayers.remove(playerId);
+        onlineRoomHistories.remove(playerId);
+        if (playerId.equals(activeOnlinePlayerId)) {
+            activeOnlinePlayerId = onlinePlayers.isEmpty() ? null : onlinePlayers.keySet().iterator().next();
+            if (activeOnlinePlayerId != null) {
+                loadActivePlayerContext();
+            }
+        }
+    }
+
+    public Collection<String> getOnlinePlayerIds() {
+        return Collections.unmodifiableSet(onlinePlayers.keySet());
+    }
+
+    public Map<String, Player> getOnlinePlayers() {
+        return Collections.unmodifiableMap(onlinePlayers);
+    }
+
+    public String getActiveOnlinePlayerId() {
+        return activeOnlinePlayerId;
+    }
+
+    /**
+     * 切换命令执行上下文到指定联机玩家。
+     *
+     * @param playerId 玩家 ID
+     */
+    public void setActiveOnlinePlayer(String playerId) {
+        if (!multiplayerSessionActive || playerId == null || !onlinePlayers.containsKey(playerId)) {
+            return;
+        }
+        persistActivePlayerContext();
+        activeOnlinePlayerId = playerId;
+        loadActivePlayerContext();
+    }
+
+    private void persistActivePlayerContext() {
+        if (!multiplayerSessionActive || activeOnlinePlayerId == null) {
+            return;
+        }
+        Player active = onlinePlayers.get(activeOnlinePlayerId);
+        if (active != null && currentRoom != null) {
+            active.setCurrentRoom(currentRoom);
+        }
+        onlineRoomHistories.put(activeOnlinePlayerId, new ArrayList<>(roomHistory));
+    }
+
+    private void loadActivePlayerContext() {
+        if (!multiplayerSessionActive || activeOnlinePlayerId == null) {
+            return;
+        }
+        Player active = onlinePlayers.get(activeOnlinePlayerId);
+        if (active == null) {
+            return;
+        }
+        currentRoom = active.getCurrentRoom();
+        roomHistory = onlineRoomHistories.computeIfAbsent(activeOnlinePlayerId, key -> new ArrayList<>());
+    }
+
+    /**
+     * 创建联机专用游戏实例：服务端权威计时并自动 tick。
+     *
+     * @return 已配置的多人游戏实例
+     */
+    public static Game createMultiplayerHostGame() {
+        Game game = new Game();
+        game.startMultiplayerSession();
+        game.useServerHostTimerAuthority();
+        game.getLevelTimer().setAutoTickEnabled(true);
+        return game;
     }
 
 }

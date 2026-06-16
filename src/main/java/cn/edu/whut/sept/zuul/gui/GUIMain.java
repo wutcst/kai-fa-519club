@@ -13,6 +13,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import cn.edu.whut.sept.zuul.Game;
+import cn.edu.whut.sept.zuul.multiplayer.MultiplayerSession;
 
 /**
  * 图形界面主入口类，提供游戏启动模式选择
@@ -35,6 +36,8 @@ public class GUIMain {
                 startGUIMode();
             } else if (args[0].equalsIgnoreCase("enhanced")) {
                 startEnhancedMode();
+            } else if (args[0].equalsIgnoreCase("multiplayer") || args[0].equalsIgnoreCase("online")) {
+                startMultiplayerMode();
             } else {
                 showModeSelectionDialog();
             }
@@ -50,7 +53,7 @@ public class GUIMain {
             // 使用默认外观
         }
 
-        String[] options = {"命令行模式", "图形界面模式", "增强图形模式", "退出"};
+        String[] options = {"命令行模式", "图形界面模式", "增强图形模式", "联机模式", "退出"};
 
         int choice = JOptionPane.showOptionDialog(
                 null,
@@ -74,6 +77,9 @@ public class GUIMain {
                 startEnhancedMode();
                 break;
             case 3:
+                startMultiplayerMode();
+                break;
+            case 4:
             default:
                 System.exit(0);
         }
@@ -122,6 +128,30 @@ public class GUIMain {
                         "启动增强界面失败: " + e.getMessage(),
                         "错误",
                         JOptionPane.ERROR_MESSAGE
+                );
+            }
+        });
+    }
+
+    private static void startMultiplayerMode() {
+        System.out.println("启动联机图形界面模式...");
+        SwingUtilities.invokeLater(() -> {
+            try {
+                MultiplayerSession session = MultiplayerLobbyDialog.openLobby();
+                if (session == null || !session.isConnected()) {
+                    return;
+                }
+                Game game = new Game();
+                MultiplayerGameWindow window = new MultiplayerGameWindow(game, session);
+                window.start();
+            } catch (Exception exception) {
+                System.err.println("启动联机界面失败: " + exception.getMessage());
+                exception.printStackTrace();
+                JOptionPane.showMessageDialog(
+                    null,
+                    "启动联机界面失败: " + exception.getMessage(),
+                    "错误",
+                    JOptionPane.ERROR_MESSAGE
                 );
             }
         });

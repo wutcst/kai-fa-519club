@@ -211,6 +211,26 @@ public class LevelManager {
         return currentLevel;
     }
 
+    /**
+     * 联机客户端仅同步关卡号与状态展示，不触发关卡重置逻辑。
+     *
+     * @param level 服务端当前关卡
+     * @param levelStateName 关卡状态枚举名
+     */
+    public void syncDisplayFromServer(int level, String levelStateName) {
+        if (level >= LevelConfig.MIN_LEVEL && level <= LevelConfig.MAX_LEVEL) {
+            currentLevel = level;
+            currentConfig = LevelConfig.forLevel(level);
+        }
+        if (levelStateName != null && !levelStateName.isEmpty()) {
+            try {
+                state = LevelState.valueOf(levelStateName);
+            } catch (IllegalArgumentException ignored) {
+                // 保持原状态
+            }
+        }
+    }
+
     public int getHighestUnlockedLevel() {
         return highestUnlockedLevel;
     }
