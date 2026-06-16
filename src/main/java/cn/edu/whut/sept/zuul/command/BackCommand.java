@@ -7,6 +7,7 @@
 package cn.edu.whut.sept.zuul.command;
 
 import cn.edu.whut.sept.zuul.Game;
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 /**
  * 处理返回上一个房间的命令类
@@ -23,6 +24,7 @@ public class BackCommand implements CommandInterface {
         }
 
         if (game.goBack()) {
+            ActionTimeCost.deduct(game, ActionTimeCost.GO);
             System.out.println("你回到了上一个房间。");
             game.printLocationInfo();
         } else if (!game.isTrappedInWestBuilding()) {

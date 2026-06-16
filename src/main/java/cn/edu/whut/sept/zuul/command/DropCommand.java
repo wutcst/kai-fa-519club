@@ -11,6 +11,7 @@ import java.util.List;
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Item;
 import cn.edu.whut.sept.zuul.Player;
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 /**
  * 处理丢弃物品的命令类
@@ -33,6 +34,7 @@ public class DropCommand implements CommandInterface {
             if (droppedItems.isEmpty()) {
                 System.out.println("你没有携带任何物品。");
             } else {
+                ActionTimeCost.deduct(game, ActionTimeCost.DROP);
                 System.out.println("你丢弃了所有物品:");
                 for (Item item : droppedItems) {
                     System.out.println("- " + item.getDetails());
@@ -48,6 +50,7 @@ public class DropCommand implements CommandInterface {
         if (droppedItem == null) {
             System.out.println("你没有携带 '" + itemName + "'。");
         } else {
+            ActionTimeCost.deduct(game, ActionTimeCost.DROP);
             System.out.println("你丢弃了: " + droppedItem.getDetails());
             player.getCurrentRoom().addItem(droppedItem);
             System.out.println("当前负重: " + player.getCurrentWeight() + "g / "

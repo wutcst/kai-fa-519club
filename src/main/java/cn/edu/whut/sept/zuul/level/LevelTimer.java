@@ -10,8 +10,8 @@ import cn.edu.whut.sept.zuul.Game;
 /**
  * 熄灯倒计时：实时每秒扣减，归零时通知 LevelManager 本关失败。
  * <p>
- * E11 中 go/look/take/drop 等常规操作的额外扣时已移除，改由实时秒表统一流逝；
- * 黑暗罚时、喂猫、食用等仍通过 {@link ActionTimeCost} 额外扣减。
+ * E11 操作耗时通过 {@link ActionTimeCost} 在命令成功后扣减；
+ * 命令行模式另启用实时秒表每秒流逝；黑暗罚时、喂猫、食用等为额外扣减。
  */
 public class LevelTimer {
 

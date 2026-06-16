@@ -12,6 +12,7 @@ import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Item;
 import cn.edu.whut.sept.zuul.Player;
 import cn.edu.whut.sept.zuul.Room;
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 /**
  * 处理拾取物品的命令类
@@ -46,6 +47,7 @@ public class TakeCommand implements CommandInterface {
 
         if (player.takeItem(targetItem)) {
             removeItemFromRoom(currentRoom, targetItem);
+            ActionTimeCost.deduct(game, ActionTimeCost.TAKE);
             System.out.println("你拾取了: " + targetItem.getDetails());
 
             int remaining = player.getRemainingCapacity();

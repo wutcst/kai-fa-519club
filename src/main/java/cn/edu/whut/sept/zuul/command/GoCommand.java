@@ -8,6 +8,7 @@ package cn.edu.whut.sept.zuul.command;
 
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Room;
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 import cn.edu.whut.sept.zuul.level.LevelConfig;
 import cn.edu.whut.sept.zuul.level.LevelManager;
 
@@ -38,6 +39,7 @@ public class GoCommand implements CommandInterface {
         } else if (!game.isRoomAccessible(nextRoom)) {
             System.out.println(LevelConfig.LOCKED_EXIT_MESSAGE);
         } else if (game.setCurrentRoom(nextRoom)) {
+            ActionTimeCost.deduct(game, ActionTimeCost.GO);
             game.printLocationInfo();
         }
         return false;

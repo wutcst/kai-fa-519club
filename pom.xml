@@ -26,7 +26,20 @@
         <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
         <surefire.plugin.version>3.0.0-M9</surefire.plugin.version>
         <assembly.plugin.version>3.6.0</assembly.plugin.version>
+        <spring-boot.version>2.7.18</spring-boot.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <!-- 项目依赖 -->
     <dependencies>
@@ -56,6 +69,16 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>2.1.214</version>
+        </dependency>
+        <!-- F6 联机 Spring Boot REST 服务端 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -105,6 +128,16 @@
                     <includes>
                         <include>**/*Test.java</include>   <!-- 匹配所有 Test 结尾的测试类 -->
                     </includes>
+                </configuration>
+            </plugin>
+
+            <!-- Spring Boot 可执行 JAR（F6 联机服务端） -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <configuration>
+                    <mainClass>cn.edu.whut.sept.zuul.infrastructure.server.ServerApplication</mainClass>
                 </configuration>
             </plugin>
 
