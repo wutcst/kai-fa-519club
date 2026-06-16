@@ -60,8 +60,8 @@ public class EatCookieCommand implements CommandInterface {
 
     private void eatMilkTea(Game game, String foodName) {
         ActionTimeCost.deduct(game, ActionTimeCost.MILK_TEA_DIARRHEA);
-        System.out.println("你喝掉了 " + foodName + "！（食用耗时 " + ActionTimeCost.EAT
-                + " 秒）");
+        System.out.println("你喝掉了 " + foodName + "！标签写着学长请的，凉了也能喝。"
+            + "（食用耗时 " + ActionTimeCost.EAT + " 秒）");
         System.out.println("好像拉肚子了，又在厕所多耗了 " + ActionTimeCost.MILK_TEA_DIARRHEA + " 秒……");
         System.out.println(game.getLevelTimer().getDisplayText());
     }

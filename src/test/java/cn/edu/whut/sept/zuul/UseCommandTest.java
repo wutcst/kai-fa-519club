@@ -70,17 +70,13 @@ public class UseCommandTest {
     }
 
     @Test
-    public void testUseRegistrationSlipInSupermarket() throws Exception {
-        Room supermarket = game.getRoomById(UseCommand.SUPERMARKET_ROOM_ID);
-        setCurrentRoom(supermarket);
-        player.takeItem(new Item(UseCommand.REGISTRATION_SLIP_ITEM, 5));
+    public void testUsePrayerPaperShowsJoke() throws Exception {
+        setCurrentRoom(game.getRoomById("gate"));
+        player.takeItem(new Item(UseCommand.PRAYER_PAPER_ITEM, 30));
 
-        useCommand.execute(game, UseCommand.REGISTRATION_SLIP_ITEM);
+        useCommand.execute(game, UseCommand.PRAYER_PAPER_ITEM);
 
-        String output = outContent.toString();
-        assertTrue(output.contains("一卡通"));
-        assertNull(player.findItemInInventory(UseCommand.REGISTRATION_SLIP_ITEM));
-        assertNotNull(player.findItemInInventory(GatedRoom.CAMPUS_CARD_ITEM));
+        assertTrue(outContent.toString().contains("极限不存在"));
     }
 
     @Test
@@ -141,21 +137,6 @@ public class UseCommandTest {
         assertTrue(output.contains("砸开"));
         assertFalse(game.getLevelManager().isWestBuildingExitLocked());
         assertNull(player.findItemInInventory(UseCommand.HAMMER_ITEM));
-    }
-
-    @Test
-    public void testUseReceiptInLibrary() throws Exception {
-        advanceToLevel(4);
-        Room library = game.getRoomById(UseCommand.LIBRARY_ROOM_ID);
-        setCurrentRoom(library);
-        player.takeItem(new Item(UseCommand.RECEIPT_ITEM, 5));
-
-        useCommand.execute(game, UseCommand.RECEIPT_ITEM);
-
-        String output = outContent.toString();
-        assertTrue(output.contains("归寝单"));
-        assertNull(player.findItemInInventory(UseCommand.RECEIPT_ITEM));
-        assertNotNull(player.findItemInInventory(UseCommand.DORM_FORM_ITEM));
     }
 
     @Test

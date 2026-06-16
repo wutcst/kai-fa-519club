@@ -10,11 +10,13 @@ import java.util.Set;
 public final class FoodItems {
 
     public static final String MAGIC_COOKIE = "magic cookie";
-    public static final String MILK_TEA_ITEM = "一杯奶茶";
+    public static final String MILK_TEA_ITEM = "半瓶奶茶";
+    public static final String MILK_TEA_LEGACY_ITEM = "一杯奶茶";
 
     private static final Set<String> EDIBLE_NAMES = new HashSet<>(Arrays.asList(
             MAGIC_COOKIE,
             MILK_TEA_ITEM,
+            MILK_TEA_LEGACY_ITEM,
             "一根火腿肠",
             "火腿肠",
             "一个辣椒包",
@@ -53,7 +55,12 @@ public final class FoodItems {
      * 判断是否为一杯奶茶（拉肚子额外罚时）。
      */
     public static boolean isMilkTea(String itemName) {
-        return itemName != null && MILK_TEA_ITEM.equalsIgnoreCase(itemName.trim());
+        if (itemName == null) {
+            return false;
+        }
+        String trimmed = itemName.trim();
+        return MILK_TEA_ITEM.equalsIgnoreCase(trimmed)
+            || MILK_TEA_LEGACY_ITEM.equalsIgnoreCase(trimmed);
     }
 
     /**

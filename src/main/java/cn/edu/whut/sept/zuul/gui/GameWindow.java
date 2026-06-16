@@ -424,24 +424,19 @@ public class GameWindow extends JFrame {
      * 保存游戏
      */
     private void saveGame() {
-        JOptionPane.showMessageDialog(
-                this,
-                "保存游戏功能正在开发中...",
-                "保存游戏",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        GameSaveUiHelper.saveGame(this, game);
     }
 
     /**
      * 加载游戏
      */
     private void loadGame() {
-        JOptionPane.showMessageDialog(
-                this,
-                "加载游戏功能正在开发中...",
-                "加载游戏",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        GameSaveUiHelper.loadGame(this, game, () -> {
+            outputArea.append("\n读档成功，继续游戏。\n");
+            updateGameDisplay();
+            submitButton.setEnabled(true);
+            inputField.setEnabled(true);
+        });
     }
 
     /**

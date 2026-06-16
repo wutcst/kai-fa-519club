@@ -32,4 +32,9 @@ Thumbs.db
 application-local.properties
 secret.properties
 
+# H2 本地存档数据文件（F8）
+data/
+*.mv.db
+*.trace.db
+
 # 实训报告：提交 REPORT.pdf 或 REPORT.docx 到仓库（不要忽略）

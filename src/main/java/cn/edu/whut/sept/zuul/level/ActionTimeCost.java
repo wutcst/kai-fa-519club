@@ -3,7 +3,8 @@ package cn.edu.whut.sept.zuul.level;
 import cn.edu.whut.sept.zuul.Game;
 
 /**
- * 各命令操作耗时常量，扣减由 LevelTimer 统一处理（E11）。
+ * 各命令操作耗时常量。常规移动/拾取改由 {@link LevelTimer} 实时秒表扣减；
+ * 此处保留喂猫、食用、合成、罚时等额外耗时。
  */
 public final class ActionTimeCost {
 

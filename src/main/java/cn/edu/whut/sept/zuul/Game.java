@@ -30,11 +30,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.edu.whut.sept.zuul.infrastructure.InfrastructureServices;
+import cn.edu.whut.sept.zuul.infrastructure.auth.AuthService;
+import cn.edu.whut.sept.zuul.infrastructure.auth.AuthSession;
+import cn.edu.whut.sept.zuul.infrastructure.persistence.GamePersistenceService;
 import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 import cn.edu.whut.sept.zuul.level.LevelConfig;
 import cn.edu.whut.sept.zuul.level.LevelManager;
 import cn.edu.whut.sept.zuul.level.LevelRoomContent;
 import cn.edu.whut.sept.zuul.level.LevelTimer;
+import cn.edu.whut.sept.zuul.level.TimerAuthority;
 import cn.edu.whut.sept.zuul.unlock.UnlockService;
 
 /**
@@ -55,6 +60,10 @@ public class Game
     private Map<String, Room> roomRegistry; // 房间 ID 注册表，供关卡配置引用
     private LevelManager levelManager; // 五关进度管理
     private LevelTimer levelTimer; // 熄灯倒计时
+    private InfrastructureServices infrastructureServices; // 认证 + 存档（共享 H2）
+    private GamePersistenceService persistenceService; // 兼容测试注入
+    private AuthService authService; // 兼容测试注入
+    private AuthSession authSession; // 当前登录会话
 
     /**
      * 创建游戏并初始化内部数据和解析器.
@@ -276,16 +285,15 @@ public class Game
      */
     public void play()
     {
+        levelTimer.setAutoTickEnabled(true);
         printWelcome();
-
-        // Enter the main command loop.  Here we repeatedly read commands and
-        // execute them until the game is over.
 
         boolean finished = false;
         while (! finished) {
             Command command = parser.getCommand();
             finished = processCommand(command);
         }
+        levelTimer.shutdown();
         System.out.println("Thank you for playing.  Good bye.");
     }
 
@@ -436,6 +444,150 @@ public class Game
         if (gym != null) {
             gym.removeItemByDescription(DarkRoom.FLASHLIGHT_ITEM);
         }
+    }
+
+    /**
+     * 读档时从地图上移除已拾取物品，避免重复拾取。
+     *
+     * @param collectedItems 背包中的物品
+     */
+    public void removeCollectedItemsFromRooms(List<Item> collectedItems) {
+        if (collectedItems == null || roomRegistry == null) {
+            return;
+        }
+        for (Item item : collectedItems) {
+            for (Room room : roomRegistry.values()) {
+                Item removed = room.removeItemByDescription(item.getDescription());
+                if (removed != null) {
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * 获取基础设施服务（认证 + 存档，共享 H2）。
+     *
+     * @return InfrastructureServices 实例
+     */
+    public InfrastructureServices getInfrastructureServices() {
+        if (infrastructureServices == null) {
+            infrastructureServices = InfrastructureServices.getDefault();
+        }
+        return infrastructureServices;
+    }
+
+    /**
+     * 注入基础设施服务（测试用）。
+     */
+    public void setInfrastructureServices(InfrastructureServices services) {
+        this.infrastructureServices = services;
+        if (services != null) {
+            this.persistenceService = services.getPersistenceService();
+            this.authService = services.getAuthService();
+        }
+    }
+
+    /**
+     * 联机客户端：切换为服务端权威计时（本地不再自动 tick）。
+     */
+    public void useServerTimerAuthority() {
+        levelTimer.setTimerAuthority(TimerAuthority.SERVER_CLIENT);
+    }
+
+    /**
+     * 联机服务端：启用权威计时（本地 tick 作为服务端时钟）。
+     */
+    public void useServerHostTimerAuthority() {
+        levelTimer.setTimerAuthority(TimerAuthority.SERVER_HOST);
+    }
+
+    /**
+     * 由联机服务端推送剩余秒数（客户端调用）。
+     *
+     * @param remainingSeconds 权威剩余秒数
+     */
+    public void applyServerRemainingSeconds(int remainingSeconds) {
+        levelTimer.applyAuthoritativeRemainingSeconds(remainingSeconds);
+    }
+
+    /**
+     * 获取 H2 持久化服务。
+     */
+    public GamePersistenceService getPersistenceService() {
+        if (persistenceService != null) {
+            return persistenceService;
+        }
+        return getInfrastructureServices().getPersistenceService();
+    }
+
+    /**
+     * 注入持久化服务（单元测试用）。
+     */
+    public void setPersistenceService(GamePersistenceService service) {
+        this.persistenceService = service;
+    }
+
+    /**
+     * 五关全部通关后写入 H2 通关记录。
+     */
+    public void onAllLevelsCompleted() {
+        try {
+            getPersistenceService().recordClear(getPlayer().getName());
+        } catch (RuntimeException exception) {
+            System.out.println("通关记录写入失败: " + exception.getMessage());
+        }
+    }
+
+    /**
+     * 获取登录注册服务（懒加载，与存档共用 H2）。
+     *
+     * @return AuthService 实例
+     */
+    public AuthService getAuthService() {
+        if (authService != null) {
+            return authService;
+        }
+        return getInfrastructureServices().getAuthService();
+    }
+
+    /**
+     * 注入登录注册服务（测试用）。
+     */
+    public void setAuthService(AuthService service) {
+        this.authService = service;
+    }
+
+    /**
+     * 绑定已登录用户：同步玩家昵称，供存档与通关记录使用。
+     *
+     * @param session 登录会话
+     */
+    public void bindAuthSession(AuthSession session) {
+        if (session == null) {
+            this.authSession = null;
+            return;
+        }
+        this.authSession = session;
+        getPlayer().setName(session.getDisplayName());
+    }
+
+    /**
+     * 获取当前登录会话；未登录时返回 null。
+     *
+     * @return 登录会话或 null
+     */
+    public AuthSession getAuthSession() {
+        return authSession;
+    }
+
+    /**
+     * 是否已登录。
+     *
+     * @return 已登录返回 true
+     */
+    public boolean isLoggedIn() {
+        return authSession != null;
     }
 
 }

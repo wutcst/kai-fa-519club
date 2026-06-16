@@ -111,4 +111,10 @@ public class LevelTimerTest {
         timer.resetForLevel(LevelConfig.forLevel(3));
         assertEquals(420, timer.getRemainingSeconds());
     }
+
+    @Test
+    public void testRealTimeTickOnceReducesSeconds() {
+        timer.tickOnceForTest();
+        assertEquals(239, timer.getRemainingSeconds());
+    }
 }

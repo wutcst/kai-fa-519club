@@ -11,7 +11,6 @@ import java.util.List;
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Item;
 import cn.edu.whut.sept.zuul.Player;
-import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 /**
  * 处理丢弃物品的命令类
@@ -41,7 +40,6 @@ public class DropCommand implements CommandInterface {
                 }
                 System.out.println("当前负重: " + player.getCurrentWeight() + "g / "
                         + player.getMaxWeight() + "g");
-                ActionTimeCost.deduct(game, ActionTimeCost.DROP);
             }
             return false;
         }
@@ -54,7 +52,6 @@ public class DropCommand implements CommandInterface {
             player.getCurrentRoom().addItem(droppedItem);
             System.out.println("当前负重: " + player.getCurrentWeight() + "g / "
                     + player.getMaxWeight() + "g");
-            ActionTimeCost.deduct(game, ActionTimeCost.DROP);
         }
 
         return false;

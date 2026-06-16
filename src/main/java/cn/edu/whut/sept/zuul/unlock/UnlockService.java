@@ -7,7 +7,7 @@ import cn.edu.whut.sept.zuul.Room;
 import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 /**
- * 密码解锁服务（E4）：体育馆 WHUT2026、第五关寝室 20000527。
+ * 密码解锁服务（E4）：体育馆 WHUT2026（可选）、第五关寝室 20000527。
  */
 public final class UnlockService {
 
@@ -21,17 +21,11 @@ public final class UnlockService {
     private static final int MIN_GYM_UNLOCK_LEVEL = 3;
     private static final int DORMITORY_UNLOCK_LEVEL = 5;
     private static final int FLASHLIGHT_WEIGHT = 200;
+    private static final int DORMITORY_WRONG_PASSWORD_PENALTY = 60;
 
     private UnlockService() {
     }
 
-    /**
-     * 尝试用密码解锁当前房间的锁。
-     *
-     * @param game 游戏实例
-     * @param password 玩家输入的密码
-     * @return 解锁成功返回 true
-     */
     public static boolean unlock(Game game, String password) {
         if (password == null || password.trim().isEmpty()) {
             System.out.println("Unlock what? 请输入密码。");
@@ -60,7 +54,7 @@ public final class UnlockService {
     private static boolean unlockGym(Game game, Room gym, String password) {
         int level = game.getLevelManager().getCurrentLevel();
         if (level < MIN_GYM_UNLOCK_LEVEL) {
-            System.out.println("本关无需解锁体育馆器材室。");
+            System.out.println("本关无需解锁体育馆器材室，手电可直接在场馆拾取。");
             return false;
         }
 
@@ -78,7 +72,7 @@ public final class UnlockService {
             return true;
         }
 
-        handleWrongPassword(game, password);
+        handleWrongPassword(game, password, false);
         return false;
     }
 
@@ -99,16 +93,21 @@ public final class UnlockService {
             return true;
         }
 
-        handleWrongPassword(game, password);
+        handleWrongPassword(game, password, true);
         return false;
     }
 
-    private static void handleWrongPassword(Game game, String password) {
+    private static void handleWrongPassword(Game game, String password, boolean dormitoryLock) {
         if (DISTRACTION_DATE_PASSWORD.equals(password) || "20260601".equals(password)) {
-            System.out.println("密码错误。食堂纸条上的日期并不是门锁密码。");
+            System.out.println("密码错误。食堂纸条上的日期并不是门锁密码，别被占座纸条骗了。");
         } else {
             System.out.println("密码错误。");
         }
-        ActionTimeCost.deduct(game, ActionTimeCost.WRONG_PASSWORD);
+        if (dormitoryLock) {
+            ActionTimeCost.deduct(game, DORMITORY_WRONG_PASSWORD_PENALTY);
+            game.getLevelManager().recordDormitoryWrongPassword();
+        } else {
+            ActionTimeCost.deduct(game, ActionTimeCost.WRONG_PASSWORD);
+        }
     }
 }

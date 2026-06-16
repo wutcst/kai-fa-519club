@@ -2,6 +2,7 @@ package cn.edu.whut.sept.zuul.level;
 
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Room;
+import cn.edu.whut.sept.zuul.infrastructure.persistence.GameSaveSnapshot;
 
 /**
  * 五关进度管理：关卡加载、通关进下一关、失败重开本关、每关开始清空背包。
@@ -24,6 +25,9 @@ public class LevelManager {
     private boolean gymStorageUnlocked;
     private boolean dormitoryPasswordUnlocked;
     private boolean magicCookieBonusUsed;
+    private int dormitoryWrongPasswordAttempts;
+
+    public static final int MAX_DORMITORY_WRONG_PASSWORD_ATTEMPTS = 3;
 
     /**
      * 创建关卡管理器并绑定游戏实例。
@@ -61,6 +65,7 @@ public class LevelManager {
         gymStorageUnlocked = false;
         dormitoryPasswordUnlocked = false;
         magicCookieBonusUsed = false;
+        dormitoryWrongPasswordAttempts = 0;
         game.resetUnlockRoomState();
 
         game.getPlayer().dropAllItems();
@@ -96,13 +101,14 @@ public class LevelManager {
         if (currentLevel >= LevelConfig.MAX_LEVEL) {
             state = LevelState.GAME_WON;
             System.out.println("五关全部通关，你赶在熄灯前回到了寝室！");
+            game.onAllLevelsCompleted();
             return true;
         }
 
         state = LevelState.COMPLETED;
         highestUnlockedLevel = Math.max(highestUnlockedLevel, currentLevel + 1);
         int nextLevel = currentLevel + 1;
-        System.out.println("即将进入第 " + nextLevel + " 关...");
+        System.out.println("即将进入第 " + nextLevel + " 关，更多区域即将开放……");
         startLevel(nextLevel);
         return false;
     }
@@ -115,11 +121,83 @@ public class LevelManager {
             throw new IllegalStateException("游戏已全部通关，无法标记失败");
         }
         state = LevelState.FAILED;
-        System.out.println("本关失败！请重开本关后再试。");
+        System.out.println("本关失败！输入 restart 重开本关。");
     }
 
     /**
-     * 失败或主动重开：重新加载当前关卡。
+     * 采集当前关卡进度标志（供存档使用）。
+     *
+     * @return 进度快照
+     */
+    public LevelProgressSnapshot captureProgressSnapshot() {
+        return new LevelProgressSnapshot(
+            dormitorySubmitCompleted,
+            westBuildingExitLocked,
+            westBuildingLockBroken,
+            gymStorageUnlocked,
+            dormitoryPasswordUnlocked,
+            magicCookieBonusUsed
+        );
+    }
+
+    /**
+     * 从 H2 存档恢复关卡与计时（架构既定：不恢复背包与位置，从大门重来）。
+     *
+     * @param snapshot 存档快照（仅使用关卡号与剩余秒数）
+     */
+    public void loadFromSnapshot(GameSaveSnapshot snapshot) {
+        if (snapshot == null) {
+            throw new IllegalArgumentException("存档快照不能为空");
+        }
+        loadSavedProgress(snapshot.getLevelNumber(), snapshot.getRemainingSeconds());
+    }
+
+    /**
+     * 从 H2 存档恢复关卡与剩余秒数。
+     */
+    public void loadSavedProgress(int levelNumber, int remainingSeconds) {
+        if (levelNumber < LevelConfig.MIN_LEVEL || levelNumber > LevelConfig.MAX_LEVEL) {
+            throw new IllegalArgumentException("关卡号必须在 " + LevelConfig.MIN_LEVEL
+                + "—" + LevelConfig.MAX_LEVEL + " 之间");
+        }
+        if (remainingSeconds < 0) {
+            throw new IllegalArgumentException("剩余秒数不能为负数");
+        }
+
+        highestUnlockedLevel = Math.max(highestUnlockedLevel, levelNumber);
+        currentLevel = levelNumber;
+        currentConfig = LevelConfig.forLevel(levelNumber);
+        state = LevelState.IN_PROGRESS;
+        dormitorySubmitCompleted = false;
+        westBuildingExitLocked = false;
+        westBuildingLockBroken = false;
+        gymStorageUnlocked = false;
+        dormitoryPasswordUnlocked = false;
+        magicCookieBonusUsed = false;
+        dormitoryWrongPasswordAttempts = 0;
+        game.resetUnlockRoomState();
+
+        game.getPlayer().dropAllItems();
+
+        Room startRoom = game.getRoomById(currentConfig.getStartRoomId());
+        if (startRoom == null) {
+            throw new IllegalStateException("关卡起点房间不存在: " + currentConfig.getStartRoomId());
+        }
+        game.resetPlayerPosition(startRoom);
+        game.getLevelTimer().reset(remainingSeconds);
+        game.applyLevelRoomState(currentConfig);
+        game.getCommandManager().updateFeedCommandAvailability(levelNumber);
+
+        System.out.println();
+        System.out.println("=== 读档成功：" + currentConfig.getTitle() + " ===");
+        System.out.println(game.getLevelTimer().getDisplayText());
+        System.out.println("背包已清空，你从起点出发。");
+        System.out.println();
+    }
+
+    /**
+     * 重新加载当前关卡（清空背包、重置位置与计时）。
+     * 玩家命令 {@code restart} 仅在 {@link LevelState#FAILED} 时调用此方法。
      */
     public void restartCurrentLevel() {
         if (currentLevel < LevelConfig.MIN_LEVEL || currentLevel > LevelConfig.MAX_LEVEL) {
@@ -242,5 +320,20 @@ public class LevelManager {
      */
     public void markMagicCookieBonusUsed() {
         magicCookieBonusUsed = true;
+    }
+
+    /**
+     * 记录第五关寝室智能锁密码错误；累计三次本关失败。
+     */
+    public void recordDormitoryWrongPassword() {
+        dormitoryWrongPasswordAttempts++;
+        if (dormitoryWrongPasswordAttempts >= MAX_DORMITORY_WRONG_PASSWORD_ATTEMPTS) {
+            System.out.println("智能锁已锁定，本关失败！");
+            failCurrentLevel();
+        }
+    }
+
+    public int getDormitoryWrongPasswordAttempts() {
+        return dormitoryWrongPasswordAttempts;
     }
 }

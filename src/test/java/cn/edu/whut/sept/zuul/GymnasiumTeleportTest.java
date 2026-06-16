@@ -12,7 +12,6 @@ import org.junit.Test;
 
 import cn.edu.whut.sept.zuul.command.BackCommand;
 import cn.edu.whut.sept.zuul.command.GoCommand;
-import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 import cn.edu.whut.sept.zuul.level.LevelState;
 import cn.edu.whut.sept.zuul.unlock.UnlockService;
 
@@ -86,7 +85,7 @@ public class GymnasiumTeleportTest {
         assertNotEquals(UnlockService.DORMITORY_ROOM_ID, current.getRoomId());
         assertTrue(out.toString().contains("突然被传送"));
         assertEquals(LevelState.IN_PROGRESS, game.getLevelManager().getState());
-        assertEquals(beforeSeconds - ActionTimeCost.GO, game.getLevelTimer().getRemainingSeconds());
+        assertEquals(beforeSeconds, game.getLevelTimer().getRemainingSeconds());
     }
 
     @Test

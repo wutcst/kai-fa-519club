@@ -150,8 +150,8 @@ public class UnlockCommandTest {
         unlockCommand.execute(game, "12345678");
 
         assertFalse(game.getLevelManager().isDormitoryPasswordUnlocked());
-        assertEquals(beforeSeconds - ActionTimeCost.WRONG_PASSWORD,
-            game.getLevelTimer().getRemainingSeconds());
+        assertEquals(beforeSeconds - 60, game.getLevelTimer().getRemainingSeconds());
+        assertEquals(1, game.getLevelManager().getDormitoryWrongPasswordAttempts());
     }
 
     @Test
