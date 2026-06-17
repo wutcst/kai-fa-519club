@@ -14,6 +14,7 @@ public class CommandResponseDto {
     private List<String> messages = new ArrayList<>();
     private boolean quitRequested;
     private GameStateDto state;
+    private String noticeMessage;
 
     public static CommandResponseDto from(GameCommandResult result) {
         CommandResponseDto dto = new CommandResponseDto();
@@ -34,5 +35,17 @@ public class CommandResponseDto {
 
     public GameStateDto getState() {
         return state;
+    }
+
+    public void setState(GameStateDto state) {
+        this.state = state;
+    }
+
+    public String getNoticeMessage() {
+        return noticeMessage;
+    }
+
+    public void setNoticeMessage(String noticeMessage) {
+        this.noticeMessage = noticeMessage;
     }
 }

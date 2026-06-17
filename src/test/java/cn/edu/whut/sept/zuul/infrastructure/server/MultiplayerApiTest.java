@@ -136,6 +136,41 @@ public class MultiplayerApiTest {
             .andExpect(jsonPath("$.code").value(1));
     }
 
+    @Test
+    public void testRoomChatMessageVisibleToOtherPlayers() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/rooms")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roomName\":\"聊天房\",\"hostName\":\"主机\"}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String createBody = createResult.getResponse().getContentAsString();
+        String roomId = extractJsonValue(createBody, "\"roomId\":\"", "\"");
+        String hostPlayerId = extractJsonValue(createBody, "\"playerId\":\"", "\"");
+
+        MvcResult joinResult = mockMvc.perform(post("/api/rooms/" + roomId + "/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"displayName\":\"客人\"}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String guestPlayerId = extractJsonValue(
+            joinResult.getResponse().getContentAsString(), "\"playerId\":\"", "\"");
+
+        mockMvc.perform(post("/api/rooms/" + roomId + "/chat")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"playerId\":\"" + hostPlayerId + "\",\"text\":\"大家好\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.text").value("大家好"));
+
+        mockMvc.perform(get("/api/game/state")
+                .param("roomId", roomId)
+                .param("playerId", guestPlayerId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.chatMessages[0].text").value("大家好"))
+            .andExpect(jsonPath("$.data.roomItems").isArray())
+            .andExpect(jsonPath("$.data.inventory").isArray());
+    }
+
     private String extractJsonValue(String json, String prefix, String suffix) {
         int start = json.indexOf(prefix);
         assertTrue("JSON 中未找到字段: " + prefix, start >= 0);

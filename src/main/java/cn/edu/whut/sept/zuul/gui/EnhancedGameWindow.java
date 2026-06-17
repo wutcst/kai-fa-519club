@@ -1,848 +1,572 @@
-/**
- * 该包包含World-of-Zuul文本冒险游戏的图形化界面实现类，
- * 涵盖窗口管理、界面布局、事件处理等功能模块，
- * 实现了玩家与图形界面的交互逻辑。
- *
- * @author Michael Kölling and David J. Barnes/liujing
- * @version 2.0
- */
 package cn.edu.whut.sept.zuul.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
+import cn.edu.whut.sept.zuul.DarkRoom;
+import cn.edu.whut.sept.zuul.FoodItems;
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Item;
 import cn.edu.whut.sept.zuul.Player;
 import cn.edu.whut.sept.zuul.Room;
+import cn.edu.whut.sept.zuul.command.UseCommand;
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
+import cn.edu.whut.sept.zuul.level.LevelConfig;
+import cn.edu.whut.sept.zuul.level.LevelState;
+import cn.edu.whut.sept.zuul.unlock.UnlockService;
 
 /**
- * 增强版游戏窗口类，提供更丰富的图形化功能
- * 新增：支持图像显示、地图视图、物品拖放等高级功能
- *
- * @author liujing
- * @version 2.0
+ * F7 图形界面：沉浸式全屏场景 + 半透明 HUD（无日志栏，公告弹层展示）。
  */
 public class EnhancedGameWindow extends JFrame {
-    private Game game;
-    private ImageLoader imageLoader;
-    private JTextArea outputArea;
-    private JTextField inputField;
-    private JPanel mapPanel;
-    private JPanel inventoryPanel;
-    private JPanel roomItemsPanel;
-    private JLabel currentRoomImage;
-    private JLabel playerStatusLabel;
-    private JButton northButton, southButton, eastButton, westButton;
 
-    /**
-     * 初始化增强版游戏窗口
-     *
-     * @param game 游戏实例
-     */
+    private Game game;
+    private final GameGuiController controller;
+    private final ImageLoader imageLoader;
+
+    private JLabel timerLabel;
+    private JLabel levelLabel;
+    private RoomScenePanel scenePanel;
+    private InventorySlotPanel inventoryPanel;
+    private GlassPanel topHudPanel;
+    private GlassPanel bottomHudPanel;
+    private GlassPanel actionPanel;
+    private JLayeredPane rootLayer;
+    private ItemActionMenu inventoryActionMenu;
+    private GlassModalLayer glassModalLayer;
+
+    private StyledGlassButton lookButton;
+    private StyledGlassButton sleepButton;
+    private StyledGlassButton submitButton;
+    private StyledGlassButton combineButton;
+    private StyledGlassButton feedActionButton;
+    private StyledGlassButton unlockButton;
+
+    private Timer uiRefreshTimer;
+    private Timer timerPulseTimer;
+    private boolean timerPulseBright = true;
+    private LevelState trackedLevelState = LevelState.IN_PROGRESS;
+
     public EnhancedGameWindow(Game game) {
         this.game = game;
+        this.controller = new GameGuiController();
         this.imageLoader = ImageLoader.getInstance();
         initializeWindow();
         createComponents();
         layoutComponents();
-        setupEventHandlers();
-        updateGameDisplay();
+        wireListeners();
+        controller.prepareGuiSession(this.game);
+        trackedLevelState = game.getLevelManager().getState();
+        refreshDisplay();
     }
 
-    /**
-     * 初始化窗口属性
-     */
     private void initializeWindow() {
-        setTitle("World of Zuul - 增强图形界面");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 750);
+        setTitle("熄灯前归寝 - 图形界面");
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setSize(1280, 800);
+        setMinimumSize(new Dimension(1100, 720));
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+        getContentPane().setBackground(GuiTheme.WINDOW_BG);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent event) {
+                controller.shutdownGuiSession(game);
+                dispose();
+                System.exit(0);
+            }
+        });
     }
 
-    /**
-     * 创建界面组件
-     */
     private void createComponents() {
-        // 游戏输出区域
-        outputArea = new JTextArea(10, 40);
-        outputArea.setEditable(false);
-        outputArea.setLineWrap(true);
-        outputArea.setWrapStyleWord(true);
-        outputArea.setFont(new Font("宋体", Font.PLAIN, 13));
+        scenePanel = new RoomScenePanel(imageLoader);
+        inventoryPanel = new InventorySlotPanel(imageLoader);
 
-        // 命令输入框
-        inputField = new JTextField(25);
-        inputField.setFont(new Font("宋体", Font.PLAIN, 14));
+        timerLabel = new JLabel("距熄灯（23:00）还有 0 秒", SwingConstants.RIGHT);
+        timerLabel.setFont(GuiTheme.FONT_TIMER);
+        timerLabel.setForeground(GuiTheme.TEXT_PRIMARY);
 
-        // 地图面板
-        mapPanel = new JPanel(new GridBagLayout());
-        mapPanel.setBorder(BorderFactory.createTitledBorder("地图视图"));
-        mapPanel.setBackground(new Color(240, 240, 240));
+        levelLabel = new JLabel("", SwingConstants.RIGHT);
+        levelLabel.setFont(GuiTheme.FONT_SMALL);
+        levelLabel.setForeground(GuiTheme.TEXT_MUTED);
 
-        // 当前房间图像
-        currentRoomImage = new JLabel();
-        currentRoomImage.setHorizontalAlignment(SwingConstants.CENTER);
+        lookButton = createActionButton("环顾");
+        sleepButton = createActionButton("睡觉");
+        submitButton = createActionButton("提交归寝单");
+        combineButton = createActionButton("合成锤子");
+        feedActionButton = createActionButton("喂猫");
+        unlockButton = createActionButton("解锁寝室");
 
-        // 玩家状态标签
-        playerStatusLabel = new JLabel();
-        playerStatusLabel.setFont(new Font("黑体", Font.BOLD, 14));
-
-        // 物品栏面板
-        inventoryPanel = new JPanel();
-        inventoryPanel.setLayout(new BoxLayout(inventoryPanel, BoxLayout.Y_AXIS));
-        inventoryPanel.setBorder(BorderFactory.createTitledBorder("我的物品"));
-
-        // 房间物品面板
-        roomItemsPanel = new JPanel();
-        roomItemsPanel.setLayout(new BoxLayout(roomItemsPanel, BoxLayout.Y_AXIS));
-        roomItemsPanel.setBorder(BorderFactory.createTitledBorder("房间物品"));
+        lookButton.addActionListener(event -> performLook());
+        sleepButton.addActionListener(event -> runCommand("sleep", null, true));
+        submitButton.addActionListener(event -> submitDormForm());
+        combineButton.addActionListener(event -> runCommand("combine", null, true));
+        feedActionButton.addActionListener(event -> runCommand("feed", null, true));
+        unlockButton.addActionListener(event -> promptUnlockPassword());
     }
 
-    /**
-     * 布局界面组件
-     */
     private void layoutComponents() {
-        // 创建主面板
-        JPanel mainPanel = new JPanel(new BorderLayout());
+        rootLayer = new JLayeredPane();
+        rootLayer.setLayout(null);
+        rootLayer.setPreferredSize(new Dimension(1280, 800));
 
-        // 创建左侧面板（地图和房间）
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.setPreferredSize(new Dimension(400, 600));
+        topHudPanel = new GlassPanel();
+        topHudPanel.setLayout(new BorderLayout(0, 4));
+        topHudPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 16, 10, 16));
 
-        // 地图面板
-        JPanel mapContainer = new JPanel(new BorderLayout());
-        mapContainer.add(currentRoomImage, BorderLayout.CENTER);
-        mapContainer.add(createDirectionButtons(), BorderLayout.SOUTH);
+        JPanel timerPanel = new JPanel(new BorderLayout(0, 4));
+        timerPanel.setOpaque(false);
+        timerPanel.add(timerLabel, BorderLayout.NORTH);
+        timerPanel.add(levelLabel, BorderLayout.SOUTH);
+        topHudPanel.add(timerPanel, BorderLayout.CENTER);
 
-        mapPanel.add(mapContainer);
-        leftPanel.add(mapPanel, BorderLayout.CENTER);
+        actionPanel = new GlassPanel(GuiTheme.HUD_BG, GuiTheme.CORNER_RADIUS_SM);
+        actionPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        actionPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(6, 10, 6, 10));
+        actionPanel.add(lookButton);
+        actionPanel.add(submitButton);
+        actionPanel.add(combineButton);
+        actionPanel.add(feedActionButton);
+        actionPanel.add(unlockButton);
+        actionPanel.add(sleepButton);
 
-        // 创建右侧面板（信息和控制）
-        JPanel rightPanel = new JPanel(new BorderLayout());
+        bottomHudPanel = new GlassPanel();
+        bottomHudPanel.setLayout(new BorderLayout(0, 8));
+        bottomHudPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 10, 10, 10));
+        bottomHudPanel.add(actionPanel, BorderLayout.NORTH);
+        bottomHudPanel.add(inventoryPanel, BorderLayout.CENTER);
 
-        // 游戏输出面板
-        JPanel outputPanel = new JPanel(new BorderLayout());
-        outputPanel.setBorder(BorderFactory.createTitledBorder("游戏日志"));
-        outputPanel.add(new JScrollPane(outputArea), BorderLayout.CENTER);
+        rootLayer.add(scenePanel, JLayeredPane.DEFAULT_LAYER);
+        rootLayer.add(topHudPanel, JLayeredPane.PALETTE_LAYER);
+        rootLayer.add(bottomHudPanel, JLayeredPane.PALETTE_LAYER);
 
-        // 输入控制面板
-        JPanel inputPanel = createInputPanel();
+        inventoryActionMenu = new ItemActionMenu();
+        rootLayer.add(inventoryActionMenu, JLayeredPane.MODAL_LAYER);
 
-        // 物品面板容器
-        JPanel itemsContainer = new JPanel(new GridLayout(1, 2, 10, 0));
-        itemsContainer.add(new JScrollPane(roomItemsPanel));
-        itemsContainer.add(new JScrollPane(inventoryPanel));
+        glassModalLayer = new GlassModalLayer();
+        rootLayer.add(glassModalLayer, JLayeredPane.MODAL_LAYER);
 
-        rightPanel.add(outputPanel, BorderLayout.CENTER);
-        rightPanel.add(inputPanel, BorderLayout.SOUTH);
-        rightPanel.add(itemsContainer, BorderLayout.NORTH);
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(GuiTheme.WINDOW_BG);
+        wrapper.add(rootLayer, BorderLayout.CENTER);
+        setContentPane(wrapper);
+        setJMenuBar(createMenuBar());
 
-        // 顶部状态栏
-        JPanel statusPanel = new JPanel(new BorderLayout());
-        statusPanel.setBorder(BorderFactory.createEtchedBorder());
-        statusPanel.add(playerStatusLabel, BorderLayout.WEST);
-
-        // 组装主界面
-        mainPanel.add(statusPanel, BorderLayout.NORTH);
-        mainPanel.add(leftPanel, BorderLayout.WEST);
-        mainPanel.add(rightPanel, BorderLayout.CENTER);
-
-        // 添加菜单栏
-        setJMenuBar(createEnhancedMenuBar());
-
-        add(mainPanel);
+        rootLayer.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent event) {
+                layoutOverlays();
+            }
+        });
+        layoutOverlays();
     }
 
-    /**
-     * 创建方向按钮面板
-     *
-     * @return 方向按钮面板
-     */
-    private JPanel createDirectionButtons() {
-        JPanel panel = new JPanel(new GridLayout(3, 3, 5, 5));
-
-        // 空单元格
-        panel.add(new JLabel());
-
-        // 北方向按钮
-        JButton northButton = createDirectionButton("north", "北");
-        panel.add(northButton);
-
-        panel.add(new JLabel());
-
-        // 西方向按钮
-        JButton westButton = createDirectionButton("west", "西");
-        panel.add(westButton);
-
-        // 中间（玩家位置）
-        JLabel playerLabel = new JLabel(imageLoader.getScaledImage("player", 40, 40));
-        playerLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        panel.add(playerLabel);
-
-        // 东方向按钮
-        JButton eastButton = createDirectionButton("east", "东");
-        panel.add(eastButton);
-
-        panel.add(new JLabel());
-
-        // 南方向按钮
-        JButton southButton = createDirectionButton("south", "南");
-        panel.add(southButton);
-
-        panel.add(new JLabel());
-
-        return panel;
-    }
-
-    /**
-     * 创建方向按钮
-     *
-     * @param direction 方向
-     * @param text 按钮文本
-     * @return 方向按钮
-     */
-    private JButton createDirectionButton(String direction, String text) {
-        JButton button = new JButton(text, imageLoader.getDirectionIcon(direction));
-        button.setVerticalTextPosition(SwingConstants.BOTTOM);
-        button.setHorizontalTextPosition(SwingConstants.CENTER);
-        button.setFont(new Font("宋体", Font.BOLD, 11));
-
-        button.addActionListener(e -> processCommand("go " + direction));
-
+    private StyledGlassButton createActionButton(String label) {
+        StyledGlassButton button = new StyledGlassButton(label, GuiTheme.FONT_SMALL);
+        button.setAccentColor(GuiTheme.ACCENT);
         return button;
     }
 
-    /**
-     * 创建输入面板
-     *
-     * @return 输入面板
-     */
-    private JPanel createInputPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("命令控制"));
-
-        JPanel inputControls = new JPanel(new FlowLayout());
-        inputControls.add(new JLabel("输入命令:"));
-        inputControls.add(inputField);
-
-        JButton submitButton = new JButton("执行");
-        submitButton.addActionListener(e -> executeInputCommand());
-        inputControls.add(submitButton);
-
-        JButton clearButton = new JButton("清屏");
-        clearButton.addActionListener(e -> outputArea.setText(""));
-        inputControls.add(clearButton);
-
-        panel.add(inputControls, BorderLayout.NORTH);
-        panel.add(createActionButtons(), BorderLayout.CENTER);
-
-        return panel;
+    private void layoutOverlays() {
+        int width = rootLayer.getWidth();
+        int height = rootLayer.getHeight();
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+        scenePanel.setBounds(0, 0, width, height);
+        topHudPanel.setBounds(width - 280, 16, 264, 72);
+        bottomHudPanel.setBounds(16, height - 196, width - 32, 180);
+        glassModalLayer.layoutToSize(width, height);
+        rootLayer.revalidate();
+        rootLayer.repaint();
     }
 
-    /**
-     * 创建动作按钮面板
-     *
-     * @return 动作按钮面板
-     */
-    private JPanel createActionButtons() {
-        JPanel panel = new JPanel(new GridLayout(2, 4, 5, 5));
-
-        String[][] actions = {
-                {"look", "查看房间", "查看当前房间详情"},
-                {"items", "所有物品", "查看房间和物品栏物品"},
-                {"back", "返回", "返回上一个房间"},
-                {"help", "帮助", "显示帮助信息"},
-                {"take", "拾取", "拾取房间内物品"},
-                {"drop", "丢弃", "丢弃携带物品"},
-                {"eat", "eat", "吃掉背包中的食物"},
-                {"quit", "退出", "退出游戏"}
-        };
-
-        for (String[] action : actions) {
-            JButton button = new JButton(action[1]);
-            button.setToolTipText(action[2]);
-            button.setFont(new Font("宋体", Font.PLAIN, 11));
-
-            final String command = action[0];
-
-            // 特殊处理拾取、丢弃和帮助按钮
-            if (command.equals("take") || command.equals("drop")) {
-                button.addActionListener(e -> {
-                    String dialogTitle = command.equals("take") ? "拾取物品" : "丢弃物品";
-                    String itemName = JOptionPane.showInputDialog(
-                            EnhancedGameWindow.this,
-                            "请输入物品名称:",
-                            dialogTitle,
-                            JOptionPane.QUESTION_MESSAGE
-                    );
-                    if (itemName != null && !itemName.trim().isEmpty()) {
-                        processCommand(command + " " + itemName.trim());
-                    }
-                });
-            } else if (command.equals("help")) {
-                // 帮助按钮直接调用showHelp方法，在UI输出区域显示
-                button.addActionListener(e -> showHelp());
-            } else {
-                button.addActionListener(e -> processCommand(command));
+    private void wireListeners() {
+        scenePanel.setRoomItemListener(new RoomScenePanel.RoomItemListener() {
+            @Override
+            public void onTakeItem(Item item) {
+                runCommand("take", item.getDescription(), true);
+                GuiPhase3Helper.promptCombineIfReady(
+                    glassModalLayer,
+                    game,
+                    () -> runCommand("combine", null, true)
+                );
             }
 
-            panel.add(button);
-        }
-
-        return panel;
-    }
-
-    /**
-     * 创建增强菜单栏
-     *
-     * @return 菜单栏
-     */
-    private JMenuBar createEnhancedMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
-
-        // 游戏菜单
-        JMenu gameMenu = new JMenu("游戏");
-        JMenuItem newGameItem = new JMenuItem("新游戏");
-        JMenuItem saveItem = new JMenuItem("保存进度");
-        JMenuItem loadItem = new JMenuItem("加载进度");
-        JMenuItem statsItem = new JMenuItem("游戏统计");
-        JMenuItem exitItem = new JMenuItem("退出");
-
-        newGameItem.addActionListener(e -> restartGame());
-        saveItem.addActionListener(e -> saveGame());
-        loadItem.addActionListener(e -> loadGame());
-        statsItem.addActionListener(e -> showStatistics());
-        exitItem.addActionListener(e -> System.exit(0));
-
-        gameMenu.add(newGameItem);
-        gameMenu.addSeparator();
-        gameMenu.add(saveItem);
-        gameMenu.add(loadItem);
-        gameMenu.addSeparator();
-        gameMenu.add(statsItem);
-        gameMenu.addSeparator();
-        gameMenu.add(exitItem);
-
-        // 视图菜单
-        JMenu viewMenu = new JMenu("视图");
-        JMenuItem zoomInItem = new JMenuItem("放大");
-        JMenuItem zoomOutItem = new JMenuItem("缩小");
-        JMenuItem resetViewItem = new JMenuItem("重置视图");
-
-        viewMenu.add(zoomInItem);
-        viewMenu.add(zoomOutItem);
-        viewMenu.addSeparator();
-        viewMenu.add(resetViewItem);
-
-        // 帮助菜单
-        JMenu helpMenu = new JMenu("帮助");
-        JMenuItem quickHelpItem = new JMenuItem("快速指南");
-        JMenuItem commandsItem = new JMenuItem("命令大全");
-        JMenuItem aboutItem = new JMenuItem("关于");
-        JMenuItem helpItem = new JMenuItem("游戏帮助");
-
-        helpItem.addActionListener(e -> showHelp());
-        quickHelpItem.addActionListener(e -> showQuickHelp());
-        commandsItem.addActionListener(e -> showAllCommands());
-        aboutItem.addActionListener(e -> showAbout());
-
-        helpMenu.add(helpItem);
-        helpMenu.add(quickHelpItem);
-        helpMenu.add(commandsItem);
-        helpMenu.addSeparator();
-        helpMenu.add(aboutItem);
-
-        menuBar.add(gameMenu);
-        menuBar.add(viewMenu);
-        menuBar.add(helpMenu);
-
-        return menuBar;
-    }
-
-    /**
-     * 设置事件处理器
-     */
-    private void setupEventHandlers() {
-        // 输入框回车事件
-        inputField.addActionListener(e -> executeInputCommand());
-
-        // 双击物品事件
-        inventoryPanel.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    // 处理物品双击
-                    Component component = inventoryPanel.getComponentAt(e.getPoint());
-                    if (component instanceof JLabel) {
-                        JLabel label = (JLabel) component;
-                        String itemName = label.getText();
-                        processCommand("drop " + itemName.split(" ")[0]);
-                    }
-                }
+            public void onInspectRoomItem(Item item) {
+                ActionTimeCost.deduct(game, ActionTimeCost.LOOK);
+                scenePanel.showPopup(item.getLongDescription());
+                refreshDisplay();
             }
         });
 
-        roomItemsPanel.addMouseListener(new MouseAdapter() {
+        inventoryPanel.setInventoryItemListener(new InventorySlotPanel.InventoryItemListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    Component component = roomItemsPanel.getComponentAt(e.getPoint());
-                    if (component instanceof JLabel) {
-                        JLabel label = (JLabel) component;
-                        String itemName = label.getText();
-                        processCommand("take " + itemName.split(" ")[0]);
-                    }
-                }
+            public void onDropItem(Item item) {
+                runCommand("drop", item.getDescription(), true);
+            }
+
+            @Override
+            public void onUseItem(Item item) {
+                runCommand("use", item.getDescription(), true);
+            }
+
+            @Override
+            public void onInspectItem(Item item) {
+                runCommand("inspect", item.getDescription(), true);
             }
         });
+
+        inventoryPanel.setSlotClickListener((item, slotView) -> {
+            java.awt.Point origin = SwingUtilities.convertPoint(slotView, 0, 0, rootLayer);
+            List<ItemActionMenu.Entry> entries = new ArrayList<>();
+            entries.add(new ItemActionMenu.Entry("丢弃",
+                () -> runCommand("drop", item.getDescription(), true)));
+            if (FoodItems.isEdible(item.getDescription())) {
+                entries.add(new ItemActionMenu.Entry("吃",
+                    () -> runCommand("eat", item.getDescription(), true)));
+            }
+            entries.add(new ItemActionMenu.Entry("使用",
+                () -> runCommand("use", item.getDescription(), true)));
+            entries.add(new ItemActionMenu.Entry("查看",
+                () -> runCommand("inspect", item.getDescription(), true)));
+            rootLayer.moveToFront(inventoryActionMenu);
+            inventoryActionMenu.showNearSlot(
+                origin.x,
+                origin.y,
+                slotView.getWidth(),
+                slotView.getHeight(),
+                rootLayer.getWidth(),
+                rootLayer.getHeight(),
+                entries.toArray(new ItemActionMenu.Entry[0])
+            );
+        });
+
+        scenePanel.setRoomNpcListener(new RoomScenePanel.RoomNpcListener() {
+            @Override
+            public void onTalk() {
+                openNpcDialog();
+            }
+
+            @Override
+            public void onFeed() {
+                runCommand("feed", null, true);
+            }
+        });
+
+        scenePanel.setDirectionListener(new RoomScenePanel.DirectionListener() {
+            @Override
+            public void onNavigate(String direction) {
+                move(direction);
+            }
+
+            @Override
+            public void onBack() {
+                if (isInteractionBlocked()) {
+                    return;
+                }
+                scenePanel.hidePopup();
+                scenePanel.playDirectionalTransition("back", () -> runCommand("back", null, false), null);
+            }
+        });
+
+        uiRefreshTimer = new Timer(1000, event -> refreshTimerLabels());
+        uiRefreshTimer.start();
+
+        timerPulseTimer = new Timer(600, event -> {
+            if (game.getLevelTimer() != null && game.getLevelTimer().getRemainingSeconds() <= 60) {
+                timerPulseBright = !timerPulseBright;
+                refreshTimerLabels();
+            }
+        });
+        timerPulseTimer.start();
     }
 
-    /**
-     * 执行输入命令
-     */
-    private void executeInputCommand() {
-        String command = inputField.getText().trim();
-        if (!command.isEmpty()) {
-            processCommand(command);
-            inputField.setText("");
+    private void performLook() {
+        String bulletin = controller.buildBulletinText(game);
+        runCommand("look", null, false);
+        scenePanel.showPopup(bulletin);
+    }
+
+    private void openNpcDialog() {
+        List<String> lines = NpcDialogHelper.performTalk(game);
+        scenePanel.showPopup(String.join("\n", lines));
+        refreshDisplay();
+    }
+
+    private void submitDormForm() {
+        Player player = game.getPlayer();
+        if (player.findItemInInventory(UseCommand.DORM_FORM_ITEM) == null) {
+            scenePanel.showPopup("背包中没有归寝单，请先向志愿者或图书馆工作人员领取。");
+            return;
         }
+        runCommand("submit", UseCommand.DORM_FORM_ITEM, true);
     }
 
-    /**
-     * 处理游戏命令
-     */
-    private void processCommand(String command) {
-        appendOutput("> " + command);
+    private void promptUnlockPassword() {
+        glassModalLayer.showTextInput(
+            "解锁寝室",
+            "请输入寝室智能锁八位密码：",
+            "",
+            "解锁",
+            "取消",
+            password -> {
+                if (password != null && !password.trim().isEmpty()) {
+                    runCommand("unlock", password.trim(), true);
+                }
+            },
+            null
+        );
+    }
 
-        if (command.equalsIgnoreCase("clear")) {
-            outputArea.setText("");
+    private boolean isInteractionBlocked() {
+        return scenePanel.isTransitionRunning()
+            || scenePanel.isLockedOverlayVisible()
+            || scenePanel.isOutcomeVisible()
+            || glassModalLayer.isDialogVisible();
+    }
+
+    private void move(String direction) {
+        if (isInteractionBlocked()) {
+            return;
+        }
+        scenePanel.hidePopup();
+        Room currentRoom = game.getCurrentRoom();
+        Room target = currentRoom == null ? null : currentRoom.getExit(direction);
+        if (target == null) {
+            scenePanel.showPopup("此路不通。");
+            return;
+        }
+        if (!game.isRoomAccessible(target)) {
+            scenePanel.showLockedOverlay(LevelConfig.LOCKED_EXIT_MESSAGE);
             return;
         }
 
-        // 解析命令
-        String[] parts = command.split(" ", 2);
-        String commandWord = parts[0];
-        String parameter = parts.length > 1 ? parts[1] : null;
-
-        boolean exitGame = game.getCommandManager().executeCommand(
-                commandWord,
-                parameter,
-                game
-        );
-
-        // 在 processCommand 方法中添加
-        if (commandWord.equalsIgnoreCase("take")) {
-            // 特殊处理拾取命令，检查重量限制
-            Player player = game.getPlayer();
-            Room currentRoom = game.getCurrentRoom();
-            List<Item> roomItems = currentRoom.getItems();
-
-            // 查找物品
-            Item targetItem = null;
-            for (Item item : roomItems) {
-                if (item.getDescription().equalsIgnoreCase(parameter)) {
-                    targetItem = item;
-                    break;
-                }
+        scenePanel.hideLockedOverlay();
+        scenePanel.playDirectionalTransition(direction, () -> {
+            GameGuiController.CommandResult result = runCommand("go", direction, false);
+            if (result.isLockedExitAttempt()) {
+                scenePanel.showLockedOverlay(LevelConfig.LOCKED_EXIT_MESSAGE);
             }
+        }, null);
+    }
 
-            if (targetItem != null) {
-                // 检查负重
-                if (player.getCurrentWeight() + targetItem.getWeight() > player.getMaxWeight()) {
-                    appendOutput("你无法拾取 '" + parameter + "', 它太重了！");
-                    appendOutput("当前负重: " + player.getCurrentWeight() + "g / " +
-                            player.getMaxWeight() + "g");
-                    appendOutput("需要: " + targetItem.getWeight() + "g, 但只剩: " +
-                            player.getRemainingCapacity() + "g");
-                    updateGameDisplay(); // 仍然更新显示
-                    return;
-                }
-            }
+    private void handlePostCommandEffects(GameGuiController.CommandResult result) {
+        if (result.isDarkPenaltyTriggered()) {
+            scenePanel.showPopup(DarkRoom.PENALTY_MESSAGE);
         }
-
-        updateGameDisplay();
-
-        if (exitGame) {
-            appendOutput("\n游戏结束！");
-            inputField.setEnabled(false);
+        if (result.getGatedDenialMessage() != null) {
+            scenePanel.showPopup(result.getGatedDenialMessage());
+        }
+        if (result.isTeleported()) {
+            scenePanel.showPopup("你进入体育馆后被传送到校园另一处！");
         }
     }
 
-    /**
-     * 更新游戏显示
-     */
-    private void updateGameDisplay() {
-        // 更新房间图像
-        Room currentRoom = game.getCurrentRoom();
-        ImageIcon roomIcon = imageLoader.getRoomIcon(currentRoom.getShortDescription());
-        currentRoomImage.setIcon(imageLoader.getScaledImage(
-                getRoomImageKey(currentRoom), 200, 200));
+    private GameGuiController.CommandResult runCommand(
+        String commandWord,
+        String secondWord,
+        boolean showOutputNotice) {
+        GameGuiController.CommandResult result = controller.execute(game, commandWord, secondWord);
+        refreshDisplay();
+        handlePostCommandEffects(result);
+        GuiOutcomeHelper.OutcomeType outcome = GuiOutcomeHelper.detectFromOutput(result.getOutputLines());
+        if (outcome != GuiOutcomeHelper.OutcomeType.NONE) {
+            presentOutcome(outcome, result.getOutputLines());
+        } else if (showOutputNotice && !result.getOutputLines().isEmpty()) {
+            scenePanel.showPopup(result.joinedOutput());
+        }
+        return result;
+    }
 
-        // 在房间图片下方添加出口信息标签
-        updateExitButtons(currentRoom);
+    private void presentOutcome(GuiOutcomeHelper.OutcomeType type, List<String> outputLines) {
+        if (scenePanel.isOutcomeVisible()) {
+            return;
+        }
+        scenePanel.showOutcome(
+            GuiOutcomeHelper.buildTitle(type),
+            GuiOutcomeHelper.buildMessage(type, game, outputLines),
+            GuiOutcomeHelper.buildActionLabel(type),
+            () -> {
+                if (type == GuiOutcomeHelper.OutcomeType.LEVEL_FAILED) {
+                    controller.execute(game, "restart", null);
+                }
+                refreshDisplay();
+            }
+        );
+    }
 
-        // 更新玩家状态
-        Player player = game.getPlayer();
-        playerStatusLabel.setText(String.format(
-                "玩家: %s | 负重: %dg/%dg | 物品: %d件 | 位置: %s",
-                player.getName(),
-                player.getCurrentWeight(),
-                player.getMaxWeight(),
-                player.getInventory().size(),
-                currentRoom.getShortDescription()
+    private void refreshDisplay() {
+        inventoryActionMenu.hideMenu();
+        Room room = game.getCurrentRoom();
+        refreshTimerLabels();
+        scenePanel.updateRoom(
+            room,
+            room == null ? List.of() : room.getItems(),
+            NpcDialogHelper.shouldShowNpc(
+                room == null ? null : room.getRoomId(),
+                game.getLevelManager().getCurrentLevel()
+            ),
+            GuiPhase3Helper.shouldShowFeedButton(game),
+            GuiPhase3Helper.westTrapBannerText(game)
+        );
+        inventoryPanel.updateInventory(game.getPlayer().getInventory());
+        updateDirectionAvailability(room);
+        sleepButton.setVisible(room != null
+            && UnlockService.DORMITORY_ROOM_ID.equals(room.getRoomId()));
+        submitButton.setVisible(NpcDialogHelper.canSubmitAtSupermarket(game));
+        combineButton.setVisible(GuiPhase3Helper.shouldShowCombineButton(game));
+        feedActionButton.setVisible(GuiPhase3Helper.shouldShowFeedButton(game));
+        unlockButton.setVisible(GuiPhase3Helper.shouldShowUnlockButton(game));
+    }
+
+    private void refreshTimerLabels() {
+        if (game.getLevelTimer() == null) {
+            return;
+        }
+        LevelState currentState = game.getLevelManager().getState();
+        GuiOutcomeHelper.OutcomeType transitionOutcome =
+            GuiOutcomeHelper.detectFromStateTransition(trackedLevelState, currentState);
+        if (transitionOutcome != GuiOutcomeHelper.OutcomeType.NONE && !scenePanel.isOutcomeVisible()) {
+            presentOutcome(transitionOutcome, List.of(GuiOutcomeHelper.FAIL_SNIPPET + "。"));
+        }
+        trackedLevelState = currentState;
+
+        timerLabel.setText(game.getLevelTimer().getDisplayText());
+        levelLabel.setText(controller.buildLevelTitle(game));
+
+        int remaining = game.getLevelTimer().getRemainingSeconds();
+        if (remaining <= 60) {
+            timerLabel.setForeground(timerPulseBright ? GuiTheme.DANGER : GuiTheme.DANGER.darker());
+        } else if (remaining <= 120) {
+            timerLabel.setForeground(new Color(255, 196, 96));
+        } else {
+            timerLabel.setForeground(GuiTheme.TEXT_PRIMARY);
+        }
+    }
+
+    private void updateDirectionAvailability(Room room) {
+        boolean eastAvailable = hasExit(room, "east") && !game.isTrappedInWestBuilding();
+        scenePanel.updateDirectionAvailability(
+            hasExit(room, "north"),
+            hasExit(room, "south"),
+            eastAvailable,
+            hasExit(room, "west"),
+            !game.isTrappedInWestBuilding()
+        );
+    }
+
+    private boolean hasExit(Room room, String direction) {
+        return room != null && room.getExit(direction) != null;
+    }
+
+    private JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu gameMenu = new JMenu("游戏");
+
+        JMenuItem newGameItem = new JMenuItem("新游戏");
+        newGameItem.addActionListener(event -> restartGame());
+        JMenuItem saveItem = new JMenuItem("保存");
+        saveItem.addActionListener(event -> GameSaveUiHelper.saveGame(glassModalLayer, game, null));
+        JMenuItem loadItem = new JMenuItem("读档");
+        loadItem.addActionListener(event -> GameSaveUiHelper.loadGame(
+            glassModalLayer,
+            game,
+            this::syncUiAfterPersistedStateChange
         ));
 
-        // 更新房间物品
-        updateRoomItems();
-
-        // 更新物品栏
-        updateInventory();
-
-        // 焦点设置
-        inputField.requestFocus();
-
-        // 在输出区域显示方向提示
-        appendOutput("当前位置: " + currentRoom.getShortDescription());
-        appendOutput(getRoomExitsInfo(currentRoom));
+        gameMenu.add(newGameItem);
+        gameMenu.add(saveItem);
+        gameMenu.add(loadItem);
+        menuBar.add(gameMenu);
+        return menuBar;
     }
 
-    /**
-     * 更新方向按钮状态
-     */
-    private void updateExitButtons(Room room) {
-        // 如果按钮已经创建，更新它们的状态
-        if (northButton != null) {
-            northButton.setEnabled(room.getExit("north") != null);
-            northButton.setToolTipText(room.getExit("north") != null ?
-                    "向北移动" : "此路不通");
-        }
-        if (southButton != null) {
-            southButton.setEnabled(room.getExit("south") != null);
-            southButton.setToolTipText(room.getExit("south") != null ?
-                    "向南移动" : "此路不通");
-        }
-        if (eastButton != null) {
-            eastButton.setEnabled(room.getExit("east") != null);
-            eastButton.setToolTipText(room.getExit("east") != null ?
-                    "向东移动" : "此路不通");
-        }
-        if (westButton != null) {
-            westButton.setEnabled(room.getExit("west") != null);
-            westButton.setToolTipText(room.getExit("west") != null ?
-                    "向西移动" : "此路不通");
-        }
-    }
-
-    /**
-     * 获取房间图像键
-     */
-    private String getRoomImageKey(Room room) {
-        String desc = room.getShortDescription();
-        if (desc.contains("校门")) {
-            return "room_outside";
-        }
-        if (desc.contains("博学主楼")) {
-            return "room_theater";
-        }
-        if (desc.contains("博学北楼")) {
-            return "room_office";
-        }
-        if (desc.contains("教育超市")) {
-            return "room_pub";
-        }
-        if (desc.contains("寝室")) {
-            return "room_lab";
-        }
-        if (desc.contains("图书馆")) {
-            return "room_office";
-        }
-        if (desc.contains("博学东楼")) {
-            return "room_theater";
-        }
-        if (desc.contains("博学西楼")) {
-            return "room_lab";
-        }
-        if (desc.contains("体育馆")) {
-            return "room_teleport";
-        }
-        if (desc.contains("越苑食堂")) {
-            return "room_pub";
-        }
-        if (desc.contains("teleport")) {
-            return "room_teleport";
-        }
-        return "room_outside";
-    }
-
-    /**
-     * 更新房间物品显示
-     */
-    private void updateRoomItems() {
-        roomItemsPanel.removeAll();
-
-        Room currentRoom = game.getCurrentRoom();
-        List<Item> items = currentRoom.getItems();
-
-        if (items.isEmpty()) {
-            JLabel emptyLabel = new JLabel("房间内没有物品");
-            emptyLabel.setFont(new Font("宋体", Font.ITALIC, 12));
-            roomItemsPanel.add(emptyLabel);
-        } else {
-            for (Item item : items) {
-                JLabel itemLabel = createItemLabel(item, false);
-                roomItemsPanel.add(itemLabel);
-            }
-        }
-
-        roomItemsPanel.revalidate();
-        roomItemsPanel.repaint();
-    }
-
-    /**
-     * 更新物品栏显示
-     */
-    private void updateInventory() {
-        inventoryPanel.removeAll();
-
-        Player player = game.getPlayer();
-        List<Item> items = player.getInventory();
-
-        if (items.isEmpty()) {
-            JLabel emptyLabel = new JLabel("物品栏为空");
-            emptyLabel.setFont(new Font("宋体", Font.ITALIC, 12));
-            inventoryPanel.add(emptyLabel);
-        } else {
-            for (Item item : items) {
-                JLabel itemLabel = createItemLabel(item, true);
-                inventoryPanel.add(itemLabel);
-            }
-        }
-
-        inventoryPanel.revalidate();
-        inventoryPanel.repaint();
-    }
-
-    /**
-     * 创建物品标签
-     */
-    private JLabel createItemLabel(Item item, boolean inInventory) {
-        JLabel label = new JLabel(item.getDetails());
-        label.setIcon(imageLoader.getItemIcon(item.getDescription()));
-        label.setFont(new Font("宋体", inInventory ? Font.BOLD : Font.PLAIN, 12));
-        label.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-
-        if (inInventory) {
-            label.setToolTipText("双击丢弃: " + item.getDescription());
-        } else {
-            label.setToolTipText("双击拾取: " + item.getDescription());
-        }
-
-        return label;
-    }
-
-    /**
-     * 向输出区域追加文本
-     */
-    private void appendOutput(String text) {
-        outputArea.append(text + "\n");
-        outputArea.setCaretPosition(outputArea.getDocument().getLength());
-    }
-
-    /**
-     * 重新开始游戏
-     */
     private void restartGame() {
-        int response = JOptionPane.showConfirmDialog(
-                this, "确定要开始新游戏吗？", "新游戏", JOptionPane.YES_NO_OPTION);
-
-        if (response == JOptionPane.YES_OPTION) {
-            game = new Game();
-            outputArea.setText("");
-            appendOutput("新游戏开始！");
-            updateGameDisplay();
-            inputField.setEnabled(true);
-        }
-    }
-
-    /**
-     * 保存游戏
-     */
-    private void saveGame() {
-        GameSaveUiHelper.saveGame(this, game);
-    }
-
-    /**
-     * 加载游戏
-     */
-    private void loadGame() {
-        GameSaveUiHelper.loadGame(this, game, () -> {
-            appendOutput("\n读档成功，继续游戏。");
-            updateGameDisplay();
-            inputField.setEnabled(true);
-        });
-    }
-
-    /**
-     * 显示游戏统计
-     */
-    private void showStatistics() {
-        Player player = game.getPlayer();
-        String stats = String.format(
-                "=== 游戏统计 ===\n" +
-                        "玩家: %s\n" +
-                        "当前负重: %dg/%dg\n" +
-                        "携带物品: %d件\n" +
-                        "剩余容量: %dg\n" +
-                        "当前位置: %s",
-                player.getName(),
-                player.getCurrentWeight(),
-                player.getMaxWeight(),
-                player.getInventory().size(),
-                player.getRemainingCapacity(),
-                game.getCurrentRoom().getShortDescription()
+        glassModalLayer.showConfirm(
+            "新游戏",
+            "确定重新开始？当前进度将丢失。",
+            "重新开始",
+            "取消",
+            () -> {
+                controller.shutdownGuiSession(game);
+                game = new Game();
+                controller.prepareGuiSession(game);
+                syncUiAfterPersistedStateChange();
+                scenePanel.showPopup("新游戏开始。\n点击「环顾」可查看本关任务与房间公告。");
+            },
+            null
         );
+    }
 
-        JOptionPane.showMessageDialog(this, stats, "游戏统计", JOptionPane.INFORMATION_MESSAGE);
+    private void syncUiAfterPersistedStateChange() {
+        trackedLevelState = game.getLevelManager().getState();
+        controller.prepareGuiSession(game);
+        scenePanel.hidePopup();
+        scenePanel.hideOutcome();
+        scenePanel.hideLockedOverlay();
+        glassModalLayer.hideDialog();
+        refreshDisplay();
     }
 
     /**
-     * 显示快速帮助
-     */
-    private void showQuickHelp() {
-        String help = "=== 快速指南 ===\n\n" +
-                "1. 使用方向按钮或输入'go <方向>'移动\n" +
-                "2. 双击物品可拾取/丢弃\n" +
-                "3. 使用动作按钮执行常用命令\n" +
-                "4. 查看房间物品和物品栏信息\n" +
-                "5. 输入'help'查看详细帮助";
-
-        JOptionPane.showMessageDialog(this, help, "快速指南", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    /**
-     * 显示所有命令
-     */
-    private void showAllCommands() {
-        String commands =
-                "=== 命令大全 ===\n\n" +
-                        "移动命令:\n" +
-                        "  go north/south/east/west - 向指定方向移动\n" +
-                        "  back - 返回上一个房间\n" +
-                        "  look - 查看当前房间\n\n" +
-                        "物品命令:\n" +
-                        "  take <物品> - 拾取物品\n" +
-                        "  take all - 拾取所有物品\n" +
-                        "  drop <物品> - 丢弃物品\n" +
-                        "  drop all - 丢弃所有物品\n" +
-                        "  items - 查看所有物品\n\n" +
-                        "特殊命令:\n" +
-                        "  eat - 食用背包中的食物（耗时25秒；magic cookie 同步+300秒）\n" +
-                        "  help - 显示帮助\n" +
-                        "  quit - 退出游戏";
-
-        JOptionPane.showMessageDialog(this, commands, "命令大全", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    /**
-     * 显示关于信息
-     */
-    private void showAbout() {
-        String about =
-                "World of Zuul 增强图形界面\n" +
-                        "版本 2.0\n\n" +
-                        "基于Swing开发的图形化冒险游戏\n" +
-                        "支持鼠标操作和键盘命令\n" +
-                        "保持原版游戏所有功能\n\n" +
-                        "© 2023 武汉理工大学";
-
-        JOptionPane.showMessageDialog(this, about, "关于", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    /**
-     * 启动增强界面
+     * 显示窗口。
      */
     public void start() {
         setVisible(true);
-        appendOutput("欢迎来到 World of Zuul 增强图形界面！");
-        appendOutput("使用方向按钮移动，双击物品进行交互。");
+        refreshDisplay();
+        SwingUtilities.invokeLater(() -> scenePanel.showPopup(
+            "欢迎来到《熄灯前归寝》。\n点击中央箭头移动，点击「环顾」查看公告与任务。"
+        ));
     }
 
     /**
-     * 获取房间出口信息
+     * 供测试访问场景面板。
+     *
+     * @return RoomScenePanel
      */
-    private String getRoomExitsInfo(Room room) {
-        StringBuilder exitsInfo = new StringBuilder();
-        exitsInfo.append("可用出口:\n");
-
-        // 检查各个方向
-        String[] directions = {"north", "south", "east", "west"};
-        String[] directionNames = {"北", "南", "东", "西"};
-        boolean hasExit = false;
-
-        for (int i = 0; i < directions.length; i++) {
-            if (room.getExit(directions[i]) != null) {
-                exitsInfo.append("  ").append(directionNames[i]).append(": 可通行\n");
-                hasExit = true;
-            }
-        }
-
-        if (!hasExit) {
-            exitsInfo.append("  没有可用出口\n");
-        }
-
-        return exitsInfo.toString();
+    RoomScenePanel getScenePanelForTest() {
+        return scenePanel;
     }
 
     /**
-     * 显示游戏帮助（简洁版）
+     * 供测试访问物品栏面板。
+     *
+     * @return InventorySlotPanel
      */
-    private void showHelp() {
-        // 从命令管理器获取所有可用命令
-        String[] commandWords = game.getCommandManager().getCommandWords();
+    InventorySlotPanel getInventoryPanelForTest() {
+        return inventoryPanel;
+    }
 
-        // 清空之前的输出
-        outputArea.setText("");
+    /**
+     * 供测试访问控制器。
+     *
+     * @return GameGuiController
+     */
+    GameGuiController getControllerForTest() {
+        return controller;
+    }
 
-        // 添加标准的帮助信息
-        appendOutput("You are lost. You are alone. You wander");
-        appendOutput("around at the university.");
-        appendOutput("");
-        appendOutput("Your command words are:");
-
-        // 显示命令列表，一行显示所有命令
-        StringBuilder commandsLine = new StringBuilder();
-        for (String command : commandWords) {
-            commandsLine.append(command).append(" ");
-        }
-
-        // 显示所有命令在一行
-        appendOutput(commandsLine.toString().trim());
+    GlassModalLayer getGlassModalLayerForTest() {
+        return glassModalLayer;
     }
 }

@@ -52,7 +52,7 @@ public class GameStateSnapshot {
             game.getLevelTimer().getDisplayText(),
             game.getActiveOnlinePlayerId(),
             room == null ? "" : room.getRoomId(),
-            room == null ? "" : room.getLongDescription(),
+            room == null ? "" : room.getShortDescription(),
             playerStates
         );
     }

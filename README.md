@@ -141,7 +141,7 @@
    git merge dev
    ```
 3. 文档改动在 `feature/docs` 分支提交，再 PR → `dev`。
-4. 本地门禁：`mvn checkstyle:check`、`mvn test`。
+4. 本地门禁：`mvn checkstyle:check`、`mvn test`；Vue 改动另跑 `cd vue-portal; npm run build`。
 5. 提交写清描述：`feat: 实现 submit 归寝单判定`。
 6. PR：`feature/你的分支` → `dev`，CI 通过后 Review 合并。
 7. 合并冲突用 `merge/conflict` 分支处理，**禁止** force push 到 `dev`/`master`。
@@ -150,17 +150,41 @@
 
 ## 架构与技术栈
 
-本项目采用 **混合架构**：Java 游戏内核（四层 + 命令模式）+ **Spring Boot / Spring MVC / RESTful API** 服务层 + **Swing** 主客户端 + **Vue 3** Web 辅前端。详见 [docs/系统架构设计.md](docs/系统架构设计.md)
+本项目采用 **混合架构**：Java 游戏内核（四层 + 命令模式）+ **Spring Boot / Spring MVC / RESTful API** 服务层 + **Vue 3 主前端** + Swing 备用客户端。详见 [docs/系统架构设计.md](docs/系统架构设计.md)
 
 | 层次 | 技术 |
 |------|------|
 | 游戏内核 | Java 11、命令模式、JUnit 5、Checkstyle |
 | 服务后端 | Spring Boot、Spring MVC、RESTful API、H2 |
-| 主前端 | Swing（F7）、文本 Parser |
-| 辅前端 | Vue 3 + Axios（排行榜/存档/大厅） |
-| 工程 | Maven 3.8+、GitHub Actions CI/CD |
+| **主前端** | **Vue 3 + TypeScript**（`vue-portal`：单机 + 联机） |
+| 备用前端 | Swing（`enhanced`）、文本 Parser |
+| 工程 | Maven 3.8+、Vite、GitHub Actions CI/CD |
 
 ## 构建与运行
+
+**推荐答辩路径（Vue + Spring Boot）：**
+
+```powershell
+# 终端 1：后端
+cd D:\softwaretest\kai-fa-519club
+mvn spring-boot:run
+
+# 终端 2：前端
+cd vue-portal
+npm install
+npm run dev
+# 浏览器 http://localhost:5173
+```
+
+**本地门禁（合并 PR 前）：**
+
+```powershell
+mvn checkstyle:check
+mvn test
+cd vue-portal; npm run build
+```
+
+**控制台单机 JAR（备用）：**
 
 ```powershell
 mvn clean package

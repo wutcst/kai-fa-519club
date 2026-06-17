@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.CommandResponseDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.GameStateDto;
+import cn.edu.whut.sept.zuul.infrastructure.server.dto.RoomChatMessageDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.RoomInfoDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.RoomSessionDto;
 import cn.edu.whut.sept.zuul.multiplayer.GameCommandResult;
@@ -16,6 +17,7 @@ import cn.edu.whut.sept.zuul.multiplayer.GameRoomRegistry;
 import cn.edu.whut.sept.zuul.multiplayer.GameStateSnapshot;
 import cn.edu.whut.sept.zuul.multiplayer.JoinRoomResult;
 import cn.edu.whut.sept.zuul.multiplayer.LeaveRoomResult;
+import cn.edu.whut.sept.zuul.multiplayer.RoomChatMessage;
 
 /**
  * 联机房间与命令业务服务。
@@ -33,7 +35,7 @@ public class MultiplayerRoomService {
         session.setRoomName(room.getRoomName());
         session.setPlayerId(room.getHostPlayerId());
         session.setDisplayName(room.getPlayerDisplayNames().get(room.getHostPlayerId()));
-        session.setState(GameStateDto.from(gameEngineFacade.getState(room, room.getHostPlayerId())));
+        session.setState(buildState(room, room.getHostPlayerId()));
         return session;
     }
 
@@ -48,7 +50,7 @@ public class MultiplayerRoomService {
         session.setRoomName(room.getRoomName());
         session.setPlayerId(result.getPlayerId());
         session.setDisplayName(result.getDisplayName());
-        session.setState(GameStateDto.from(gameEngineFacade.getState(room, result.getPlayerId())));
+        session.setState(buildState(room, result.getPlayerId()));
         return session;
     }
 
@@ -63,8 +65,9 @@ public class MultiplayerRoomService {
         if (room == null) {
             return null;
         }
-        GameStateSnapshot snapshot = gameEngineFacade.getState(room, playerId);
-        return GameStateDto.from(snapshot);
+        synchronized (room.getLock()) {
+            return buildState(room, playerId);
+        }
     }
 
     public CommandResponseDto executeCommand(String roomId, String playerId,
@@ -73,9 +76,30 @@ public class MultiplayerRoomService {
         if (room == null) {
             return null;
         }
-        GameCommandResult result = gameEngineFacade.executeCommand(
-            room, playerId, commandWord, secondWord);
-        return CommandResponseDto.from(result);
+        synchronized (room.getLock()) {
+            GameCommandResult result = gameEngineFacade.executeCommand(
+                room, playerId, commandWord, secondWord);
+            CommandResponseDto dto = CommandResponseDto.from(result);
+            dto.setState(buildState(room, playerId));
+            dto.setNoticeMessage(MultiplayerViewMapper.buildNoticeMessage(
+                commandWord, result.getMessages()));
+            return dto;
+        }
+    }
+
+    public RoomChatMessageDto sendChat(String roomId, String playerId, String text) {
+        GameRoom room = roomRegistry.findRoom(roomId);
+        if (room == null) {
+            throw new IllegalArgumentException("房间不存在");
+        }
+        synchronized (room.getLock()) {
+            if (!room.hasPlayer(playerId)) {
+                throw new IllegalArgumentException("玩家不在该房间中");
+            }
+            String displayName = room.getPlayerDisplayNames().get(playerId);
+            RoomChatMessage message = room.addChatMessage(playerId, displayName, text);
+            return RoomChatMessageDto.from(message);
+        }
     }
 
     public LeaveRoomResult leaveRoom(String roomId, String playerId) {
@@ -91,5 +115,10 @@ public class MultiplayerRoomService {
      */
     public void clearAllRoomsForTest() {
         roomRegistry.clearAllForTest();
+    }
+
+    private GameStateDto buildState(GameRoom room, String playerId) {
+        GameStateSnapshot snapshot = gameEngineFacade.getState(room, playerId);
+        return MultiplayerViewMapper.toDto(room, snapshot, playerId);
     }
 }

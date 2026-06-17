@@ -127,14 +127,6 @@ public class Room {
             sb.append("【公告】").append(bulletin).append("\n");
         }
         sb.append(getExitString());
-        if (!items.isEmpty()) {
-            sb.append("\n房间里有这些物品:");
-            for (Item item : items) {
-                sb.append("\n- ").append(item.getDetails());
-            }
-        } else {
-            sb.append("\n这个房间里没有任何物品。");
-        }
         return sb.toString();
     }
 

@@ -75,6 +75,15 @@ public class TeleportRoom extends Room {
     }
 
     /**
+     * 当前配置的传送目标（副本，供测试与调试）。
+     *
+     * @return 目标房间列表
+     */
+    public List<Room> getTargetRooms() {
+        return new ArrayList<>(targetRooms);
+    }
+
+    /**
      * 随机选择一个目标房间进行传输。
      *
      * @return 随机选择的目标房间；无目标时返回自身

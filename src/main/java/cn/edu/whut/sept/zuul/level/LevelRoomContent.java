@@ -128,7 +128,7 @@ public final class LevelRoomContent {
                 setBulletin(game, "boxue_main", "请努力拿到一卡通与归寝单回寝吧！本关主楼供电正常。");
                 setBulletin(game, "dormitory",
                     "智能锁：请输入八位离校验证码（与校史相关，别用食堂纸条生日）。");
-                setBulletin(game, "gymnasium", "进入后可能传送到校园任意角落（寝室除外）。");
+                setBulletin(game, "gymnasium", "进入后可能传送到校园任意角落（寝室与图书馆除外）。");
                 break;
             default:
                 break;
