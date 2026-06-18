@@ -11,8 +11,10 @@ import cn.edu.whut.sept.zuul.infrastructure.server.dto.ApiResponse;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.CreateRoomRequest;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.JoinRoomRequest;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.LeaveRoomRequest;
+import cn.edu.whut.sept.zuul.infrastructure.server.dto.RoomChatMessageDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.RoomInfoDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.RoomSessionDto;
+import cn.edu.whut.sept.zuul.infrastructure.server.dto.SendChatRequest;
 import cn.edu.whut.sept.zuul.infrastructure.server.service.MultiplayerRoomService;
 
 /**
@@ -66,6 +68,27 @@ public class RoomController {
         try {
             multiplayerRoomService.leaveRoom(roomId, request.getPlayerId());
             return ApiResponse.ok(Boolean.TRUE);
+        } catch (IllegalArgumentException exception) {
+            return ApiResponse.fail(exception.getMessage());
+        }
+    }
+
+    @PostMapping("/{roomId}/chat")
+    public ApiResponse<RoomChatMessageDto> sendChat(@PathVariable String roomId,
+                                                    @RequestBody SendChatRequest request) {
+        if (request.getPlayerId() == null || request.getPlayerId().trim().isEmpty()) {
+            return ApiResponse.fail("playerId 不能为空");
+        }
+        if (request.getText() == null || request.getText().trim().isEmpty()) {
+            return ApiResponse.fail("消息不能为空");
+        }
+        if (multiplayerRoomService.findRoom(roomId) == null) {
+            return ApiResponse.fail("房间不存在");
+        }
+        try {
+            RoomChatMessageDto message = multiplayerRoomService.sendChat(
+                roomId, request.getPlayerId(), request.getText());
+            return ApiResponse.ok(message);
         } catch (IllegalArgumentException exception) {
             return ApiResponse.fail(exception.getMessage());
         }

@@ -18,7 +18,17 @@ public class GameStateDto {
     private String activePlayerId;
     private String roomId;
     private String roomDescription;
+    private String bulletin;
+    private String westTrapBanner;
+    private List<ItemViewDto> roomItems = new ArrayList<>();
+    private List<ItemViewDto> inventory = new ArrayList<>();
+    private int inventoryWeight;
+    private int maxInventoryWeight;
+    private int remainingCapacity;
+    private ExitAvailabilityDto exits = new ExitAvailabilityDto();
+    private UiActionFlagsDto actions = new UiActionFlagsDto();
     private List<PlayerStateDto> players = new ArrayList<>();
+    private List<RoomChatMessageDto> chatMessages = new ArrayList<>();
 
     public static GameStateDto from(GameStateSnapshot snapshot) {
         GameStateDto dto = new GameStateDto();
@@ -63,7 +73,91 @@ public class GameStateDto {
         return roomDescription;
     }
 
+    public void setRoomDescription(String roomDescription) {
+        this.roomDescription = roomDescription;
+    }
+
+    public String getBulletin() {
+        return bulletin;
+    }
+
+    public void setBulletin(String bulletin) {
+        this.bulletin = bulletin;
+    }
+
+    public String getWestTrapBanner() {
+        return westTrapBanner;
+    }
+
+    public void setWestTrapBanner(String westTrapBanner) {
+        this.westTrapBanner = westTrapBanner;
+    }
+
+    public List<ItemViewDto> getRoomItems() {
+        return roomItems;
+    }
+
+    public void setRoomItems(List<ItemViewDto> roomItems) {
+        this.roomItems = roomItems;
+    }
+
+    public List<ItemViewDto> getInventory() {
+        return inventory;
+    }
+
+    public void setInventory(List<ItemViewDto> inventory) {
+        this.inventory = inventory;
+    }
+
+    public int getInventoryWeight() {
+        return inventoryWeight;
+    }
+
+    public void setInventoryWeight(int inventoryWeight) {
+        this.inventoryWeight = inventoryWeight;
+    }
+
+    public int getMaxInventoryWeight() {
+        return maxInventoryWeight;
+    }
+
+    public void setMaxInventoryWeight(int maxInventoryWeight) {
+        this.maxInventoryWeight = maxInventoryWeight;
+    }
+
+    public int getRemainingCapacity() {
+        return remainingCapacity;
+    }
+
+    public void setRemainingCapacity(int remainingCapacity) {
+        this.remainingCapacity = remainingCapacity;
+    }
+
+    public ExitAvailabilityDto getExits() {
+        return exits;
+    }
+
+    public void setExits(ExitAvailabilityDto exits) {
+        this.exits = exits;
+    }
+
+    public UiActionFlagsDto getActions() {
+        return actions;
+    }
+
+    public void setActions(UiActionFlagsDto actions) {
+        this.actions = actions;
+    }
+
     public List<PlayerStateDto> getPlayers() {
         return players;
+    }
+
+    public List<RoomChatMessageDto> getChatMessages() {
+        return chatMessages;
+    }
+
+    public void setChatMessages(List<RoomChatMessageDto> chatMessages) {
+        this.chatMessages = chatMessages;
     }
 }

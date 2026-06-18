@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import cn.edu.whut.sept.zuul.command.UseCommand;
 import cn.edu.whut.sept.zuul.infrastructure.InfrastructureServices;
 import cn.edu.whut.sept.zuul.infrastructure.auth.AuthService;
 import cn.edu.whut.sept.zuul.infrastructure.auth.AuthSession;
@@ -254,7 +255,7 @@ public class Game
     }
 
     /**
-     * 按关卡配置体育馆传送（E17）：仅第五关启用，目标为除寝室外的全部房间。
+     * 按关卡配置体育馆传送（E17）：仅第五关启用，目标为除寝室、图书馆外的全部房间。
      *
      * @param config 当前关卡配置
      */
@@ -275,9 +276,14 @@ public class Game
     private List<Room> buildGymTeleportTargets() {
         List<Room> targets = new ArrayList<>();
         for (Map.Entry<String, Room> entry : roomRegistry.entrySet()) {
-            if (!UnlockService.DORMITORY_ROOM_ID.equals(entry.getKey())) {
-                targets.add(entry.getValue());
+            String roomId = entry.getKey();
+            if (UnlockService.DORMITORY_ROOM_ID.equals(roomId)) {
+                continue;
             }
+            if (UseCommand.LIBRARY_ROOM_ID.equals(roomId)) {
+                continue;
+            }
+            targets.add(entry.getValue());
         }
         return targets;
     }

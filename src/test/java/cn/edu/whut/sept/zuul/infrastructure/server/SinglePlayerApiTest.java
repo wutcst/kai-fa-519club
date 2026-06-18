@@ -1,0 +1,127 @@
+package cn.edu.whut.sept.zuul.infrastructure.server;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import cn.edu.whut.sept.zuul.infrastructure.server.service.SinglePlayerGuiService;
+
+import static org.junit.Assert.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * 单机 Vue REST API 集成测试。
+ */
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = ServerApplication.class)
+@AutoConfigureMockMvc
+public class SinglePlayerApiTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private SinglePlayerGuiService singlePlayerGuiService;
+
+    @Before
+    public void clearSessions() {
+        singlePlayerGuiService.clearAllSessionsForTest();
+    }
+
+    @Test
+    public void testCreateSessionAndMove() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/solo/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"playerName\":\"Vue玩家\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.sessionId").exists())
+            .andExpect(jsonPath("$.data.state.level").value(1))
+            .andReturn();
+
+        String sessionId = extractJsonValue(
+            createResult.getResponse().getContentAsString(), "\"sessionId\":\"", "\"");
+
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"commandWord\":\"go\",\"secondWord\":\"north\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.state.roomId").value("boxue_main"))
+            .andExpect(jsonPath("$.data.popupMessage").doesNotExist());
+
+        mockMvc.perform(get("/api/solo/sessions/" + sessionId + "/state"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.inventory").isArray())
+            .andExpect(jsonPath("$.data.inventoryWeight").value(0))
+            .andExpect(jsonPath("$.data.maxInventoryWeight").value(3000))
+            .andExpect(jsonPath("$.data.remainingCapacity").value(3000))
+            .andExpect(jsonPath("$.data.exits.north").isBoolean());
+    }
+
+    @Test
+    public void testTakeDoesNotPopupWeightNotice() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/solo/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String sessionId = extractJsonValue(
+            createResult.getResponse().getContentAsString(), "\"sessionId\":\"", "\"");
+
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"commandWord\":\"go\",\"secondWord\":\"north\"}"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"commandWord\":\"take\",\"secondWord\":\"社团传单\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.popupMessage").doesNotExist())
+            .andExpect(jsonPath("$.data.state.inventoryWeight").value(30))
+            .andExpect(jsonPath("$.data.state.remainingCapacity").value(2970));
+    }
+
+    @Test
+    public void testLookIncludesBulletin() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/solo/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String sessionId = extractJsonValue(
+            createResult.getResponse().getContentAsString(), "\"sessionId\":\"", "\"");
+
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/look"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.popupMessage").exists());
+    }
+
+    @Test
+    public void testGuiAssetsAreServed() throws Exception {
+        mockMvc.perform(get("/assets/gui/rooms/gate.png"))
+            .andExpect(status().isOk());
+    }
+
+    private String extractJsonValue(String json, String prefix, String suffix) {
+        int start = json.indexOf(prefix);
+        assertTrue("JSON 中未找到字段: " + prefix, start >= 0);
+        start += prefix.length();
+        int end = json.indexOf(suffix, start);
+        assertTrue(end > start);
+        return json.substring(start, end);
+    }
+}

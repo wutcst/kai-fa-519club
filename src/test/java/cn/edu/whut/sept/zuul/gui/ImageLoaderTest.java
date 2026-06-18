@@ -1,14 +1,8 @@
-/**
- * ImageLoader类单元测试
- * 新增：测试图像加载器的基本功能
- *
- * @author liujing
- * @version 2.0
- */
-        package cn.edu.whut.sept.zuul.gui;
+package cn.edu.whut.sept.zuul.gui;
 
 import javax.swing.ImageIcon;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -16,40 +10,45 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 测试图像加载器功能
+ * ImageLoader 单元测试。
  */
 public class ImageLoaderTest {
+
+    @BeforeEach
+    public void resetLoader() {
+        ImageLoader.resetForTest();
+    }
 
     @Test
     public void testSingletonPattern() {
         ImageLoader instance1 = ImageLoader.getInstance();
         ImageLoader instance2 = ImageLoader.getInstance();
-
-        assertNotNull(instance1, "ImageLoader实例不应为null");
-        assertSame(instance1, instance2, "ImageLoader应为单例模式");
+        assertNotNull(instance1);
+        assertSame(instance1, instance2);
     }
 
     @Test
-    public void testBasicImageLoading() {
+    public void testRoomImageLoading() {
         ImageLoader loader = ImageLoader.getInstance();
-
-        // 测试获取图像（即使是默认图像）
-        ImageIcon icon1 = loader.getImage("room_outside");
-        assertNotNull(icon1, "图像不应为null");
-
-        ImageIcon icon2 = loader.getImage("non_existent_key");
-        assertNotNull(icon2, "默认图像不应为null");
+        ImageIcon gate = loader.getRoomImage("gate");
+        assertNotNull(gate);
+        assertTrue(gate.getIconWidth() > 0);
     }
 
     @Test
-    public void testScaledImage() {
+    public void testItemImageLoading() {
         ImageLoader loader = ImageLoader.getInstance();
+        ImageIcon money = loader.getItemImage("湿漉漉的三十元钱");
+        assertNotNull(money);
+        assertTrue(money.getIconWidth() > 0);
+    }
 
-        ImageIcon original = loader.getImage("room_outside");
-        ImageIcon scaled = loader.getScaledImage("room_outside", 100, 100);
-
-        assertNotNull(scaled, "缩放图像不应为null");
-        assertTrue(scaled.getIconWidth() <= 100 || scaled.getIconHeight() <= 100,
-                "缩放图像尺寸应正确");
+    @Test
+    public void testScaleCover() {
+        ImageLoader loader = ImageLoader.getInstance();
+        ImageIcon original = loader.getRoomImage("gate");
+        ImageIcon covered = loader.scaleCover(original, 320, 180);
+        assertNotNull(covered);
+        assertTrue(covered.getIconWidth() >= 320 || covered.getIconHeight() >= 180);
     }
 }

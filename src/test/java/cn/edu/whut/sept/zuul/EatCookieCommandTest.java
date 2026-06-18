@@ -98,13 +98,23 @@ public class EatCookieCommandTest {
     }
 
     @Test
-    public void testEatIgnoresSecondWord() {
+    public void testEatSpecificFoodByName() {
+        player.takeItem(new Item("magic cookie", 100));
+        outContent.reset();
+        eatCookieCommand.execute(game, "magic cookie");
+
+        assertTrue(outContent.toString().contains("你吃掉了 magic cookie"));
+        assertEquals(0, player.getInventory().size());
+    }
+
+    @Test
+    public void testEatWrongSecondWordFails() {
         player.takeItem(new Item("magic cookie", 100));
         outContent.reset();
         eatCookieCommand.execute(game, "cookie");
 
-        assertTrue(outContent.toString().contains("你吃掉了 magic cookie"));
-        assertEquals(0, player.getInventory().size());
+        assertTrue(outContent.toString().contains("背包里没有「cookie」或该物品不可食用"));
+        assertEquals(1, player.getInventory().size());
     }
 
     @Test

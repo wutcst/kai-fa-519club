@@ -34,11 +34,15 @@ public class EatCookieCommand implements CommandInterface {
     @Override
     public boolean execute(Game game, String secondWord) {
         Player player = game.getPlayer();
-        Item food = FoodItems.findFirstEdible(player);
+        Item food = resolveFood(player, secondWord);
 
         if (food == null) {
-            System.out.println("背包里没有可以吃的食物！");
-            System.out.println("提示：先把食物 take 进背包，再使用 eat 命令。");
+            if (secondWord != null && !secondWord.trim().isEmpty()) {
+                System.out.println("背包里没有「" + secondWord.trim() + "」或该物品不可食用。");
+            } else {
+                System.out.println("背包里没有可以吃的食物！");
+                System.out.println("提示：先把食物 take 进背包，再使用 eat 命令。");
+            }
             return false;
         }
 
@@ -56,6 +60,17 @@ public class EatCookieCommand implements CommandInterface {
         }
 
         return false;
+    }
+
+    private Item resolveFood(Player player, String secondWord) {
+        if (secondWord != null && !secondWord.trim().isEmpty()) {
+            Item named = player.findItemInInventory(secondWord.trim());
+            if (named != null && FoodItems.isEdible(named.getDescription())) {
+                return named;
+            }
+            return null;
+        }
+        return FoodItems.findFirstEdible(player);
     }
 
     private void eatMilkTea(Game game, String foodName) {

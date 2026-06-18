@@ -1,0 +1,13 @@
+:root {
+  color-scheme: dark;
+  --window-bg: #080a10;
+  --hud-bg: rgba(15, 18, 28, 0.82);
+  --hud-bg-strong: rgba(10, 12, 20, 0.92);
+  --text-primary: #f0f4fc;
+  --text-muted: #b4bccc;
+  --accent: #58a6ff;
+  --danger: #dc5a5a;
+  --border-soft: rgba(255, 255, 255, 0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
