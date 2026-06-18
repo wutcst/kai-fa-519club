@@ -20,6 +20,9 @@ import CatSeniorLayer from '@/component/solo/CatSeniorLayer.vue'
 import InventoryHudSolo from '@/component/solo/InventoryHudSolo.vue'
 import LockedOverlay from '@/component/solo/LockedOverlay.vue'
 import RoomChatPanel from '@/component/multiplayer/RoomChatPanel.vue'
+import HostLeaveModal from '@/component/lobby/HostLeaveModal.vue'
+import ConfirmModal from '@/component/common/ConfirmModal.vue'
+import UnlockPasswordModal from '@/component/game/UnlockPasswordModal.vue'
 import GlassButton from '@/component/common/GlassButton.vue'
 
 const {
@@ -51,8 +54,20 @@ const {
   talkNpc,
   closeNpcDialog,
   promptUnlock,
+  unlockModalVisible,
+  unlockPassword,
+  closeUnlockModal,
+  confirmUnlock,
   sendChat,
   leaveRoom,
+  leaveConfirmVisible,
+  closeLeaveConfirm,
+  confirmLeaveGame,
+  hostLeaveVisible,
+  closeHostLeaveModal,
+  returnToTeamLobby,
+  dissolveRoomFromGame,
+  hostLeaveCandidates,
   dismissLockedOverlay,
   hideNotice,
   runCommand,
@@ -211,6 +226,34 @@ function onPickupDone(id: number) {
       :title="npcDialogTitle"
       :message="npcDialogMessage"
       @close="closeNpcDialog"
+    />
+
+    <HostLeaveModal
+      :visible="hostLeaveVisible"
+      :members="hostLeaveCandidates()"
+      from-game
+      @close="closeHostLeaveModal"
+      @return-lobby="returnToTeamLobby"
+      @dissolve="dissolveRoomFromGame"
+    />
+
+    <ConfirmModal
+      :visible="leaveConfirmVisible"
+      title="离开对局"
+      message="确定离开联机对局并退出当前队伍？"
+      confirm-label="离开"
+      danger
+      @confirm="confirmLeaveGame"
+      @cancel="closeLeaveConfirm"
+    />
+
+    <UnlockPasswordModal
+      :visible="unlockModalVisible"
+      :password="unlockPassword"
+      :loading="busy"
+      @update:password="unlockPassword = $event"
+      @confirm="confirmUnlock"
+      @cancel="closeUnlockModal"
     />
   </div>
 </template>

@@ -23,7 +23,7 @@ public class SignupCommand implements CommandInterface {
             System.out.println("用法: signup <用户名> <密码> <昵称>");
             return false;
         }
-        AuthResult result = game.getAuthService().register(parts[0], parts[1], parts[2]);
+        AuthResult result = game.getAuthService().registerConsole(parts[0], parts[1], parts[2]);
         if (result.isSuccess()) {
             game.bindAuthSession(result.getSession());
             System.out.println("注册成功，欢迎 " + parts[2] + "！");

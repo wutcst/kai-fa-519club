@@ -74,6 +74,8 @@ public class Game
     private final Map<String, Player> onlinePlayers = new LinkedHashMap<>();
     private final Map<String, List<Room>> onlineRoomHistories = new LinkedHashMap<>();
     private String activeOnlinePlayerId;
+    /** 第三、四关：有人持手电筒进入博学主楼后，全队可通行（无需各自带手电）。 */
+    private boolean mainBuildingIlluminated;
 
     /**
      * 创建游戏并初始化内部数据和解析器.
@@ -122,8 +124,7 @@ public class Game
 
         if (targetRoom instanceof DarkRoom
                 && levelManager.getCurrentLevelConfig().isMainBuildingDark()) {
-            DarkRoom darkRoom = (DarkRoom) targetRoom;
-            if (!darkRoom.canEnter(player)) {
+            if (!canEnterDarkRoom((DarkRoom) targetRoom)) {
                 System.out.println(DarkRoom.PENALTY_MESSAGE);
                 ActionTimeCost.deduct(this, ActionTimeCost.DARK_PENALTY);
                 return false;
@@ -150,20 +151,45 @@ public class Game
             if (teleportRoom.isTeleportEnabled()) {
                 Room teleportedRoom = teleportRoom.teleport();
                 this.currentRoom = teleportedRoom;
-                player.setCurrentRoom(teleportedRoom);
+                getPlayer().setCurrentRoom(teleportedRoom);
                 System.out.println("你进入了一个神秘的房间，突然被传送到了其他地方！");
             } else {
                 this.currentRoom = targetRoom;
-                player.setCurrentRoom(targetRoom);
+                getPlayer().setCurrentRoom(targetRoom);
             }
         } else {
             this.currentRoom = targetRoom;
-            player.setCurrentRoom(targetRoom);
+            getPlayer().setCurrentRoom(targetRoom);
             if ("boxue_west".equals(targetRoom.getRoomId())) {
                 levelManager.onEnterWestBuilding();
             }
+            if ("boxue_main".equals(targetRoom.getRoomId())
+                    && levelManager.getCurrentLevelConfig().isMainBuildingDark()) {
+                mainBuildingIlluminated = true;
+            }
         }
         return true;
+    }
+
+    /**
+     * 博学主楼是否已被照亮（联机一人带手电进入后全队可通行）。
+     */
+    public boolean isMainBuildingIlluminated() {
+        return mainBuildingIlluminated;
+    }
+
+    /**
+     * 关卡切换时重置主楼照亮状态。
+     */
+    public void resetMainBuildingIllumination() {
+        mainBuildingIlluminated = false;
+    }
+
+    private boolean canEnterDarkRoom(DarkRoom darkRoom) {
+        if (mainBuildingIlluminated) {
+            return true;
+        }
+        return darkRoom.canEnter(getPlayer());
     }
 
 
@@ -377,7 +403,7 @@ public class Game
             Room previousRoom = roomHistory.remove(roomHistory.size() - 1);
             // 直接修改当前房间，不调用setCurrentRoom()，避免重复添加历史
             this.currentRoom = previousRoom;
-            player.setCurrentRoom(previousRoom); // 更新玩家位置【新增】
+            getPlayer().setCurrentRoom(previousRoom);
             return true;
         }
         return false;
@@ -479,6 +505,7 @@ public class Game
      * 关卡切换时重置与 unlock 相关的房间物品（如体育馆手电筒）。
      */
     public void resetUnlockRoomState() {
+        resetMainBuildingIllumination();
         Room gym = getRoomById(UnlockService.GYM_ROOM_ID);
         if (gym != null) {
             gym.removeItemByDescription(DarkRoom.FLASHLIGHT_ITEM);

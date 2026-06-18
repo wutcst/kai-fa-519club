@@ -1,13 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { RoomInfo } from '@/model/types'
 import GlassPanel from '@/component/common/GlassPanel.vue'
 import GlassButton from '@/component/common/GlassButton.vue'
 
-defineProps<{
+const props = defineProps<{
   rooms: RoomInfo[]
   selectedRoomId: string
   loading: boolean
   error: string
+  compact?: boolean
+  fill?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -19,13 +22,26 @@ const emit = defineEmits<{
 function playerDots(count: number) {
   return Array.from({ length: 4 }, (_, index) => index < count)
 }
+
+function roomStatusLabel(room: RoomInfo) {
+  return room.inGame ? '游戏中' : '组队中'
+}
+
+function roomStatusClass(room: RoomInfo) {
+  return room.inGame ? 'status-playing' : 'status-lobby'
+}
+
+const selectedInGame = computed(() => {
+  const selected = props.rooms.find((room) => room.roomId === props.selectedRoomId)
+  return selected?.inGame ?? false
+})
 </script>
 
 <template>
-  <GlassPanel strong padding="22px 24px" class="list-panel">
+  <GlassPanel strong :padding="compact ? '16px 18px' : '22px 24px'" class="list-panel" :class="{ compact, fill }">
     <div class="head">
       <div class="head-left">
-        <svg class="panel-icon" viewBox="0 0 48 48" aria-hidden="true">
+        <svg v-if="!compact" class="panel-icon" viewBox="0 0 48 48" aria-hidden="true">
           <rect x="6" y="10" width="36" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="2.2" />
           <path d="M6 18h36" stroke="currentColor" stroke-width="2.2" />
           <circle cx="14" cy="14" r="1.5" fill="currentColor" />
@@ -33,7 +49,7 @@ function playerDots(count: number) {
         </svg>
         <div>
           <h2>房间列表</h2>
-          <p class="muted">选择房间加入，列表自动刷新</p>
+          <p v-if="!compact" class="muted">选择房间加入，列表自动刷新</p>
         </div>
       </div>
       <GlassButton :disabled="loading" @click="emit('refresh')">刷新</GlassButton>
@@ -53,10 +69,14 @@ function playerDots(count: number) {
         @click="emit('select', room.roomId)"
       >
         <div class="room-main">
-          <div class="title">{{ room.roomName }}</div>
+          <div class="title-row">
+            <div class="title">{{ room.roomName }}</div>
+            <span class="status-badge" :class="roomStatusClass(room)">{{ roomStatusLabel(room) }}</span>
+          </div>
           <div class="meta">
-            <span class="level-badge">L{{ room.level }}</span>
-            <span>{{ room.remainingSeconds }}s 剩余</span>
+            <span v-if="room.inGame" class="level-badge">L{{ room.level }}</span>
+            <span v-if="room.inGame">{{ room.remainingSeconds }}s 剩余</span>
+            <span v-else class="lobby-hint">等待房主开始</span>
           </div>
         </div>
         <div class="room-side">
@@ -76,10 +96,10 @@ function playerDots(count: number) {
     <GlassButton
       accent
       class="join-btn"
-      :disabled="loading || rooms.length === 0"
+      :disabled="loading || rooms.length === 0 || !!selectedInGame"
       @click="emit('join')"
     >
-      加入选中房间
+      {{ selectedInGame ? '游戏中无法加入' : '加入选中房间' }}
     </GlassButton>
 
     <p v-if="error" class="error">{{ error }}</p>
@@ -90,6 +110,29 @@ function playerDots(count: number) {
 .list-panel {
   border: 1px solid rgba(88, 166, 255, 0.18);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.list-panel.fill {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.list-panel.compact .head h2 {
+  font-size: 1rem;
+}
+
+.list-panel.fill .room-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.list-panel.fill .join-btn {
+  flex-shrink: 0;
+  margin-top: auto;
 }
 
 .head {
@@ -159,9 +202,36 @@ function playerDots(count: number) {
   box-shadow: 0 0 20px rgba(88, 166, 255, 0.12);
 }
 
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
 .title {
   font-weight: 600;
-  margin-bottom: 6px;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.status-lobby {
+  color: #9ecaff;
+  background: rgba(88, 166, 255, 0.15);
+}
+
+.status-playing {
+  color: #a8f0c8;
+  background: rgba(80, 200, 140, 0.15);
+}
+
+.lobby-hint {
+  color: var(--text-muted);
 }
 
 .meta {

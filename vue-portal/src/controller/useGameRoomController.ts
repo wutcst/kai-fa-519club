@@ -36,16 +36,22 @@ export function useGameRoomController() {
   const noticeVisible = ref(false)
   const lockedOverlayMessage = ref<string | null>(null)
   const npcDialogVisible = ref(false)
+  const unlockModalVisible = ref(false)
+  const unlockPassword = ref('')
   const npcDialogTitle = ref('')
   const npcDialogMessage = ref('')
   const polling = ref(false)
   const sceneTransition = ref(false)
   const directionalExit = ref(false)
   const moveDirection = ref<MoveDirection | null>(null)
+  const hostLeaveVisible = ref(false)
+  const leaveConfirmVisible = ref(false)
   const { isImmersive } = useGameDisplayMode()
   let pollTimer: ReturnType<typeof setInterval> | null = null
   let noticeTimer: ReturnType<typeof setTimeout> | null = null
   let lastRoomId = ''
+  let lastPlayerIds: string[] = []
+  let lastPlayerNames = new Map<string, string>()
 
   const session = computed(() => sessionModel.value)
   const gameState = computed(() => gameStateModel.value)
@@ -105,8 +111,44 @@ export function useGameRoomController() {
     clearDirectionalTransition()
   }
 
+  function detectPlayerLeaves(state: GameState) {
+    const active = session.value
+    if (!active?.isHost) {
+      lastPlayerIds = state.players.map((player) => player.playerId)
+      lastPlayerNames = new Map(state.players.map((player) => [player.playerId, player.displayName]))
+      return
+    }
+    const currentIds = new Set(state.players.map((player) => player.playerId))
+    for (const playerId of lastPlayerIds) {
+      if (playerId !== active.playerId && !currentIds.has(playerId)) {
+        const name = lastPlayerNames.get(playerId) ?? '队员'
+        showNotice(`${name} 已离开对局`, 6000)
+      }
+    }
+    lastPlayerIds = state.players.map((player) => player.playerId)
+    lastPlayerNames = new Map(state.players.map((player) => [player.playerId, player.displayName]))
+  }
+
+  async function exitToLobby(message: string) {
+    stopPolling()
+    showNotice(message, 5000)
+    await sleep(400)
+    router.push('/multiplayer/team')
+  }
+
+  async function exitAfterRoomGone(message: string) {
+    stopPolling()
+    clearSession()
+    showNotice(message, 5000)
+    await sleep(400)
+    router.push('/multiplayer')
+  }
+
   function applyState(state: GameState | null) {
     const normalized = normalizeGameState(state)
+    if (normalized) {
+      detectPlayerLeaves(normalized)
+    }
     if (normalized?.roomId && normalized.roomId !== lastRoomId) {
       sceneTransition.value = true
       setTimeout(() => {
@@ -147,9 +189,28 @@ export function useGameRoomController() {
     }
     try {
       const state = await gameService.fetchGameState(active.roomId, active.playerId)
+      if (state.roomInGame === false) {
+        await exitToLobby(active.isHost ? '已返回组队界面。' : '房主已结束本局，返回组队界面。')
+        return
+      }
       applyState(state)
-    } catch {
-      // 轮询失败静默
+      if (state?.levelState === 'FAILED' || state?.remainingSeconds <= 0) {
+        stopPolling()
+        showNotice('本关时间到，返回组队界面。', 5000)
+        try {
+          if (active.isHost) {
+            await roomService.endRoomRound(active.roomId)
+          }
+        } catch {
+          // 忽略
+        }
+        router.push('/multiplayer/team')
+      }
+    } catch (exception) {
+      const message = exception instanceof Error ? exception.message : ''
+      if (message.includes('房间不存在')) {
+        await exitAfterRoomGone('房间已解散，返回联机大厅。')
+      }
     }
   }
 
@@ -291,10 +352,23 @@ export function useGameRoomController() {
   }
 
   function promptUnlock() {
-    const password = window.prompt('请输入寝室智能锁八位密码：')
-    if (password?.trim()) {
-      void runCommand('unlock', password.trim())
+    unlockPassword.value = ''
+    unlockModalVisible.value = true
+  }
+
+  function closeUnlockModal() {
+    unlockModalVisible.value = false
+    unlockPassword.value = ''
+  }
+
+  function confirmUnlock() {
+    const password = unlockPassword.value.trim()
+    if (!password) {
+      return
     }
+    unlockModalVisible.value = false
+    unlockPassword.value = ''
+    void runCommand('unlock', password)
   }
 
   async function sendChat() {
@@ -318,29 +392,106 @@ export function useGameRoomController() {
   async function leaveRoom() {
     const active = session.value
     if (!active) {
-      router.push('/multiplayer')
+      router.push('/multiplayer/team')
       return
     }
-    if (!window.confirm('确定离开联机房间？')) {
+    if (active.isHost === true) {
+      hostLeaveVisible.value = true
+      return
+    }
+    leaveConfirmVisible.value = true
+  }
+
+  function closeLeaveConfirm() {
+    leaveConfirmVisible.value = false
+  }
+
+  async function confirmLeaveGame() {
+    leaveConfirmVisible.value = false
+    await leaveGameAsMember()
+  }
+
+  async function leaveGameAsMember() {
+    const active = session.value
+    if (!active) {
+      router.push('/multiplayer')
       return
     }
     stopPolling()
+    hostLeaveVisible.value = false
     try {
-      await roomService.leaveRoom(active.roomId, active.playerId)
+      await roomService.leaveRoom(active.roomId, active.playerId, 'LEAVE')
     } catch {
-      // 忽略离开失败
-    } finally {
-      clearSession()
-      router.push('/multiplayer')
+      // 忽略
     }
+    clearSession()
+    router.push('/multiplayer')
+  }
+
+  function closeHostLeaveModal() {
+    hostLeaveVisible.value = false
+  }
+
+  async function returnToTeamLobby() {
+    const active = session.value
+    if (!active) {
+      router.push('/multiplayer/team')
+      return
+    }
+    stopPolling()
+    hostLeaveVisible.value = false
+    try {
+      await roomService.endRoomRound(active.roomId)
+    } catch {
+      // 忽略
+    }
+    router.push('/multiplayer/team')
+  }
+
+  async function dissolveRoomFromGame() {
+    const active = session.value
+    if (!active) {
+      return
+    }
+    stopPolling()
+    hostLeaveVisible.value = false
+    try {
+      await roomService.leaveRoom(active.roomId, active.playerId, 'DISSOLVE')
+    } catch {
+      // 忽略
+    }
+    clearSession()
+    router.push('/multiplayer')
+  }
+
+  const hostLeaveCandidates = () => {
+    const players = gameState.value?.players ?? []
+    const active = session.value
+    if (!active) {
+      return []
+    }
+    return players
+      .filter((player) => player.playerId !== active.playerId)
+      .map((player) => ({
+        playerId: player.playerId,
+        userId: 0,
+        displayName: player.displayName,
+        host: false,
+      }))
   }
 
   onMounted(() => {
     if (!session.value) {
-      router.replace('/multiplayer')
+      router.replace('/multiplayer/team')
       return
     }
     lastRoomId = gameState.value?.roomId ?? ''
+    if (gameState.value?.players) {
+      lastPlayerIds = gameState.value.players.map((player) => player.playerId)
+      lastPlayerNames = new Map(
+        gameState.value.players.map((player) => [player.playerId, player.displayName]),
+      )
+    }
     showNotice('欢迎来到联机对局。\n点击「环顾」查看公告，右下角按钮可打开聊天。', 6000)
     startPolling()
   })
@@ -380,8 +531,20 @@ export function useGameRoomController() {
     talkNpc,
     closeNpcDialog,
     promptUnlock,
+    unlockModalVisible,
+    unlockPassword,
+    closeUnlockModal,
+    confirmUnlock,
     sendChat,
     leaveRoom,
+    leaveConfirmVisible,
+    closeLeaveConfirm,
+    confirmLeaveGame,
+    hostLeaveVisible,
+    closeHostLeaveModal,
+    returnToTeamLobby,
+    dissolveRoomFromGame,
+    hostLeaveCandidates,
     dismissLockedOverlay,
     hideNotice,
     runCommand,

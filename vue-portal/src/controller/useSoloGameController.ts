@@ -32,6 +32,8 @@ export function useSoloGameController() {
   const noticeText = ref('')
   const noticeVisible = ref(false)
   const combineVisible = ref(false)
+  const unlockModalVisible = ref(false)
+  const unlockPassword = ref('')
   const npcDialogVisible = ref(false)
   const npcDialogTitle = ref('')
   const npcDialogMessage = ref('')
@@ -292,10 +294,23 @@ export function useSoloGameController() {
   }
 
   function promptUnlock() {
-    const password = window.prompt('请输入寝室智能锁八位密码：')
-    if (password?.trim()) {
-      void runCommand('unlock', password.trim())
+    unlockPassword.value = ''
+    unlockModalVisible.value = true
+  }
+
+  function closeUnlockModal() {
+    unlockModalVisible.value = false
+    unlockPassword.value = ''
+  }
+
+  function confirmUnlock() {
+    const password = unlockPassword.value.trim()
+    if (!password) {
+      return
     }
+    unlockModalVisible.value = false
+    unlockPassword.value = ''
+    void runCommand('unlock', password)
   }
 
   async function startNewGame(playerName: string) {
@@ -397,6 +412,10 @@ export function useSoloGameController() {
     cancelCombine,
     dismissOutcome,
     promptUnlock,
+    unlockModalVisible,
+    unlockPassword,
+    closeUnlockModal,
+    confirmUnlock,
     dismissLocked,
     startNewGame,
     quitGame,

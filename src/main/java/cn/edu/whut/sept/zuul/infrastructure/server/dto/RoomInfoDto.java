@@ -13,6 +13,7 @@ public class RoomInfoDto {
     private int level;
     private int remainingSeconds;
     private String hostPlayerId;
+    private boolean inGame;
 
     public static RoomInfoDto from(GameRoom room) {
         RoomInfoDto dto = new RoomInfoDto();
@@ -22,6 +23,7 @@ public class RoomInfoDto {
         dto.level = room.getGame().getLevelManager().getCurrentLevel();
         dto.remainingSeconds = room.getGame().getLevelTimer().getRemainingSeconds();
         dto.hostPlayerId = room.getHostPlayerId();
+        dto.inGame = room.isInGame();
         return dto;
     }
 
@@ -47,5 +49,13 @@ public class RoomInfoDto {
 
     public String getHostPlayerId() {
         return hostPlayerId;
+    }
+
+    public boolean isInGame() {
+        return inGame;
+    }
+
+    public void setInGame(boolean inGame) {
+        this.inGame = inGame;
     }
 }

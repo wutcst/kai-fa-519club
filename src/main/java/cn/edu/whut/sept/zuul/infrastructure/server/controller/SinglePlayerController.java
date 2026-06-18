@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,6 +13,7 @@ import cn.edu.whut.sept.zuul.infrastructure.server.dto.ApiResponse;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.CreateSoloSessionRequest;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.SoloCommandRequest;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.SoloCommandResponseDto;
+import cn.edu.whut.sept.zuul.infrastructure.server.dto.SoloLevelSelectionDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.SoloSessionDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.SoloViewStateDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.service.SinglePlayerGuiService;
@@ -29,9 +31,21 @@ public class SinglePlayerController {
         this.singlePlayerGuiService = singlePlayerGuiService;
     }
 
+    @GetMapping("/levels")
+    public ApiResponse<SoloLevelSelectionDto> listLevels(
+            @RequestHeader(value = "X-Auth-Token", required = false) String token) {
+        return ApiResponse.ok(singlePlayerGuiService.getLevelSelection(token));
+    }
+
     @PostMapping("/sessions")
-    public ApiResponse<SoloSessionDto> createSession(@RequestBody(required = false) CreateSoloSessionRequest request) {
-        return ApiResponse.ok(singlePlayerGuiService.createSession(request));
+    public ApiResponse<SoloSessionDto> createSession(
+            @RequestHeader(value = "X-Auth-Token", required = false) String token,
+            @RequestBody(required = false) CreateSoloSessionRequest request) {
+        try {
+            return ApiResponse.ok(singlePlayerGuiService.createSession(request, token));
+        } catch (IllegalArgumentException exception) {
+            return ApiResponse.fail(exception.getMessage());
+        }
     }
 
     @GetMapping("/sessions/{sessionId}/state")

@@ -10,6 +10,8 @@ public class RoomSessionDto {
     private String playerId;
     private String displayName;
     private GameStateDto state;
+    private boolean host;
+    private boolean inGame;
 
     public String getRoomId() {
         return roomId;
@@ -49,5 +51,21 @@ public class RoomSessionDto {
 
     public void setState(GameStateDto state) {
         this.state = state;
+    }
+
+    public boolean isHost() {
+        return host;
+    }
+
+    public void setHost(boolean host) {
+        this.host = host;
+    }
+
+    public boolean isInGame() {
+        return inGame;
+    }
+
+    public void setInGame(boolean inGame) {
+        this.inGame = inGame;
     }
 }

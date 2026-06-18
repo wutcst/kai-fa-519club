@@ -3,6 +3,7 @@ package cn.edu.whut.sept.zuul.infrastructure.server.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import cn.edu.whut.sept.zuul.DarkRoom;
 import cn.edu.whut.sept.zuul.FoodItems;
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Item;
@@ -52,10 +53,18 @@ public final class MultiplayerViewMapper {
         dto.setChatMessages(room.getChatMessages().stream()
             .map(RoomChatMessageDto::from)
             .collect(Collectors.toList()));
+        dto.setRoomInGame(room.isInGame());
+        dto.setHostPlayerId(room.getHostPlayerId());
         return dto;
     }
 
     public static String buildNoticeMessage(String commandWord, List<String> lines) {
+        if (lines == null || lines.isEmpty()) {
+            return null;
+        }
+        if (lines.stream().anyMatch(MultiplayerViewMapper::isDarkPenaltyLine)) {
+            return DarkRoom.PENALTY_MESSAGE;
+        }
         if (!shouldShowCommandPopup(commandWord, lines)) {
             return null;
         }
@@ -123,7 +132,10 @@ public final class MultiplayerViewMapper {
             return false;
         }
         String cmd = commandWord == null ? "" : commandWord.trim().toLowerCase();
-        if ("go".equals(cmd) || "back".equals(cmd) || "look".equals(cmd)) {
+        if ("go".equals(cmd) || "back".equals(cmd)) {
+            return lines.stream().anyMatch(MultiplayerViewMapper::isDarkPenaltyLine);
+        }
+        if ("look".equals(cmd)) {
             return false;
         }
         if ("take".equals(cmd)) {
@@ -133,6 +145,10 @@ public final class MultiplayerViewMapper {
             return false;
         }
         return true;
+    }
+
+    private static boolean isDarkPenaltyLine(String line) {
+        return line != null && line.contains(DarkRoom.PENALTY_MESSAGE);
     }
 
     private static boolean isTakeFailureLine(String line) {

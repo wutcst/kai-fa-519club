@@ -15,11 +15,14 @@ import cn.edu.whut.sept.zuul.gui.GameGuiController;
 import cn.edu.whut.sept.zuul.gui.GuiOutcomeHelper;
 import cn.edu.whut.sept.zuul.gui.GuiPhase3Helper;
 import cn.edu.whut.sept.zuul.gui.NpcDialogHelper;
+import cn.edu.whut.sept.zuul.infrastructure.auth.AuthService;
+import cn.edu.whut.sept.zuul.infrastructure.auth.AuthSession;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.CreateSoloSessionRequest;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.ExitAvailabilityDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.ItemViewDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.OutcomeOverlayDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.SoloCommandResponseDto;
+import cn.edu.whut.sept.zuul.infrastructure.server.dto.SoloLevelSelectionDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.SoloSessionDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.SoloViewStateDto;
 import cn.edu.whut.sept.zuul.infrastructure.server.dto.UiActionFlagsDto;
@@ -37,14 +40,33 @@ public class SinglePlayerGuiService {
     private static final String CAT_PHOTO_ITEM = "一张猫学长的照片";
 
     private final SinglePlayerSessionRegistry sessionRegistry;
+    private final SoloProgressService soloProgressService;
+    private final AuthService authService;
 
-    public SinglePlayerGuiService(SinglePlayerSessionRegistry sessionRegistry) {
+    public SinglePlayerGuiService(
+            SinglePlayerSessionRegistry sessionRegistry,
+            SoloProgressService soloProgressService,
+            AuthServiceProvider authServiceProvider) {
         this.sessionRegistry = sessionRegistry;
+        this.soloProgressService = soloProgressService;
+        this.authService = authServiceProvider.getAuthService();
     }
 
-    public SoloSessionDto createSession(CreateSoloSessionRequest request) {
+    public SoloLevelSelectionDto getLevelSelection(String token) {
+        Long userId = resolveUserId(token);
+        return soloProgressService.buildLevelSelection(userId);
+    }
+
+    public SoloSessionDto createSession(CreateSoloSessionRequest request, String token) {
         String playerName = request == null ? null : request.getPlayerName();
-        SinglePlayerSession session = sessionRegistry.createSession(playerName);
+        int levelNumber = request == null || request.getLevelNumber() == null
+            ? LevelConfig.MIN_LEVEL
+            : request.getLevelNumber();
+        Long userId = resolveUserId(token);
+        soloProgressService.assertLevelUnlocked(userId, levelNumber);
+        int highestUnlocked = soloProgressService.getHighestUnlockedForUser(userId);
+        SinglePlayerSession session = sessionRegistry.createSession(
+            playerName, levelNumber, highestUnlocked, userId);
         SoloSessionDto dto = new SoloSessionDto();
         dto.setSessionId(session.getSessionId());
         dto.setState(buildViewState(session));
@@ -188,8 +210,37 @@ public class SinglePlayerGuiService {
         if (type == GuiOutcomeHelper.OutcomeType.NONE) {
             return;
         }
+        persistLevelProgressIfNeeded(session, type);
         session.setPendingOutcome(buildOutcomeDto(session, type, lines));
         session.setPendingLockedOverlay(null);
+    }
+
+    private void persistLevelProgressIfNeeded(SinglePlayerSession session, GuiOutcomeHelper.OutcomeType type) {
+        Long userId = session.getUserId();
+        if (userId == null) {
+            return;
+        }
+        Game game = session.getGame();
+        int clearedLevel;
+        if (type == GuiOutcomeHelper.OutcomeType.GAME_WON) {
+            clearedLevel = LevelConfig.MAX_LEVEL;
+        } else if (type == GuiOutcomeHelper.OutcomeType.LEVEL_PASSED) {
+            clearedLevel = game.getLevelManager().getCurrentLevel() - 1;
+        } else {
+            return;
+        }
+        if (clearedLevel >= LevelConfig.MIN_LEVEL) {
+            soloProgressService.recordLevelCleared(userId, clearedLevel);
+        }
+    }
+
+    private Long resolveUserId(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return null;
+        }
+        return authService.validateToken(token.trim())
+            .map(AuthSession::getUserId)
+            .orElse(null);
     }
 
     private void detectTimeoutOutcome(SinglePlayerSession session) {

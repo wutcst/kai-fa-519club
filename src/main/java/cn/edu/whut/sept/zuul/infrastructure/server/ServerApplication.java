@@ -11,7 +11,11 @@ import org.springframework.context.annotation.ComponentScan;
  * 或运行打包后的可执行 JAR。</p>
  */
 @SpringBootApplication
-@ComponentScan(basePackages = "cn.edu.whut.sept.zuul.infrastructure.server")
+@ComponentScan(basePackages = {
+    "cn.edu.whut.sept.zuul.infrastructure.server",
+    "cn.edu.whut.sept.zuul.infrastructure.social",
+    "cn.edu.whut.sept.zuul.multiplayer"
+})
 public class ServerApplication {
 
     public static void main(String[] args) {
