@@ -67,7 +67,7 @@ public class FriendApiTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.length()").value(0));
 
-        mockMvc.perform(post("/api/friends/requests/1/accept")
+        mockMvc.perform(post("/api/friends/requests/999999999/accept")
                 .header("X-Auth-Token", tokenB))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(1));
