@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import cn.edu.whut.sept.zuul.infrastructure.auth.AuthResult;
 import cn.edu.whut.sept.zuul.infrastructure.auth.AuthService;
-import cn.edu.whut.sept.zuul.infrastructure.auth.AuthSession;
 import cn.edu.whut.sept.zuul.infrastructure.auth.AuthService.UserPublicView;
 import cn.edu.whut.sept.zuul.infrastructure.auth.UserAccount;
 import cn.edu.whut.sept.zuul.infrastructure.auth.VerificationSendResult;
