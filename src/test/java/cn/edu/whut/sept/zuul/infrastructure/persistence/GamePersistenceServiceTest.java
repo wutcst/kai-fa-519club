@@ -111,8 +111,8 @@ public class GamePersistenceServiceTest {
         Game gameA = createGameWithPersistence();
         Game gameB = createGameWithPersistence();
 
-        gameA.bindAuthSession(authService.register("user_a", "secret12", "玩家A").getSession());
-        gameB.bindAuthSession(authService.register("user_b", "secret12", "玩家B").getSession());
+        gameA.bindAuthSession(authService.registerConsole("user_a", "secret12", "玩家A").getSession());
+        gameB.bindAuthSession(authService.registerConsole("user_b", "secret12", "玩家B").getSession());
 
         long saveA = persistenceService.saveProgress(gameA);
         persistenceService.saveProgress(gameB);

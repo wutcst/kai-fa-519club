@@ -17,6 +17,7 @@ import InventoryHudSolo from '@/component/solo/InventoryHudSolo.vue'
 import OutcomeOverlay from '@/component/solo/OutcomeOverlay.vue'
 import LockedOverlay from '@/component/solo/LockedOverlay.vue'
 import CombinePrompt from '@/component/solo/CombinePrompt.vue'
+import UnlockPasswordModal from '@/component/game/UnlockPasswordModal.vue'
 import GlassButton from '@/component/common/GlassButton.vue'
 
 const {
@@ -50,6 +51,10 @@ const {
   cancelCombine,
   dismissOutcome,
   promptUnlock,
+  unlockModalVisible,
+  unlockPassword,
+  closeUnlockModal,
+  confirmUnlock,
   dismissLocked,
   quitGame,
   hideNotice,
@@ -203,6 +208,15 @@ function onPickupDone(id: number) {
       :visible="combineVisible"
       @confirm="confirmCombine"
       @cancel="cancelCombine"
+    />
+
+    <UnlockPasswordModal
+      :visible="unlockModalVisible"
+      :password="unlockPassword"
+      :loading="busy"
+      @update:password="unlockPassword = $event"
+      @confirm="confirmUnlock"
+      @cancel="closeUnlockModal"
     />
 
     <NpcDialog

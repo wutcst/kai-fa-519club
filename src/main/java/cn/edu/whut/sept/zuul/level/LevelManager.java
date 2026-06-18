@@ -235,6 +235,19 @@ public class LevelManager {
         return highestUnlockedLevel;
     }
 
+    /**
+     * 从账号存档恢复已解锁关卡上限（单机选关用）。
+     *
+     * @param level 已解锁的最高关卡号（1—5）
+     */
+    public void setHighestUnlockedLevel(int level) {
+        if (level < LevelConfig.MIN_LEVEL || level > LevelConfig.MAX_LEVEL) {
+            throw new IllegalArgumentException("解锁关卡号必须在 " + LevelConfig.MIN_LEVEL
+                + "—" + LevelConfig.MAX_LEVEL + " 之间");
+        }
+        this.highestUnlockedLevel = level;
+    }
+
     public LevelState getState() {
         return state;
     }

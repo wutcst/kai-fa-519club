@@ -69,3 +69,17 @@ export interface SoloSessionRef {
   sessionId: string
   playerName: string
 }
+
+export interface SoloLevelOption {
+  levelNumber: number
+  title: string
+  missionHint: string
+  unlocked: boolean
+  cleared: boolean
+}
+
+export interface SoloLevelSelection {
+  levels: SoloLevelOption[]
+  comingSoonLabel: string
+  comingSoonMessage: string
+}

@@ -50,13 +50,12 @@ const ROOM_FLOOR_BANDS: Record<string, RoomFloorBand> = {
     surface: 'ledge',
   },
   boxue_main: { xMin: 0.1, xMax: 0.9, yMin: 0.66, yMax: 0.9 },
-  /** 博学北楼：主楼梯在中下方，物品集中排在台阶区域（志愿者 NPC 独立锚点不变） */
+  /** 博学北楼：物品在左侧台阶区，志愿者与猫学长在右侧 */
   boxue_north: {
-    xMin: 0.38,
-    xMax: 0.62,
-    yMin: 0.74,
-    yMax: 0.93,
-    distribute: 'center',
+    xMin: 0.08,
+    xMax: 0.4,
+    yMin: 0.72,
+    yMax: 0.88,
   },
   boxue_west: { xMin: 0.12, xMax: 0.88, yMin: 0.64, yMax: 0.88 },
   boxue_east: { xMin: 0.12, xMax: 0.88, yMin: 0.64, yMax: 0.88 },
@@ -77,18 +76,32 @@ export interface NpcDoorAnchor {
 
 const NPC_DOOR_ANCHORS: Record<string, NpcDoorAnchor> = {
   supermarket: { x: 0.76, y: 0.58, title: '宿管阿姨', scale: 1.4 },
-  boxue_north: { x: 0.63, y: 0.94, title: '志愿者' },
+  boxue_north: { x: 0.74, y: 0.8, title: '志愿者', scale: 2 },
   library: { x: 0.52, y: 0.82, title: '志愿者', scale: 1.4 },
 }
 
-/** 猫学长照片（志愿者旁，不可拾取） */
-export const CAT_SENIOR_ANCHOR: ItemAnchor = { x: 0.78, y: 0.95, placement: 'floor' }
+/** 猫学长（喂猫交互，博学北楼右侧） */
+export const CAT_SENIOR_ANCHOR: ItemAnchor = { x: 0.86, y: 0.72, placement: 'floor' }
 
 /** 全局物品落点（不限关卡） */
 const ITEM_ANCHOR_OVERRIDES: Record<string, Partial<ItemAnchor> & { x: number; y: number }> = {
   社团传单: { x: 0.86, y: 0.88 },
-  一根二手数据线: { x: 0.46, y: 0.93, placement: 'floor' },
-  一台打开的电脑: { x: 0.54, y: 0.91, placement: 'floor' },
+}
+
+/** 按房间覆盖物品落点（优先于全局） */
+const ROOM_ITEM_OVERRIDES: Record<
+  string,
+  Record<string, Partial<ItemAnchor> & { x: number; y: number }>
+> = {
+  boxue_north: {
+    湿漉漉的三十元钱: { x: 0.14, y: 0.84, placement: 'floor' },
+    一根二手数据线: { x: 0.1, y: 0.77, placement: 'floor' },
+    寝室省电攻略: { x: 0.32, y: 0.73, placement: 'floor' },
+    一台打开的电脑: { x: 0.2, y: 0.86, placement: 'floor' },
+    志愿者马甲: { x: 0.13, y: 0.8, placement: 'floor' },
+    晚安玛卡巴卡抱枕: { x: 0.36, y: 0.85, placement: 'floor' },
+    一张猫学长的照片: { x: 0.24, y: 0.76, placement: 'floor' },
+  },
 }
 
 /**
@@ -111,11 +124,6 @@ const ROOM_LEVEL_ITEM_OVERRIDES: Record<
       食堂纸条: { x: 0.34, y: 0.7, placement: 'shelf' },
     },
   },
-  boxue_north: {
-    3: {
-      寝室省电攻略: { x: 0.44, y: 0.9, placement: 'floor' },
-    },
-  },
 }
 
 function resolveItemOverride(
@@ -136,6 +144,9 @@ function resolveItemOverride(
         return byLevel[3][trimmed]
       }
     }
+  }
+  if (room && ROOM_ITEM_OVERRIDES[room]?.[trimmed]) {
+    return ROOM_ITEM_OVERRIDES[room][trimmed]
   }
   return ITEM_ANCHOR_OVERRIDES[trimmed] ?? null
 }

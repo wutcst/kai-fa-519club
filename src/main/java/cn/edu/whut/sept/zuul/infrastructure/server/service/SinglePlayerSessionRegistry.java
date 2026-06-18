@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
 import cn.edu.whut.sept.zuul.Game;
+import cn.edu.whut.sept.zuul.level.LevelConfig;
 
 /**
  * 单机会话注册表。
@@ -16,13 +17,17 @@ public class SinglePlayerSessionRegistry {
 
     private final Map<String, SinglePlayerSession> sessions = new ConcurrentHashMap<>();
 
-    public SinglePlayerSession createSession(String playerName) {
+    public SinglePlayerSession createSession(String playerName, int levelNumber, int highestUnlocked, Long userId) {
         Game game = new Game();
         if (playerName != null && !playerName.trim().isEmpty()) {
             game.getPlayer().setName(playerName.trim());
         }
+        game.getLevelManager().setHighestUnlockedLevel(highestUnlocked);
+        if (levelNumber != LevelConfig.MIN_LEVEL) {
+            game.getLevelManager().startLevel(levelNumber);
+        }
         String sessionId = UUID.randomUUID().toString();
-        SinglePlayerSession session = new SinglePlayerSession(sessionId, game);
+        SinglePlayerSession session = new SinglePlayerSession(sessionId, game, userId);
         sessions.put(sessionId, session);
         return session;
     }

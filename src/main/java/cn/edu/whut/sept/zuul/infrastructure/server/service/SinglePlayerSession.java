@@ -13,13 +13,15 @@ public class SinglePlayerSession {
     private final String sessionId;
     private final Game game;
     private final GameGuiController controller;
+    private final Long userId;
     private LevelState trackedLevelState;
     private OutcomeOverlayDto pendingOutcome;
     private String pendingLockedOverlay;
 
-    public SinglePlayerSession(String sessionId, Game game) {
+    public SinglePlayerSession(String sessionId, Game game, Long userId) {
         this.sessionId = sessionId;
         this.game = game;
+        this.userId = userId;
         this.controller = new GameGuiController();
         this.controller.prepareGuiSession(game);
         this.trackedLevelState = game.getLevelManager().getState();
@@ -27,6 +29,10 @@ public class SinglePlayerSession {
 
     public String getSessionId() {
         return sessionId;
+    }
+
+    public Long getUserId() {
+        return userId;
     }
 
     public Game getGame() {

@@ -91,6 +91,19 @@ public class DarkRoomTest {
         assertEquals(before, game.getLevelTimer().getRemainingSeconds());
     }
 
+    @Test
+    public void testReenterMainBuildingWithoutFlashlightAfterIlluminated() {
+        game.getPlayer().takeItem(new Item(DarkRoom.FLASHLIGHT_ITEM, 200));
+        assertTrue(game.setCurrentRoom(boxueMain));
+        assertTrue(game.isMainBuildingIlluminated());
+
+        game.setCurrentRoom(gate);
+        game.getPlayer().dropItem(DarkRoom.FLASHLIGHT_ITEM);
+
+        assertTrue(game.setCurrentRoom(boxueMain));
+        assertEquals(boxueMain, game.getCurrentRoom());
+    }
+
     private void enterLevelThree() {
         game.getLevelManager().completeCurrentLevel();
         game.getLevelManager().completeCurrentLevel();

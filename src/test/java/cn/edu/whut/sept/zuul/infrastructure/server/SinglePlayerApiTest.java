@@ -116,6 +116,37 @@ public class SinglePlayerApiTest {
             .andExpect(status().isOk());
     }
 
+    @Test
+    public void testListLevelsGuestOnlyFirstUnlocked() throws Exception {
+        mockMvc.perform(get("/api/solo/levels"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.levels[0].levelNumber").value(1))
+            .andExpect(jsonPath("$.data.levels[0].unlocked").value(true))
+            .andExpect(jsonPath("$.data.levels[1].unlocked").value(false))
+            .andExpect(jsonPath("$.data.comingSoonLabel").value("…"));
+    }
+
+    @Test
+    public void testCreateSessionRejectsLockedLevel() throws Exception {
+        mockMvc.perform(post("/api/solo/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"playerName\":\"Vue玩家\",\"levelNumber\":2}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(1))
+            .andExpect(jsonPath("$.message").value("第 2 关尚未解锁，请先通关上一关"));
+    }
+
+    @Test
+    public void testCreateSessionWithLevelNumber() throws Exception {
+        mockMvc.perform(post("/api/solo/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"playerName\":\"Vue玩家\",\"levelNumber\":1}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.state.level").value(1));
+    }
+
     private String extractJsonValue(String json, String prefix, String suffix) {
         int start = json.indexOf(prefix);
         assertTrue("JSON 中未找到字段: " + prefix, start >= 0);

@@ -29,6 +29,8 @@ public class GameStateDto {
     private UiActionFlagsDto actions = new UiActionFlagsDto();
     private List<PlayerStateDto> players = new ArrayList<>();
     private List<RoomChatMessageDto> chatMessages = new ArrayList<>();
+    private boolean roomInGame;
+    private String hostPlayerId;
 
     public static GameStateDto from(GameStateSnapshot snapshot) {
         GameStateDto dto = new GameStateDto();
@@ -159,5 +161,21 @@ public class GameStateDto {
 
     public void setChatMessages(List<RoomChatMessageDto> chatMessages) {
         this.chatMessages = chatMessages;
+    }
+
+    public boolean isRoomInGame() {
+        return roomInGame;
+    }
+
+    public void setRoomInGame(boolean roomInGame) {
+        this.roomInGame = roomInGame;
+    }
+
+    public String getHostPlayerId() {
+        return hostPlayerId;
+    }
+
+    public void setHostPlayerId(String hostPlayerId) {
+        this.hostPlayerId = hostPlayerId;
     }
 }

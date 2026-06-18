@@ -85,6 +85,24 @@ public class H2Database {
                     + "username VARCHAR(64) NOT NULL UNIQUE, "
                     + "password_hash VARCHAR(256) NOT NULL, "
                     + "display_name VARCHAR(64) NOT NULL, "
+                    + "email VARCHAR(128), "
+                    + "avatar_url VARCHAR(256), "
+                    + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                    + ")"
+            );
+            statement.execute("ALTER TABLE app_user ADD COLUMN IF NOT EXISTS email VARCHAR(128)");
+            statement.execute("ALTER TABLE app_user ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(256)");
+            statement.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_app_user_email ON app_user(email)"
+            );
+            statement.execute(
+                "CREATE TABLE IF NOT EXISTS email_verification_code ("
+                    + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
+                    + "email VARCHAR(128) NOT NULL, "
+                    + "code VARCHAR(8) NOT NULL, "
+                    + "purpose VARCHAR(32) NOT NULL DEFAULT 'register', "
+                    + "expires_at TIMESTAMP NOT NULL, "
+                    + "used BOOLEAN DEFAULT FALSE, "
                     + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
                     + ")"
             );
@@ -106,6 +124,29 @@ public class H2Database {
             statement.execute(
                 "ALTER TABLE game_save ADD COLUMN IF NOT EXISTS dorm_password_unlocked BOOLEAN DEFAULT FALSE");
             statement.execute("ALTER TABLE game_save ADD COLUMN IF NOT EXISTS magic_cookie_used BOOLEAN DEFAULT FALSE");
+            statement.execute(
+                "CREATE TABLE IF NOT EXISTS user_friend ("
+                    + "user_id BIGINT NOT NULL, "
+                    + "friend_user_id BIGINT NOT NULL, "
+                    + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+                    + "PRIMARY KEY (user_id, friend_user_id)"
+                    + ")"
+            );
+            statement.execute(
+                "CREATE TABLE IF NOT EXISTS friend_request ("
+                    + "from_user_id BIGINT NOT NULL, "
+                    + "to_user_id BIGINT NOT NULL, "
+                    + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+                    + "PRIMARY KEY (from_user_id, to_user_id)"
+                    + ")"
+            );
+            statement.execute(
+                "CREATE TABLE IF NOT EXISTS user_level_progress ("
+                    + "user_id BIGINT PRIMARY KEY, "
+                    + "highest_cleared_level INT NOT NULL DEFAULT 0, "
+                    + "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                    + ")"
+            );
             statement.execute(
                 "CREATE TABLE IF NOT EXISTS game_save_item ("
                     + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "

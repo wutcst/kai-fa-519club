@@ -1,39 +1,60 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { saveSoloSession, updateSoloViewState } from '@/model/soloSessionModel'
-import * as soloService from '@/service/soloService'
-import { unlockGameBgm } from '@/service/gameBgm'
+import { authSessionModel, isLoggedIn, mergeAuthSession, resolveMediaUrl } from '@/model/authModel'
+import { useAuthController } from '@/controller/useAuthController'
+import { saveSoloPendingSetup } from '@/model/soloSessionModel'
+import * as authService from '@/service/authService'
 import HomeAmbientBackground from '@/component/home/HomeAmbientBackground.vue'
 import DisplayModeToggle from '@/component/game/DisplayModeToggle.vue'
 import GlassButton from '@/component/common/GlassButton.vue'
 
 const router = useRouter()
+const { logout, loading: authLoading } = useAuthController()
 const playerName = ref('玩家')
-const loading = ref(false)
 const error = ref('')
 
-async function startSolo() {
-  unlockGameBgm()
-  loading.value = true
-  error.value = ''
-  try {
-    const created = await soloService.createSoloSession(playerName.value.trim() || '玩家')
-    saveSoloSession({
-      sessionId: created.sessionId,
-      playerName: playerName.value.trim() || '玩家',
-    })
-    updateSoloViewState(created.state)
-    router.push('/solo')
-  } catch (exception) {
-    error.value = exception instanceof Error ? exception.message : '无法连接服务端，请先 mvn spring-boot:run'
-  } finally {
-    loading.value = false
+const loggedIn = computed(() => authSessionModel.value !== null)
+
+const avatarSrc = computed(() =>
+  resolveMediaUrl(authSessionModel.value?.avatarUrl, authSessionModel.value?.userId),
+)
+
+onMounted(async () => {
+  if (!isLoggedIn()) {
+    return
   }
+  try {
+    const profile = await authService.fetchProfile()
+    mergeAuthSession({
+      displayName: profile.displayName,
+      email: profile.email,
+      avatarUrl: profile.avatarUrl,
+    })
+    playerName.value = profile.displayName || playerName.value
+  } catch {
+    // 忽略资料拉取失败，不影响首页
+  }
+})
+
+function openSoloLevels() {
+  error.value = ''
+  saveSoloPendingSetup({
+    playerName: playerName.value.trim() || '玩家',
+  })
+  router.push('/solo/levels')
 }
 
 function openMultiplayer() {
+  if (!loggedIn.value) {
+    router.push({ name: 'auth', query: { redirect: '/multiplayer' } })
+    return
+  }
   router.push('/multiplayer')
+}
+
+function openAuth() {
+  router.push('/auth')
 }
 </script>
 
@@ -43,6 +64,27 @@ function openMultiplayer() {
     <div class="home-vignette" />
 
     <div class="home-shell">
+      <div v-if="loggedIn" class="auth-bar">
+        <span class="auth-greeting">
+          <img
+            v-if="avatarSrc"
+            :src="avatarSrc"
+            alt=""
+            class="auth-avatar"
+          />
+          已登录：<strong>{{ authSessionModel?.displayName }}</strong>
+          <span class="auth-user">@{{ authSessionModel?.username }}</span>
+        </span>
+        <div class="auth-actions">
+          <GlassButton @click="router.push('/account')">我的账号</GlassButton>
+          <GlassButton :disabled="authLoading" @click="logout">退出登录</GlassButton>
+        </div>
+      </div>
+      <div v-else class="auth-bar">
+        <span class="auth-hint">联机模式需先登录账号</span>
+        <GlassButton accent @click="openAuth">登录 / 注册</GlassButton>
+      </div>
+
       <header class="hero">
         <div class="hero-badge">
           <span class="badge-mark">519</span>
@@ -99,8 +141,8 @@ function openMultiplayer() {
             <input v-model="playerName" maxlength="20" placeholder="输入你的名字" />
           </label>
 
-          <GlassButton accent class="card-cta" :disabled="loading" @click="startSolo">
-            {{ loading ? '正在进入…' : '开始单人游戏' }}
+          <GlassButton accent class="card-cta" @click="openSoloLevels">
+            开始单人游戏
           </GlassButton>
         </article>
 
@@ -134,8 +176,8 @@ function openMultiplayer() {
             <span /><span /><span /><span />
           </div>
 
-          <GlassButton class="card-cta" :disabled="loading" @click="openMultiplayer">
-            进入联机大厅
+          <GlassButton class="card-cta" :disabled="authLoading" @click="openMultiplayer">
+            {{ loggedIn ? '进入联机大厅' : '登录后进入联机' }}
           </GlassButton>
         </article>
       </section>
@@ -153,7 +195,7 @@ function openMultiplayer() {
 <style scoped>
 .home-view {
   position: relative;
-  min-height: 100vh;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -170,18 +212,74 @@ function openMultiplayer() {
 .home-shell {
   position: relative;
   z-index: 2;
-  min-height: 100vh;
+  height: 100%;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 24px 24px;
-  gap: 36px;
+  padding: clamp(12px, 2vh, 28px) 24px clamp(10px, 1.5vh, 20px);
+  gap: clamp(14px, 2.5vh, 32px);
+  overflow: hidden;
+}
+
+.auth-bar {
+  width: min(920px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(12, 16, 28, 0.55);
+  backdrop-filter: blur(10px);
+  animation: heroIn 0.6s ease both;
+}
+
+.auth-greeting {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.auth-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(88, 166, 255, 0.35);
+}
+
+.auth-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.auth-greeting strong {
+  color: #dbeaff;
+}
+
+.auth-user {
+  margin-left: 6px;
+  font-size: 0.8rem;
+}
+
+.auth-hint {
+  font-size: 0.86rem;
+  color: var(--text-muted);
 }
 
 .hero {
   text-align: center;
   max-width: 640px;
+  flex-shrink: 1;
+  min-height: 0;
   animation: heroIn 0.8s ease both;
 }
 
@@ -283,15 +381,17 @@ function openMultiplayer() {
 
 .mode-section {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 2vh, 20px);
   width: min(920px, 100%);
+  flex-shrink: 1;
+  min-height: 0;
   animation: cardsIn 0.9s ease 0.15s both;
 }
 
 .mode-card {
   position: relative;
-  padding: 24px 22px 22px;
+  padding: clamp(16px, 2.2vh, 24px) clamp(16px, 2vw, 22px) clamp(14px, 2vh, 22px);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(12, 16, 28, 0.72);
@@ -416,11 +516,12 @@ function openMultiplayer() {
 
 .home-footer {
   text-align: center;
+  flex-shrink: 0;
   animation: heroIn 1s ease 0.3s both;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: clamp(6px, 1vh, 12px);
 }
 
 .error {
@@ -503,12 +604,58 @@ code {
   }
 }
 
-@media (max-width: 640px) {
-  .home-shell {
-    padding-top: 24px;
-    gap: 28px;
+@media (max-width: 720px) {
+  .mode-section {
+    grid-template-columns: 1fr;
   }
 
+  .home-shell {
+    justify-content: flex-start;
+    padding-top: 16px;
+  }
+}
+
+@media (max-height: 760px) {
+  .hero-badge {
+    margin-bottom: 10px;
+  }
+
+  .hero-title {
+    font-size: clamp(1.6rem, 4.5vw, 2.2rem);
+  }
+
+  .hero-sub {
+    margin-top: 8px;
+    font-size: 0.86rem;
+  }
+
+  .hero-tags {
+    margin-top: 10px;
+  }
+
+  .countdown-strip {
+    margin-top: 10px;
+    padding: 6px 12px;
+    font-size: 0.76rem;
+  }
+
+  .card-features {
+    margin-bottom: 12px;
+    line-height: 1.5;
+    font-size: 0.8rem;
+  }
+
+  .card-header {
+    margin-bottom: 10px;
+  }
+
+  .hint,
+  .copyright {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
   .hero-title {
     font-size: 1.85rem;
   }
