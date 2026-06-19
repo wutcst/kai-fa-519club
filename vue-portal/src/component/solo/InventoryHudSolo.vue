@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { ItemView } from '@/model/soloTypes'
-import { INVENTORY_SLOT_COUNT } from '@/model/theme'
 import ItemIcon from '@/component/game/ItemIcon.vue'
 import GlassButton from '@/component/common/GlassButton.vue'
 
@@ -42,11 +41,7 @@ const weightRatio = computed(() => {
 
 const weightWarning = computed(() => weightRatio.value >= 0.85)
 
-function slots() {
-  const filled = props.items.slice(0, INVENTORY_SLOT_COUNT)
-  const empties = Array(Math.max(0, INVENTORY_SLOT_COUNT - filled.length)).fill(null)
-  return [...filled, ...empties]
-}
+const displayItems = computed(() => props.items)
 
 function togglePanel() {
   expanded.value = !expanded.value
@@ -127,17 +122,16 @@ function choose(type: 'drop' | 'use' | 'eat' | 'inspect') {
         </div>
         <div class="slot-row">
           <button
-            v-for="(item, index) in slots()"
-            :key="index"
+            v-for="(item, index) in displayItems"
+            :key="`${item.name}-${index}`"
             type="button"
-            class="slot"
-            :class="{ filled: !!item }"
-            :disabled="!item || disabled"
-            @click="item && openMenu(item, $event)"
+            class="slot filled"
+            :disabled="disabled"
+            @click="openMenu(item, $event)"
           >
-            <ItemIcon v-if="item" :name="item.name" :size="40" />
-            <span v-else class="slot-empty">—</span>
+            <ItemIcon :name="item.name" :size="40" />
           </button>
+          <div v-if="displayItems.length === 0" class="slot-empty-hint">背包是空的</div>
         </div>
       </div>
     </Transition>
@@ -242,6 +236,7 @@ function choose(type: 'drop' | 'use' | 'eat' | 'inspect') {
   bottom: 68px;
   padding: 12px 14px;
   min-width: 380px;
+  max-width: min(560px, calc(100vw - 32px));
 }
 
 .panel-header {
@@ -275,7 +270,19 @@ function choose(type: 'drop' | 'use' | 'eat' | 'inspect') {
 
 .slot-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.slot-empty-hint {
+  width: 100%;
+  padding: 12px 4px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.82rem;
+  text-align: center;
 }
 
 .slot {
@@ -293,8 +300,8 @@ function choose(type: 'drop' | 'use' | 'eat' | 'inspect') {
   border-color: rgba(136, 198, 255, 0.35);
 }
 
-.slot-empty {
-  color: rgba(255, 255, 255, 0.25);
+.slot:disabled {
+  cursor: default;
 }
 
 .item-menu {

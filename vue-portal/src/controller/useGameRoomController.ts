@@ -198,9 +198,7 @@ export function useGameRoomController() {
         stopPolling()
         showNotice('本关时间到，返回组队界面。', 5000)
         try {
-          if (active.isHost) {
-            await roomService.endRoomRound(active.roomId)
-          }
+          await roomService.endRoomRound(active.roomId)
         } catch {
           // 忽略
         }

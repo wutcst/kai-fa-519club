@@ -9,7 +9,7 @@ import cn.edu.whut.sept.zuul.level.LevelConfig;
 import cn.edu.whut.sept.zuul.multiplayer.OutputCapture;
 
 /**
- * GUI 与游戏内核的命令桥接（F7 阶段 1）。
+ * Vue 前端与游戏内核的命令桥接（经 Spring REST 调用）。
  */
 public final class GameGuiController {
 

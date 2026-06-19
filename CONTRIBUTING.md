@@ -1,6 +1,6 @@
 # 贡献指南（小组协同开发规范）
 
-本项目：《熄灯前归寝》— World of Zuul 扩展（五关解密 + 多人 + GUI + H2）。
+本项目：《熄灯前归寝》— World of Zuul 扩展（五关解密 + Spring Boot REST + **Vue 3 图形前端** + H2）。
 
 ## 1. 分支模型（精简，禁止滥开分支）
 
@@ -77,6 +77,13 @@ mvn test
 mvn package -DskipTests=false
 ```
 
+若改动 `vue-portal/`（Vue 前端），另执行：
+
+```powershell
+cd vue-portal
+npm run build
+```
+
 任一步失败则**不要**推送。
 
 ## 4. 提交信息格式
@@ -148,8 +155,8 @@ git merge dev
 
 | 成员 | 个人分支 | 主责 |
 |------|----------|------|
-| 肖梦琪 | `feature/xmq` | 架构 E9—E14（#12—#16）、**F6 服务端**、**F8 框架**、F7 绑定层 |
-| 刘晶 | `feature/lj` | 核心命令 E1—E4/E8 等、**F7 GUI**、F6 客户端 / F8 DAO 协作 |
+| 肖梦琪 | `feature/xmq` | 架构 E9—E14、**F6 服务端**、**F8/H2/认证**、Spring API 桥接 |
+| 刘晶 | `feature/lj` | 核心命令 E1—E4/E8 等、**F7 Vue GUI**（经典/沉浸）、联机前端协作 |
 | 彭慧星 | `feature/phx` | E5、E6 `sleep`、E17、第 3—4 关与 E16 |
 | 庞绮君 | `feature/pqj` | E15、E7、E14、第 1—2 关与 E16（5 关）、文档与测试 |
 

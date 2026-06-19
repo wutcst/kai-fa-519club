@@ -68,7 +68,7 @@ public class LevelManager {
         dormitoryWrongPasswordAttempts = 0;
         game.resetUnlockRoomState();
 
-        game.getPlayer().dropAllItems();
+        game.clearAllInventories();
 
         Room startRoom = game.getRoomById(currentConfig.getStartRoomId());
         if (startRoom == null) {
@@ -177,7 +177,7 @@ public class LevelManager {
         dormitoryWrongPasswordAttempts = 0;
         game.resetUnlockRoomState();
 
-        game.getPlayer().dropAllItems();
+        game.clearAllInventories();
 
         Room startRoom = game.getRoomById(currentConfig.getStartRoomId());
         if (startRoom == null) {

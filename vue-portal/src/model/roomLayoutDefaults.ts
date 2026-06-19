@@ -93,6 +93,12 @@ const ROOM_ITEM_OVERRIDES: Record<
   string,
   Record<string, Partial<ItemAnchor> & { x: number; y: number }>
 > = {
+  /** 合成三材靠左摆放，避免与底部中央「向南」方向键重叠 */
+  boxue_west: {
+    棍子: { x: 0.16, y: 0.78, placement: 'floor' },
+    石头: { x: 0.24, y: 0.72, placement: 'floor' },
+    绳子: { x: 0.34, y: 0.8, placement: 'floor' },
+  },
   boxue_north: {
     湿漉漉的三十元钱: { x: 0.14, y: 0.84, placement: 'floor' },
     一根二手数据线: { x: 0.1, y: 0.77, placement: 'floor' },

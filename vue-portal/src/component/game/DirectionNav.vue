@@ -163,11 +163,13 @@ function onBackClick() {
 .direction-nav.multiplayer {
   --edge-south-bottom: 128px;
   --action-dock-bottom: 88px;
+  --south-offset-x: 44px;
 }
 
 .direction-nav.solo {
   --edge-south-bottom: 88px;
   --action-dock-bottom: 20px;
+  --south-offset-x: 44px;
 }
 
 .dir-btn.edge {
@@ -228,7 +230,7 @@ function onBackClick() {
 
 .dir-btn.south {
   bottom: var(--edge-south-bottom);
-  left: 50%;
+  left: calc(50% + var(--south-offset-x, 0px));
   transform: translateX(-50%);
 }
 

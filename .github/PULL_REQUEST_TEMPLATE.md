@@ -25,6 +25,7 @@
 
 - [ ] 本地 `mvn checkstyle:check` 通过
 - [ ] 本地 `mvn test` 通过
+- [ ] 若改动 `vue-portal/`：本地 `npm run build` 通过
 - [ ] 手动测试了受影响功能
 
 ## 代码质量自查
