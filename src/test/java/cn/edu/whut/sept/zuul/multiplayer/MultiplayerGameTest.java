@@ -6,6 +6,7 @@ import org.junit.Test;
 import cn.edu.whut.sept.zuul.DarkRoom;
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Item;
+import cn.edu.whut.sept.zuul.Player;
 import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 import cn.edu.whut.sept.zuul.level.TimerAuthority;
 import cn.edu.whut.sept.zuul.multiplayer.MultiplayerConfig;
@@ -57,6 +58,47 @@ public class MultiplayerGameTest {
         GameRoom room = registry.createRoom("计时测试", "房主", 1L);
         assertEquals(TimerAuthority.SERVER_HOST, room.getGame().getLevelTimer().getTimerAuthority());
         assertTrue(room.getGame().getLevelTimer().isAutoTickEnabled());
+    }
+
+    @Test
+    public void testRestartSameLevelClearsAllPlayersInventory() {
+        GameRoom room = registry.createRoom("同关重开", "玩家A", 1L);
+        JoinRoomResult guest = registry.joinRoom(room.getRoomId(), "玩家B", 2L);
+        Game game = room.getGame();
+        String hostId = room.getHostPlayerId();
+
+        game.setActiveOnlinePlayer(hostId);
+        game.getPlayer().takeItem(new Item("房主物品", 10));
+        game.setActiveOnlinePlayer(guest.getPlayerId());
+        game.getPlayer().takeItem(new Item("队员物品", 10));
+
+        game.getLevelManager().startLevel(1);
+
+        for (Player player : game.getOnlinePlayers().values()) {
+            assertTrue("同关重开后背包应清空: " + player.getName(),
+                player.getInventory().isEmpty());
+        }
+    }
+
+    @Test
+    public void testCompleteLevelClearsAllPlayersInventory() {
+        GameRoom room = registry.createRoom("背包清空", "玩家A", 1L);
+        JoinRoomResult guest = registry.joinRoom(room.getRoomId(), "玩家B", 2L);
+        Game game = room.getGame();
+        String hostId = room.getHostPlayerId();
+
+        game.setActiveOnlinePlayer(hostId);
+        game.getPlayer().takeItem(new Item("房主物品", 10));
+        game.setActiveOnlinePlayer(guest.getPlayerId());
+        game.getPlayer().takeItem(new Item("队员物品", 10));
+
+        game.getLevelManager().completeCurrentLevel();
+
+        for (Player player : game.getOnlinePlayers().values()) {
+            assertTrue("通关进下一关后背包应清空: " + player.getName(),
+                player.getInventory().isEmpty());
+        }
+        assertEquals(2, game.getLevelManager().getCurrentLevel());
     }
 
     @Test

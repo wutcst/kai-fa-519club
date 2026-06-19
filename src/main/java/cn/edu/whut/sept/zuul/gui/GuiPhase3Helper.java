@@ -4,7 +4,6 @@ import cn.edu.whut.sept.zuul.DarkRoom;
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.GatedRoom;
 import cn.edu.whut.sept.zuul.Player;
-import cn.edu.whut.sept.zuul.Room;
 import cn.edu.whut.sept.zuul.command.CombineCommand;
 import cn.edu.whut.sept.zuul.command.FeedCommand;
 import cn.edu.whut.sept.zuul.command.UseCommand;
@@ -13,7 +12,7 @@ import cn.edu.whut.sept.zuul.npc.NpcService;
 import cn.edu.whut.sept.zuul.unlock.UnlockService;
 
 /**
- * F7 阶段 3：黑暗主楼、西楼困锁、喂猫、门禁与密码、传送等 GUI 规则。
+ * 黑暗主楼、西楼困锁、喂猫、门禁与密码、传送等 Vue 界面规则辅助。
  */
 public final class GuiPhase3Helper {
 
@@ -95,33 +94,6 @@ public final class GuiPhase3Helper {
             }
         }
         return null;
-    }
-
-    /**
-     * 三材齐全时弹窗询问是否合成。
-     *
-     * @param dialogs 玻璃模态层
-     * @param game 游戏实例
-     * @param combineAction 确认后执行合成
-     */
-    public static void promptCombineIfReady(GlassModalLayer dialogs, Game game, Runnable combineAction) {
-        if (dialogs == null || !shouldOfferCombinePrompt(game)) {
-            return;
-        }
-        Room room = game.getCurrentRoom();
-        boolean inWest = room != null
-            && UseCommand.WEST_BUILDING_ROOM_ID.equals(room.getRoomId());
-        String message = inWest
-            ? "背包已有棍子、石头、绳子，是否合成锤子？"
-            : "背包已有棍子、石头、绳子。须在西楼内才能合成，现在尝试合成吗？";
-        dialogs.showConfirm(
-            "合成锤子",
-            message,
-            "合成",
-            "稍后",
-            combineAction,
-            null
-        );
     }
 
     private static boolean containsSnippet(Iterable<String> lines, String snippet) {

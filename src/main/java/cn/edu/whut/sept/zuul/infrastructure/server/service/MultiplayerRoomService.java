@@ -152,9 +152,8 @@ public class MultiplayerRoomService {
             soloProgressService.assertLevelUnlocked(userId, levelNumber);
             int highestUnlocked = soloProgressService.getHighestUnlockedForUser(userId);
             room.getGame().getLevelManager().setHighestUnlockedLevel(highestUnlocked);
-            if (levelNumber != room.getGame().getLevelManager().getCurrentLevel()) {
-                room.getGame().getLevelManager().startLevel(levelNumber);
-            }
+            // 每次开局都重置关卡（含背包、位置、计时），与单机 startLevel 行为一致
+            room.getGame().getLevelManager().startLevel(levelNumber);
             room.setInGame(true);
             syncRoomPresence(room);
         }

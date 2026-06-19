@@ -479,6 +479,20 @@ public class Game
     }
 
     /**
+     * 关卡切换时清空背包：联机模式下清空房间内所有玩家，单机清空主玩家。
+     */
+    public void clearAllInventories() {
+        if (multiplayerSessionActive) {
+            for (Player onlinePlayer : onlinePlayers.values()) {
+                onlinePlayer.dropAllItems();
+            }
+            player.dropAllItems();
+            return;
+        }
+        player.dropAllItems();
+    }
+
+    /**
      * 关卡加载或重开时重置玩家位置，不记录历史、不触发传送。
      *
      * @param room 目标房间

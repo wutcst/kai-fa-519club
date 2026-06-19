@@ -9,7 +9,7 @@ import cn.edu.whut.sept.zuul.multiplayer.OutputCapture;
 import cn.edu.whut.sept.zuul.npc.NpcService;
 
 /**
- * GUI 专用 NPC 对话：调用 {@link NpcService}，不经过 TalkCommand 的额外罚时（F7 阶段 2）。
+ * NPC 对话与显示规则，供 Vue 前端经 REST 使用。
  */
 public final class NpcDialogHelper {
 

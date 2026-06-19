@@ -1,8 +1,8 @@
 # GUI 试玩清单（L1→L5 + 联机 Vue 主前端）
 
-> **推荐运行：** 终端 1 `mvn spring-boot:run`；终端 2 `cd vue-portal && npm run dev` → http://localhost:5173  
-> **备用：** IDEA 运行 `GUIMain`，程序参数 `enhanced`（Swing 单机）  
-> **联机：** Vue `/multiplayer` 与 Spring `/api/game`；Swing 联机壳为遗留入口
+> **运行：** 终端 1 `mvn spring-boot:run`；终端 2 `cd vue-portal && npm run dev` → http://localhost:5173  
+> **显示模式：** 首页或局内可切换 **经典版 / 沉浸版**（`vue-portal`）  
+> **联机：** Vue `/multiplayer` 与 Spring `/api/game`
 
 ---
 
@@ -19,7 +19,7 @@
 | G7 | 结局弹层 | 超时 / sleep 通关 / 五关全通 专用卡片，非普通小弹窗 | ✅ 阶段4 |
 | G8 | 结局期间 | 不可移动、不可 back；点按钮后失败→restart | ✅ 阶段4 |
 | G9 | 菜单 保存/读档 | 玻璃对话框；读档后场景/计时/背包/结局层同步 | ✅ 阶段4-B |
-| G10 | 解锁/合成/新游戏 | 玻璃输入框 / 确认框（非 JOptionPane） | ✅ 阶段4-B |
+| G10 | 解锁/合成/新游戏 | Vue 玻璃输入框 / 确认框 | ✅ 阶段4-B |
 
 ---
 
@@ -95,10 +95,9 @@
 
 ---
 
-## Track B — Vue 3 辅前端（多人联机，必做）
+## Track B — Vue 联机前端
 
-> **架构：** Spring Boot `/api/rooms` 已有；Swing `MultiplayerLobbyDialog` / `MultiplayerGameWindow` 为临时联机壳。  
-> **目标：** `vue-portal/` 替代联机大厅与房间 UI，调用 REST，展示多人状态。
+> **架构：** Spring Boot `/api/rooms`、`/api/game`；`vue-portal/` 联机大厅与对局 UI。
 
 | # | 模块 | 说明 | 状态 |
 |---|------|------|------|
@@ -107,7 +106,7 @@
 | V3 | 创建/加入房间 | `POST /api/rooms`, `POST .../join` | ✅ |
 | V4 | 对局内同步 | 1s 轮询 `/api/game/state` | ✅ |
 | V5 | 发令 | 方向键 + 命令栏 → `/api/game/command` | ✅ |
-| V6 | 与 Swing 分工 | 单机 `enhanced`；联机用 `vue-portal` | ✅ 文档化 |
+| V6 | 显示模式 | 经典版 / 沉浸版切换 | ✅ |
 | V7 | E2E | 两客户端同房间联机 smoke | ☐ 人工 |
 
 **后端已具备：** `MultiplayerClient`, `RoomController`, `MultiplayerApiTest`, `WebConfig`（CORS）  
@@ -115,12 +114,12 @@
 
 ---
 
-## 阶段 4 剩余（Swing 单机）
+## 阶段 4 剩余（Vue 单机）
 
 | 项 | 内容 |
 |----|------|
 | B-3 | 资源：L4 cookie / L5 寝室图缺图时用占位符清单 |
-| — | B-1/B-2 玻璃对话框 + 读档 UI 同步已完成 |
+| — | 经典版 / 沉浸版 HUD、读档 UI 同步已完成 |
 
 ---
 

@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { INVENTORY_SLOT_COUNT } from '@/model/theme'
 import ItemIcon from '@/component/game/ItemIcon.vue'
 
 const props = defineProps<{
   items: string[]
 }>()
 
-const slots = computed(() => {
-  const filled = props.items.slice(0, INVENTORY_SLOT_COUNT)
-  const emptyCount = Math.max(0, INVENTORY_SLOT_COUNT - filled.length)
-  return [...filled, ...Array(emptyCount).fill('')]
-})
+const slots = computed(() => props.items)
 </script>
 
 <template>
@@ -21,13 +16,12 @@ const slots = computed(() => {
       <div
         v-for="(item, index) in slots"
         :key="`${index}-${item}`"
-        class="slot"
-        :class="{ filled: !!item }"
-        :title="item || '空'"
+        class="slot filled"
+        :title="item"
       >
-        <ItemIcon v-if="item" :name="item" :size="40" />
-        <span v-else class="slot-empty">—</span>
+        <ItemIcon :name="item" :size="40" />
       </div>
+      <div v-if="slots.length === 0" class="slot-empty-hint">背包是空的</div>
     </div>
   </div>
 </template>
@@ -50,7 +44,18 @@ const slots = computed(() => {
 
 .slot-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.slot-empty-hint {
+  width: 100%;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.82rem;
+  text-align: center;
+  padding: 8px 0;
 }
 
 .slot {

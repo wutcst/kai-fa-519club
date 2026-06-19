@@ -6,7 +6,7 @@ import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.level.LevelState;
 
 /**
- * GUI 结局弹层：超时失败、关卡通关、全通（F7 阶段 4）。
+ * 结局弹层判定（超时失败、关卡通关、全通），供 Vue API 视图状态使用。
  */
 public final class GuiOutcomeHelper {
 
