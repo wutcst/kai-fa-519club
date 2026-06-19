@@ -126,6 +126,59 @@ public class MultiplayerApiTest {
     }
 
     @Test
+    public void testTwoClientsShareTimerWithIndependentRoomsAfterMove() throws Exception {
+        String hostToken = signupToken("sync_host_" + userCounter, "房主");
+        MvcResult createResult = mockMvc.perform(post("/api/rooms")
+                .header("X-Auth-Token", hostToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roomName\":\"双客户端同步\"}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String createBody = createResult.getResponse().getContentAsString();
+        String roomId = extractJsonValue(createBody, "\"roomId\":\"", "\"");
+        String hostPlayerId = extractJsonValue(createBody, "\"playerId\":\"", "\"");
+
+        String guestToken = signupToken("sync_guest_" + userCounter, "队员");
+        MvcResult joinResult = mockMvc.perform(post("/api/rooms/" + roomId + "/join")
+                .header("X-Auth-Token", guestToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String guestPlayerId = extractJsonValue(
+            joinResult.getResponse().getContentAsString(), "\"playerId\":\"", "\"");
+
+        mockMvc.perform(post("/api/rooms/" + roomId + "/start")
+                .header("X-Auth-Token", hostToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"levelNumber\":1}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0));
+
+        mockMvc.perform(post("/api/game/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roomId\":\"" + roomId + "\",\"playerId\":\"" + hostPlayerId
+                    + "\",\"commandWord\":\"go\",\"secondWord\":\"north\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.state.roomId").value("boxue_main"))
+            .andExpect(jsonPath("$.data.state.remainingSeconds").value(240 - ActionTimeCost.GO));
+
+        mockMvc.perform(get("/api/game/state")
+                .param("roomId", roomId)
+                .param("playerId", hostPlayerId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.roomId").value("boxue_main"))
+            .andExpect(jsonPath("$.data.remainingSeconds").value(240 - ActionTimeCost.GO));
+
+        mockMvc.perform(get("/api/game/state")
+                .param("roomId", roomId)
+                .param("playerId", guestPlayerId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.roomId").value("gate"))
+            .andExpect(jsonPath("$.data.remainingSeconds").value(240 - ActionTimeCost.GO));
+    }
+
+    @Test
     public void testListRooms() throws Exception {
         String token = signupToken("list_host_" + userCounter, "房主");
         mockMvc.perform(post("/api/rooms")
