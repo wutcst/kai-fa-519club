@@ -77,7 +77,7 @@ public class UseCommand implements CommandInterface {
 
         if (PROJECTOR_REMOTE_ITEM.equalsIgnoreCase(trimmedName)) {
             ActionTimeCost.deduct(game, ActionTimeCost.USE);
-            System.out.println("嘿嘿，坏了");
+            System.out.println("你对着投影仪按了半天，电量又少了些，什么都没有发生。");
             return false;
         }
 
