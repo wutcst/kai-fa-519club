@@ -70,4 +70,26 @@ public class GameGuiControllerTest {
         String bulletin = controller.buildBulletinText(game);
         assertTrue(bulletin.contains("回寝") || bulletin.contains("校门"));
     }
+
+    @Test
+    public void buildLevelTitleMatchesCurrentLevel() {
+        assertTrue(controller.buildLevelTitle(game).contains("第一关")
+            || controller.buildLevelTitle(game).contains("初入"));
+    }
+
+    @Test
+    public void invalidCommandReturnsMessageWithoutCrash() {
+        controller.prepareGuiSession(game);
+        GameGuiController.CommandResult result = controller.execute(game, "   ", null);
+        assertFalse(result.isQuitRequested());
+        assertTrue(result.joinedOutput().contains("无效命令"));
+        controller.shutdownGuiSession(game);
+    }
+
+    @Test
+    public void shutdownGuiSessionDisablesAutoTick() {
+        controller.prepareGuiSession(game);
+        controller.shutdownGuiSession(game);
+        assertFalse(game.getLevelTimer().isAutoTickEnabled());
+    }
 }

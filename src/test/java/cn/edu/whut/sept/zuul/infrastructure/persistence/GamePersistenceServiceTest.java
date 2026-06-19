@@ -130,6 +130,25 @@ public class GamePersistenceServiceTest {
         persistenceService.saveProgress(game);
     }
 
+    @Test
+    public void testSimulateRestartRestoresLevelAndTimer() {
+        Game original = createGameWithPersistence();
+        original.getLevelManager().completeCurrentLevel();
+        original.getLevelTimer().deduct(50);
+
+        long saveId = persistenceService.saveProgress(original);
+
+        Game restarted = new Game();
+        restarted.setPersistenceService(persistenceService);
+        assertTrue(persistenceService.loadProgress(restarted, saveId));
+
+        assertEquals(2, restarted.getLevelManager().getCurrentLevel());
+        assertEquals(250, restarted.getLevelTimer().getRemainingSeconds());
+        assertEquals(LevelState.IN_PROGRESS, restarted.getLevelManager().getState());
+        assertEquals("gate", restarted.getCurrentRoom().getRoomId());
+        assertTrue(restarted.getPlayer().getInventory().isEmpty());
+    }
+
     private Game createGameWithPersistence() {
         Game game = new Game();
         game.setPersistenceService(persistenceService);

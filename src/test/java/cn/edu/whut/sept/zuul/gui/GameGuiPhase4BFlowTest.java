@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 
 import cn.edu.whut.sept.zuul.Game;
 import cn.edu.whut.sept.zuul.Item;
+import cn.edu.whut.sept.zuul.infrastructure.persistence.InMemoryGameTestSupport;
+import cn.edu.whut.sept.zuul.level.LevelConfig;
 import cn.edu.whut.sept.zuul.level.LevelState;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,36 +21,40 @@ public class GameGuiPhase4BFlowTest {
 
     @BeforeEach
     public void setUp() {
-        game = new Game();
+        game = InMemoryGameTestSupport.createGameWithInMemoryPersistence();
     }
 
     @Test
-    public void loadProgressRestoresInProgressStateAndClearsInventory() throws Exception {
+    public void loadProgressRestoresInProgressStateAndClearsInventory() {
         game.getPlayer().takeItem(new Item("magic cookie", 100));
         game.getPlayer().setName("试玩员");
+        game.getLevelTimer().deduct(55);
+        int expectedSeconds = LevelConfig.forLevel(1).getTimeLimitSeconds() - 55;
         long saveId = game.getPersistenceService().saveProgress(game);
 
         game.getLevelManager().failCurrentLevel();
         assertEquals(LevelState.FAILED, game.getLevelManager().getState());
 
-        boolean loaded = game.getPersistenceService().loadProgress(game, saveId);
-        assertTrue(loaded);
-        assertEquals(LevelState.IN_PROGRESS, game.getLevelManager().getState());
-        assertTrue(game.getPlayer().getInventory().isEmpty());
-        assertEquals("试玩员", game.getPlayer().getName());
-        assertTrue(game.getLevelTimer().getRemainingSeconds() > 0);
+        Game restarted = InMemoryGameTestSupport.createRestartedGame(game);
+        assertTrue(restarted.getPersistenceService().loadProgress(restarted, saveId));
+        assertEquals(LevelState.IN_PROGRESS, restarted.getLevelManager().getState());
+        assertTrue(restarted.getPlayer().getInventory().isEmpty());
+        assertEquals("试玩员", restarted.getPlayer().getName());
+        assertEquals(1, restarted.getLevelManager().getCurrentLevel());
+        assertEquals(expectedSeconds, restarted.getLevelTimer().getRemainingSeconds());
     }
 
     @Test
-    public void prepareGuiSessionKeepsAutoTickAfterLoad() throws Exception {
+    public void prepareGuiSessionKeepsAutoTickAfterLoad() {
         GameGuiController controller = new GameGuiController();
         controller.prepareGuiSession(game);
         long saveId = game.getPersistenceService().saveProgress(game);
 
-        game.getPersistenceService().loadProgress(game, saveId);
-        controller.prepareGuiSession(game);
+        Game restarted = InMemoryGameTestSupport.createRestartedGame(game);
+        restarted.getPersistenceService().loadProgress(restarted, saveId);
+        controller.prepareGuiSession(restarted);
 
-        assertTrue(game.getLevelTimer().isAutoTickEnabled());
-        controller.shutdownGuiSession(game);
+        assertTrue(restarted.getLevelTimer().isAutoTickEnabled());
+        controller.shutdownGuiSession(restarted);
     }
 }
