@@ -11,6 +11,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import cn.edu.whut.sept.zuul.command.UseCommand;
 import cn.edu.whut.sept.zuul.infrastructure.server.service.SinglePlayerGuiService;
 import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
@@ -225,6 +226,44 @@ public class SinglePlayerApiTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.state.lockedOverlayMessage").exists())
             .andExpect(jsonPath("$.data.state.roomId").value("gate"));
+    }
+
+    /**
+     * T6-SOLO-02：Vue /solo REST 跑通第 1 关（单机回归）。
+     */
+    @Test
+    public void regressionSoloLevelOnePassViaRestApi() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/solo/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"playerName\":\"T6单机回归\"}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String sessionId = extractJsonValue(
+            createResult.getResponse().getContentAsString(), "\"sessionId\":\"", "\"");
+
+        postSoloCommand(sessionId, "go", "north");
+        postSoloCommand(sessionId, "go", "north");
+        postSoloCommand(sessionId, "take", UseCommand.MONEY_ITEM);
+        postSoloCommand(sessionId, "go", "west");
+        postSoloCommand(sessionId, "use", UseCommand.MONEY_ITEM);
+        postSoloCommand(sessionId, "go", "north");
+
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"commandWord\":\"sleep\",\"secondWord\":null}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.state.level").value(2));
+    }
+
+    private void postSoloCommand(String sessionId, String commandWord, String secondWord)
+            throws Exception {
+        String second = secondWord == null ? "null" : "\"" + secondWord + "\"";
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"commandWord\":\"" + commandWord + "\",\"secondWord\":" + second + "}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0));
     }
 
     private String extractJsonValue(String json, String prefix, String suffix) {
