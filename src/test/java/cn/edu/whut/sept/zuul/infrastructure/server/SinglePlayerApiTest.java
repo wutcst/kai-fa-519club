@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import cn.edu.whut.sept.zuul.infrastructure.server.service.SinglePlayerGuiService;
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -145,6 +146,85 @@ public class SinglePlayerApiTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0))
             .andExpect(jsonPath("$.data.state.level").value(1));
+    }
+
+    @Test
+    public void testStateExposesTimerTextForVueHud() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/solo/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"playerName\":\"计时HUD\"}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String sessionId = extractJsonValue(
+            createResult.getResponse().getContentAsString(), "\"sessionId\":\"", "\"");
+
+        mockMvc.perform(get("/api/solo/sessions/" + sessionId + "/state"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.remainingSeconds").value(240))
+            .andExpect(jsonPath("$.data.timerText").value("距熄灯（23:00）还有 240 秒"))
+            .andExpect(jsonPath("$.data.levelTitle").exists());
+    }
+
+    @Test
+    public void testGoCommandDeductsRemainingSeconds() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/solo/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String sessionId = extractJsonValue(
+            createResult.getResponse().getContentAsString(), "\"sessionId\":\"", "\"");
+
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"commandWord\":\"go\",\"secondWord\":\"north\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.state.remainingSeconds")
+                .value(240 - ActionTimeCost.GO));
+    }
+
+    @Test
+    public void testTalkEndpointReturnsNpcDialogue() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/solo/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String sessionId = extractJsonValue(
+            createResult.getResponse().getContentAsString(), "\"sessionId\":\"", "\"");
+
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"commandWord\":\"go\",\"secondWord\":\"north\"}"))
+            .andExpect(status().isOk());
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"commandWord\":\"go\",\"secondWord\":\"north\"}"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/talk"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.popupMessage").exists());
+    }
+
+    @Test
+    public void testLockedExitSetsOverlayMessage() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/solo/sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String sessionId = extractJsonValue(
+            createResult.getResponse().getContentAsString(), "\"sessionId\":\"", "\"");
+
+        mockMvc.perform(post("/api/solo/sessions/" + sessionId + "/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"commandWord\":\"go\",\"secondWord\":\"west\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.state.lockedOverlayMessage").exists())
+            .andExpect(jsonPath("$.data.state.roomId").value("gate"));
     }
 
     private String extractJsonValue(String json, String prefix, String suffix) {

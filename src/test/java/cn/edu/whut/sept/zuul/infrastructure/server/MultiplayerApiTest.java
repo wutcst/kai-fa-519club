@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import cn.edu.whut.sept.zuul.infrastructure.server.service.AuthServiceProvider;
 import cn.edu.whut.sept.zuul.infrastructure.server.service.MultiplayerRoomService;
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
 
 import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -85,6 +86,43 @@ public class MultiplayerApiTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.remainingSeconds").isNumber())
             .andExpect(jsonPath("$.data.players").isArray());
+    }
+
+    @Test
+    public void testMultiplayerTimerSyncedFromServerAfterStart() throws Exception {
+        String hostToken = signupToken("timer_host_" + userCounter, "房主");
+        MvcResult createResult = mockMvc.perform(post("/api/rooms")
+                .header("X-Auth-Token", hostToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roomName\":\"计时同步房\"}"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String roomId = extractJsonValue(
+            createResult.getResponse().getContentAsString(), "\"roomId\":\"", "\"");
+        String hostPlayerId = extractJsonValue(
+            createResult.getResponse().getContentAsString(), "\"playerId\":\"", "\"");
+
+        mockMvc.perform(post("/api/rooms/" + roomId + "/start")
+                .header("X-Auth-Token", hostToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"levelNumber\":1}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0));
+
+        mockMvc.perform(get("/api/game/state")
+                .param("roomId", roomId)
+                .param("playerId", hostPlayerId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.remainingSeconds").value(240))
+            .andExpect(jsonPath("$.data.timerText").value("距熄灯（23:00）还有 240 秒"));
+
+        mockMvc.perform(post("/api/game/command")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roomId\":\"" + roomId + "\",\"playerId\":\"" + hostPlayerId
+                    + "\",\"commandWord\":\"go\",\"secondWord\":\"north\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.state.remainingSeconds")
+                .value(240 - ActionTimeCost.GO));
     }
 
     @Test
