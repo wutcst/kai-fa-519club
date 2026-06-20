@@ -1,0 +1,54 @@
+package cn.edu.whut.sept.zuul.level;
+
+import cn.edu.whut.sept.zuul.Game;
+
+/**
+ * 各命令操作耗时常量（E11）。常规移动/拾取等在命令成功后扣减；
+ * 实时秒表在命令行 {@code play()} 与联机服务端同时流逝。
+ */
+public final class ActionTimeCost {
+
+    /** 移动 go */
+    public static final int GO = 15;
+    /** 环顾 look */
+    public static final int LOOK = 10;
+    /** 拾取 take */
+    public static final int TAKE = 20;
+    /** 丢弃 drop */
+    public static final int DROP = 10;
+    /** 使用 use */
+    public static final int USE = 25;
+    /** 提交 submit */
+    public static final int SUBMIT = 25;
+    /** 合成 combine */
+    public static final int COMBINE = 25;
+    /** 密码错误罚时 */
+    public static final int WRONG_PASSWORD = 30;
+    /** NPC 对话 */
+    public static final int NPC = 30;
+    /** 黑暗区域罚时（E12 博学主楼） */
+    public static final int DARK_PENALTY = 60;
+    /** 喂猫（E5） */
+    public static final int FEED = 60;
+    /** 食用食物（eat） */
+    public static final int EAT = 25;
+    /** 一杯奶茶拉肚子额外罚时（E16） */
+    public static final int MILK_TEA_DIARRHEA = 30;
+    /** 魔法饼干加时（E7） */
+    public static final int COOKIE_BONUS = 300;
+
+    private ActionTimeCost() {
+    }
+
+    /**
+     * 命令成功后扣减对应秒数。
+     *
+     * @param game 游戏实例
+     * @param seconds 耗时秒数
+     */
+    public static void deduct(Game game, int seconds) {
+        if (game != null && game.getLevelTimer() != null) {
+            game.getLevelTimer().deduct(seconds);
+        }
+    }
+}

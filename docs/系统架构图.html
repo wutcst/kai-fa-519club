@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>《熄灯前归寝》系统架构图</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --paper: #ffffff;
+      --text: #1a2332;
+      --muted: #5c6b7a;
+      --border: #c5d0dc;
+      --vue: #42b883;
+      --vue-bg: #ecf8f3;
+      --vue-border: #9dd4bc;
+      --spring: #6db33f;
+      --spring-bg: #f0f7eb;
+      --spring-border: #a8d48a;
+      --core: #4f6bed;
+      --core-bg: #eef1fd;
+      --core-border: #a3b4f4;
+      --db: #e67e22;
+      --db-bg: #fdf3ea;
+      --db-border: #f0b27a;
+      --infra: #64748b;
+      --infra-bg: #f1f5f9;
+      --arrow: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem 1rem 3rem;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .wrap { max-width: 920px; margin: 0 auto; }
+
+    .page-head {
+      text-align: center;
+      margin-bottom: 1.75rem;
+      padding: 1.5rem;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .page-head h1 { font-size: 1.35rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .page-head p { color: var(--muted); font-size: 0.85rem; }
+    .page-head .meta { margin-top: 0.6rem; font-size: 0.75rem; color: var(--muted); }
+
+    .nav-toc {
+      display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .nav-toc a {
+      font-size: 0.78rem; color: var(--text); text-decoration: none;
+      padding: 0.4rem 0.85rem; background: var(--paper);
+      border: 1px solid var(--border); border-radius: 6px;
+    }
+
+    .figure {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem 1.5rem;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+
+    .figure-header {
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--text);
+    }
+
+    .fig-label {
+      display: inline-block;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+      color: var(--paper); background: var(--text);
+      padding: 0.15rem 0.5rem; border-radius: 3px; margin-bottom: 0.4rem;
+    }
+
+    .figure-title { font-size: 1.05rem; font-weight: 700; }
+    .figure-caption { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+
+    .diagram { max-width: 100%; margin: 0 auto; overflow-x: auto; }
+
+    /* ===== 图1 总体分层 ===== */
+    .tier-stack { display: flex; flex-direction: column; gap: 0; }
+
+    .tier {
+      border: 2px solid;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tier-head {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.55rem 1rem;
+      font-weight: 700; font-size: 0.82rem;
+    }
+
+    .tier-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(255,255,255,.85);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem; font-weight: 800; flex-shrink: 0;
+    }
+
+    .tier-body {
+      padding: 0.85rem 1rem 1rem;
+      display: grid; gap: 0.6rem;
+    }
+
+    .tier.vue { border-color: var(--vue-border); }
+    .tier.vue .tier-head { background: var(--vue-bg); color: #2d6a4f; }
+    .tier.spring { border-color: var(--spring-border); }
+    .tier.spring .tier-head { background: var(--spring-bg); color: #3d6b27; }
+    .tier.core { border-color: var(--core-border); }
+    .tier.core .tier-head { background: var(--core-bg); color: #3349a8; }
+    .tier.db { border-color: var(--db-border); }
+    .tier.db .tier-head { background: var(--db-bg); color: #b45309; }
+
+    .tier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.55rem; }
+    .tier-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+
+    .comp-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0.55rem 0.65rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .comp-box strong {
+      display: block; color: var(--text);
+      font-size: 0.76rem; margin-bottom: 0.2rem;
+    }
+
+    .comp-box code {
+      font-family: Consolas, monospace; font-size: 0.7rem;
+      background: var(--infra-bg); padding: 0.05rem 0.25rem; border-radius: 2px;
+    }
+
+    .arrow-block {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 0.35rem 0; color: var(--muted); font-size: 0.72rem;
+    }
+
+    .arrow-block svg { display: block; }
+
+    .fig-note {
+      margin-top: 0.85rem; padding: 0.65rem 0.85rem;
+      background: var(--infra-bg); border-left: 3px solid var(--infra);
+      font-size: 0.74rem; color: var(--muted); border-radius: 0 4px 4px 0;
+    }
+
+    /* ===== 图2 内核四层 ===== */
+    .layer-diagram {
+      display: flex; flex-direction: column; gap: 0;
+      border: 2px solid var(--border); border-radius: 6px; overflow: hidden;
+    }
+
+    .layer-band {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .layer-band:last-child { border-bottom: none; }
+
+    .layer-label {
+      writing-mode: horizontal-tb;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0.75rem 0.5rem; font-weight: 700; font-size: 0.78rem;
+      color: #fff; text-align: center; line-height: 1.3;
+    }
+
+    .layer-presentation .layer-label { background: #3b82f6; }
+    .layer-application .layer-label { background: #6366f1; }
+    .layer-domain .layer-label { background: #8b5cf6; }
+    .layer-infra .layer-label { background: #64748b; }
+
+    .layer-content {
+      padding: 0.75rem 1rem;
+      background: #fff;
+      display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center;
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 0.3rem 0.55rem;
+      background: var(--infra-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.72rem;
+      color: var(--text);
+      font-family: Consolas, "PingFang SC", monospace;
+    }
+
+    .chip.primary { background: var(--core-bg); border-color: var(--core-border); }
+    .dep-arrow {
+      text-align: center; padding: 0.4rem;
+      font-size: 0.7rem; color: var(--muted);
+      background: #fafbfc; border-top: 1px dashed var(--border);
+    }
+
+    /* ===== 图3 Spring 三层 ===== */
+    .spring-flow {
+      display: flex; align-items: stretch; gap: 0;
+      border: 2px solid var(--spring-border); border-radius: 6px; overflow: hidden;
+    }
+
+    .spring-col {
+      flex: 1; display: flex; flex-direction: column;
+      border-right: 1px solid var(--spring-border);
+    }
+
+    .spring-col:last-child { border-right: none; }
+
+    .spring-col-head {
+      padding: 0.6rem 0.5rem; text-align: center;
+      background: var(--spring-bg); font-weight: 700; font-size: 0.8rem;
+      color: #3d6b27; border-bottom: 1px solid var(--spring-border);
+    }
+
+    .spring-col-body {
+      padding: 0.75rem 0.6rem; flex: 1;
+      display: flex; flex-direction: column; gap: 0.35rem;
+    }
+
+    .spring-item {
+      text-align: center; padding: 0.4rem 0.35rem;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 4px; font-size: 0.72rem; color: var(--text);
+    }
+
+    .spring-arrow-col {
+      width: 36px; display: flex; align-items: center; justify-content: center;
+      background: #fafbfc; flex-shrink: 0;
+    }
+
+    .spring-footer {
+      margin-top: 0.75rem; text-align: center;
+      padding: 0.55rem; font-size: 0.74rem; color: var(--muted);
+      border: 1px dashed var(--border); border-radius: 4px;
+      background: var(--spring-bg);
+    }
+
+    /* ===== 图4 部署视图 ===== */
+    .deploy-diagram {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 0; align-items: stretch;
+      min-height: 280px;
+    }
+
+    .deploy-zone {
+      border: 2px solid; border-radius: 6px;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    .deploy-zone.vue-z { border-color: var(--vue-border); }
+    .deploy-zone.spring-z { border-color: var(--spring-border); }
+    .deploy-zone.data-z { border-color: var(--db-border); }
+
+    .deploy-zone-title {
+      padding: 0.5rem; text-align: center; font-weight: 700; font-size: 0.78rem;
+    }
+
+    .vue-z .deploy-zone-title { background: var(--vue-bg); color: #2d6a4f; }
+    .spring-z .deploy-zone-title { background: var(--spring-bg); color: #3d6b27; }
+    .data-z .deploy-zone-title { background: var(--db-bg); color: #b45309; }
+
+    .deploy-zone-body {
+      padding: 0.75rem; flex: 1;
+      display: flex; flex-direction: column; gap: 0.45rem;
+    }
+
+    .deploy-node {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 5px; padding: 0.55rem 0.6rem;
+      font-size: 0.72rem; color: var(--muted); line-height: 1.4;
+    }
+
+    .deploy-node strong { display: block; color: var(--text); font-size: 0.76rem; margin-bottom: 0.15rem; }
+
+    .deploy-link {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0 0.35rem; min-width: 52px;
+    }
+
+    .deploy-link span {
+      font-size: 0.65rem; color: var(--muted); text-align: center;
+      margin-top: 0.2rem; line-height: 1.3;
+    }
+
+    .deploy-legend {
+      margin-top: 0.75rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+    }
+
+    .mode-card {
+      border: 1px solid var(--border); border-radius: 5px;
+      padding: 0.6rem 0.75rem; background: #fafbfc;
+    }
+
+    .mode-card h4 { font-size: 0.78rem; margin-bottom: 0.3rem; }
+    .mode-card p { font-size: 0.72rem; color: var(--muted); line-height: 1.45; }
+
+    /* ===== 图5 时序图 ===== */
+    .seq-diagram { width: 100%; min-width: 560px; }
+
+    .seq-diagram svg { width: 100%; height: auto; display: block; }
+
+    .seq-legend {
+      display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;
+      margin-top: 0.75rem; font-size: 0.72rem; color: var(--muted);
+    }
+
+    .seq-legend span::before {
+      content: ""; display: inline-block; width: 10px; height: 10px;
+      border-radius: 2px; margin-right: 0.35rem; vertical-align: middle;
+    }
+
+    .seq-legend .l-vue::before { background: var(--vue); }
+    .seq-legend .l-spring::before { background: var(--spring); }
+    .seq-legend .l-core::before { background: var(--core); }
+
+    footer {
+      text-align: center; color: var(--muted); font-size: 0.72rem;
+      margin-top: 0.5rem; padding: 1rem;
+    }
+
+    /* 单图截图模式：点击导航 #fig1—#fig5 后只显示当前图，便于一屏截图 */
+    body.single-shot {
+      padding: 0.5rem;
+      background: #fff;
+    }
+
+    body.single-shot .page-head,
+    body.single-shot .nav-toc,
+    body.single-shot footer,
+    body.single-shot .shot-hint { display: none; }
+
+    body.single-shot .figure { display: none; margin-bottom: 0; }
+
+    body.single-shot .figure:target {
+      display: block;
+      padding: 0.65rem 0.85rem 0.85rem;
+      box-shadow: none;
+    }
+
+    body.single-shot .figure-header {
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.45rem;
+    }
+
+    body.single-shot .figure-title { font-size: 0.92rem; }
+    body.single-shot .figure-caption { font-size: 0.72rem; }
+
+    body.single-shot .tier-head { padding: 0.35rem 0.65rem; font-size: 0.74rem; }
+    body.single-shot .tier-num { width: 18px; height: 18px; font-size: 0.65rem; }
+    body.single-shot .tier-body { padding: 0.45rem 0.6rem 0.55rem; gap: 0.35rem; }
+    body.single-shot .comp-box { padding: 0.35rem 0.45rem; font-size: 0.66rem; line-height: 1.35; }
+    body.single-shot .comp-box strong { font-size: 0.68rem; margin-bottom: 0.1rem; }
+    body.single-shot .arrow-block { padding: 0.15rem 0; font-size: 0.65rem; }
+    body.single-shot .arrow-block svg { width: 18px; height: 20px; }
+
+    body.single-shot .layer-label { padding: 0.45rem 0.35rem; font-size: 0.68rem; }
+    body.single-shot .layer-band { grid-template-columns: 72px 1fr; }
+    body.single-shot .layer-content { padding: 0.45rem 0.6rem; gap: 0.3rem; }
+    body.single-shot .chip { padding: 0.2rem 0.4rem; font-size: 0.64rem; }
+    body.single-shot .dep-arrow { padding: 0.25rem; font-size: 0.64rem; }
+
+    body.single-shot .spring-col-head { padding: 0.4rem 0.35rem; font-size: 0.72rem; }
+    body.single-shot .spring-col-body { padding: 0.45rem 0.4rem; gap: 0.25rem; }
+    body.single-shot .spring-item { padding: 0.28rem 0.3rem; font-size: 0.64rem; }
+    body.single-shot .spring-footer { margin-top: 0.45rem; padding: 0.4rem; font-size: 0.66rem; }
+
+    body.single-shot .deploy-diagram { min-height: 0; }
+    body.single-shot .deploy-zone-body { padding: 0.45rem; gap: 0.3rem; }
+    body.single-shot .deploy-node { padding: 0.35rem 0.45rem; font-size: 0.64rem; line-height: 1.3; }
+    body.single-shot .deploy-node strong { font-size: 0.68rem; }
+    body.single-shot .deploy-legend { margin-top: 0.45rem; gap: 0.35rem; }
+    body.single-shot .mode-card { padding: 0.4rem 0.55rem; }
+    body.single-shot .mode-card h4 { font-size: 0.7rem; }
+    body.single-shot .mode-card p { font-size: 0.64rem; }
+
+    body.single-shot .seq-diagram svg { max-height: 52vh; }
+    body.single-shot .seq-legend { margin-top: 0.45rem; font-size: 0.64rem; gap: 0.5rem; }
+    body.single-shot .fig-note { margin-top: 0.45rem; padding: 0.45rem 0.6rem; font-size: 0.66rem; }
+
+    .shot-hint {
+      text-align: center;
+      font-size: 0.76rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding: 0.55rem 0.75rem;
+      background: #fff8e6;
+      border: 1px solid #f0d78c;
+      border-radius: 6px;
+    }
+
+    .shot-hint strong { color: #8a6d1d; }
+
+    @media (max-width: 700px) {
+      .tier-grid, .tier-grid-2, .deploy-diagram, .deploy-legend { grid-template-columns: 1fr; }
+      .deploy-diagram { display: flex; flex-direction: column; gap: 0.5rem; }
+      .deploy-link { flex-direction: row; padding: 0.25rem 0; }
+      .spring-flow { flex-direction: column; }
+      .spring-arrow-col { width: 100%; height: 28px; transform: rotate(90deg); }
+      .layer-band { grid-template-columns: 72px 1fr; }
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .nav-toc, footer { display: none; }
+      .figure { break-inside: avoid; box-shadow: none; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="page-head">
+      <h1>《熄灯前归寝》系统架构图</h1>
+      <p>混合架构（Hybrid Architecture）· Java 游戏内核 + Spring Boot REST + Vue 3 图形前端</p>
+      <div class="meta">小组：肖梦琪、刘晶、彭慧星、庞绮君 · 仓库：wutcst/kai-fa-519club · 导出至 docs/images/fig1—fig5.png</div>
+    </header>
+
+    <nav class="nav-toc">
+      <a href="#fig1">图1 总体分层架构</a>
+      <a href="#fig2">图2 内核逻辑分层</a>
+      <a href="#fig3">图3 Spring 三层结构</a>
+      <a href="#fig4">图4 部署与职责划分</a>
+      <a href="#fig5">图5 命令处理时序</a>
+      <a href="#">显示全部</a>
+    </nav>
+
+    <p class="shot-hint">
+      <strong>截图提示：</strong>先点上方「图1—图5」进入<strong>单图模式</strong>（一屏一张，适合保存 PNG）；
+      浏览器可按 <kbd>F11</kbd> 全屏后截图；保存为 <code>docs/images/fig1-overall.png</code> 等文件名。
+    </p>
+
+    <!-- 图1 -->
+    <section class="figure" id="fig1">
+      <div class="figure-header">
+        <div class="fig-label">FIGURE 1</div>
+        <div class="figure-title">系统总体分层架构（Logical Layered Architecture）</div>
+        <div class="figure-caption">自上而下：表现层 → 服务层 → 领域内核 → 数据持久层；规则单一来源在 Java 内核</div>
+      </div>
+
+      <div class="diagram tier-stack">
+
+        <div class="tier vue">
+          <div class="tier-head">
+            <span class="tier-num">L1</span>
+            <span>表现层 Presentation · vue-portal（:5173）</span>
+          </div>
+          <div class="tier-body">
+            <div class="tier-grid">
+              <div class="comp-box">
+                <strong>View / Component</strong>
+                经典版 HUD · 沉浸版全屏场景<br>
+                SoloGameView · GameScene · NpcLayer
+              </div>
+              <div class="comp-box">
+                <strong>Controller（Composable）</strong>
+                useSoloGameController<br>
+                useGameRoomController · useAuthController
+              </div>
+              <div class="comp-box">
+                <strong>Service + Model</strong>
+                soloService · gameService<br>
+                roomLayoutDefaults · assetCatalog
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow-block">
+          <svg width="24" height="28" viewBox="0 0 24 28"><path d="M12 0v20M6 14l6 6 6-6" stroke="#94a3b8" stroke-width="2" fill="none"/></svg>
+          HTTP/JSON · Vite 代理 <code>/api</code> <code>/assets</code> → :8080
+        </div>
+
+        <div class="tier spring">
+          <div class="tier-head">
+            <span class="tier-num">L2</span>
+            <span>服务层 Application · Spring Boot ServerApplication（:8080）</span>
+          </div>
+          <div class="tier-body">
+            <div class="tier-grid">
+              <div class="comp-box">
+                <strong>REST Controller</strong>
+                <code>/api/solo/*</code> 单机<br>
+                <code>/api/game/*</code> 联机<br>
+                <code>/api/auth/*</code> 认证
+              </div>
+              <div class="comp-box">
+                <strong>Service / Facade</strong>
+                SinglePlayerGuiService<br>
+                MultiplayerRoomService · AuthService
+              </div>
+              <div class="comp-box">
+                <strong>API 桥接</strong>
+                GameGuiController · *Helper<br>
+                视图状态 DTO 映射
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow-block">
+          <svg width="24" height="28" viewBox="0 0 24 28"><path d="M12 0v20M6 14l6 6 6-6" stroke="#94a3b8" stroke-width="2" fill="none"/></svg>
+          进程内调用 · CommandManager.executeCommand()
+        </div>
+
+        <div class="tier core">
+          <div class="tier-head">
+            <span class="tier-num">L3</span>
+            <span>领域层 Domain · cn.edu.whut.sept.zuul（纯 Java，无 Spring 依赖）</span>
+          </div>
+          <div class="tier-body">
+            <div class="tier-grid">
+              <div class="comp-box">
+                <strong>游戏编排</strong>
+                Game · LevelManager<br>
+                LevelTimer · LevelConfig
+              </div>
+              <div class="comp-box">
+                <strong>命令模式</strong>
+                GoCommand · TakeCommand<br>
+                UseCommand · SubmitCommand …
+              </div>
+              <div class="comp-box">
+                <strong>领域模型</strong>
+                Room · Player · Item<br>
+                NPC · GatedRoom · TeleportRoom
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow-block">
+          <svg width="24" height="28" viewBox="0 0 24 28"><path d="M12 0v20M6 14l6 6 6-6" stroke="#94a3b8" stroke-width="2" fill="none"/></svg>
+          JDBC · Repository / DAO
+        </div>
+
+        <div class="tier db">
+          <div class="tier-head">
+            <span class="tier-num">L4</span>
+            <span>基础设施层 Infrastructure · H2 嵌入式数据库</span>
+          </div>
+          <div class="tier-body">
+            <div class="tier-grid-2">
+              <div class="comp-box">
+                <strong>持久化数据</strong>
+                <code>data/zuul-save.mv.db</code><br>
+                用户账号 · 登录会话 · 存档槽<br>
+                通关记录 · 好友关系 · 关卡进度
+              </div>
+              <div class="comp-box">
+                <strong>工程支撑</strong>
+                Maven · Checkstyle · JUnit<br>
+                GitHub Actions CI · 静态资源 <code>/assets/gui</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="fig-note">
+        <strong>备用入口：</strong>控制台 <code>Main</code> / <code>Parser</code> 文本模式，不经 HTTP，仅供课程对照；答辩主推 Vue 图形前端（经典版 / 沉浸版）。
+      </div>
+    </section>
+
+    <!-- 图2 -->
+    <section class="figure" id="fig2">
+      <div class="figure-header">
+        <div class="fig-label">FIGURE 2</div>
+        <div class="figure-title">游戏内核逻辑分层（Game Core Logical Layers）</div>
+        <div class="figure-caption">单机与联机共用同一套内核代码；依赖方向：上层调用下层，领域层不依赖表现层</div>
+      </div>
+
+      <div class="diagram layer-diagram">
+        <div class="layer-band layer-presentation">
+          <div class="layer-label">表现层<br><small style="font-weight:400;font-size:0.65rem">Presentation</small></div>
+          <div class="layer-content">
+            <span class="chip primary">vue-portal / View</span>
+            <span class="chip primary">vue-portal / Component</span>
+            <span class="chip">Parser</span>
+            <span class="chip">Main（文本）</span>
+            <span class="chip">gui/GameGuiController</span>
+            <span class="chip">gui/*Helper</span>
+            <span class="chip">AssetCatalog</span>
+          </div>
+        </div>
+        <div class="dep-arrow">▼ 调用</div>
+        <div class="layer-band layer-application">
+          <div class="layer-label">应用层<br><small style="font-weight:400;font-size:0.65rem">Application</small></div>
+          <div class="layer-content">
+            <span class="chip primary">Game</span>
+            <span class="chip primary">CommandManager</span>
+            <span class="chip">LevelManager</span>
+            <span class="chip">LevelTimer</span>
+            <span class="chip">CommandWords</span>
+            <span class="chip">Parser</span>
+          </div>
+        </div>
+        <div class="dep-arrow">▼ 调用</div>
+        <div class="layer-band layer-domain">
+          <div class="layer-label">领域层<br><small style="font-weight:400;font-size:0.65rem">Domain</small></div>
+          <div class="layer-content">
+            <span class="chip primary">Room</span>
+            <span class="chip primary">Player</span>
+            <span class="chip">Item</span>
+            <span class="chip">NPC / NpcService</span>
+            <span class="chip">LevelConfig</span>
+            <span class="chip">TeleportRoom</span>
+            <span class="chip">GatedRoom</span>
+            <span class="chip">DarkRoom</span>
+          </div>
+        </div>
+        <div class="dep-arrow">▼ 调用</div>
+        <div class="layer-band layer-infra">
+          <div class="layer-label">基础设施<br><small style="font-weight:400;font-size:0.65rem">Infrastructure</small></div>
+          <div class="layer-content">
+            <span class="chip">infrastructure.persistence</span>
+            <span class="chip">H2Database</span>
+            <span class="chip">GamePersistenceService</span>
+            <span class="chip">infrastructure.server</span>
+            <span class="chip">ServerApplication</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 图3 -->
+    <section class="figure" id="fig3">
+      <div class="figure-header">
+        <div class="fig-label">FIGURE 3</div>
+        <div class="figure-title">Spring Boot 服务分层结构（3-Tier REST Backend）</div>
+        <div class="figure-caption">包路径 cn.edu.whut.sept.zuul.infrastructure.server · 请求自上而下，数据自下而上</div>
+      </div>
+
+      <div class="diagram">
+        <div class="spring-flow">
+          <div class="spring-col">
+            <div class="spring-col-head">Controller 层<br><small style="font-weight:400">@RestController</small></div>
+            <div class="spring-col-body">
+              <div class="spring-item">AuthController</div>
+              <div class="spring-item">SinglePlayerController</div>
+              <div class="spring-item">GameController</div>
+              <div class="spring-item">RoomController</div>
+              <div class="spring-item">FriendController</div>
+              <div class="spring-item">PresenceController</div>
+            </div>
+          </div>
+          <div class="spring-arrow-col">
+            <svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 10h12M12 6l4 4-4 4" stroke="#6db33f" stroke-width="2" fill="none"/></svg>
+          </div>
+          <div class="spring-col">
+            <div class="spring-col-head">Service 层<br><small style="font-weight:400">@Service / Facade</small></div>
+            <div class="spring-col-body">
+              <div class="spring-item">SinglePlayerGuiService</div>
+              <div class="spring-item">MultiplayerRoomService</div>
+              <div class="spring-item">AuthServiceProvider</div>
+              <div class="spring-item">FriendService</div>
+              <div class="spring-item">GameGuiController</div>
+              <div class="spring-item" style="border-color:var(--core-border);background:var(--core-bg)">→ CommandManager</div>
+            </div>
+          </div>
+          <div class="spring-arrow-col">
+            <svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 10h12M12 6l4 4-4 4" stroke="#6db33f" stroke-width="2" fill="none"/></svg>
+          </div>
+          <div class="spring-col">
+            <div class="spring-col-head">Repository 层<br><small style="font-weight:400">DAO / Persistence</small></div>
+            <div class="spring-col-body">
+              <div class="spring-item">UserRepository</div>
+              <div class="spring-item">SessionRepository</div>
+              <div class="spring-item">GamePersistenceService</div>
+              <div class="spring-item">FriendRepository</div>
+              <div class="spring-item" style="border-color:var(--db-border);background:var(--db-bg)">H2 file DB</div>
+            </div>
+          </div>
+        </div>
+        <div class="spring-footer">
+          请求链路：Vue <code>fetch</code> → Controller 路由 → Service 编排 → Facade/CommandManager 执行业务 → Repository 读写 H2 → JSON 响应
+        </div>
+      </div>
+    </section>
+
+    <!-- 图4 -->
+    <section class="figure" id="fig4">
+      <div class="figure-header">
+        <div class="fig-label">FIGURE 4</div>
+        <div class="figure-title">部署视图与前后端职责划分（Deployment View）</div>
+        <div class="figure-caption">运行时三节点：浏览器 Vue 客户端 · Spring Boot 服务端 · H2 本地文件库</div>
+      </div>
+
+      <div class="diagram deploy-diagram">
+
+        <div class="deploy-zone vue-z">
+          <div class="deploy-zone-title">客户端进程 · Browser + Vite Dev</div>
+          <div class="deploy-zone-body">
+            <div class="deploy-node">
+              <strong>Vue 3 SPA · vue-portal</strong>
+              端口 :5173<br>
+              经典版 / 沉浸版切换
+            </div>
+            <div class="deploy-node">
+              <strong>路由</strong>
+              / · /solo · /multiplayer<br>
+              /auth · /account
+            </div>
+            <div class="deploy-node">
+              <strong>会话存储</strong>
+              sessionStorage<br>
+              zuul-auth-session · zuul-solo-session
+            </div>
+          </div>
+        </div>
+
+        <div class="deploy-link">
+          <svg width="28" height="20" viewBox="0 0 28 20"><path d="M2 10h20M18 5l6 5-6 5" stroke="#94a3b8" stroke-width="1.5" fill="none"/></svg>
+          <span>HTTP REST<br>代理 /api<br>/assets</span>
+        </div>
+
+        <div class="deploy-zone spring-z">
+          <div class="deploy-zone-title">服务端进程 · Spring Boot JVM</div>
+          <div class="deploy-zone-body">
+            <div class="deploy-node">
+              <strong>ServerApplication</strong>
+              内嵌 Tomcat :8080<br>
+              <code>mvn spring-boot:run</code>
+            </div>
+            <div class="deploy-node">
+              <strong>REST API</strong>
+              /api/solo · /api/game<br>
+              /api/auth · /api/rooms
+            </div>
+            <div class="deploy-node">
+              <strong>游戏内核（同进程）</strong>
+              Game 实例 · LevelTimer<br>
+              联机房间 GameRoomRegistry
+            </div>
+          </div>
+        </div>
+
+        <div class="deploy-link">
+          <svg width="28" height="20" viewBox="0 0 28 20"><path d="M2 10h20M18 5l6 5-6 5" stroke="#94a3b8" stroke-width="1.5" fill="none"/></svg>
+          <span>JDBC<br>文件 IO</span>
+        </div>
+
+        <div class="deploy-zone data-z">
+          <div class="deploy-zone-title">数据层 · H2 File Database</div>
+          <div class="deploy-zone-body">
+            <div class="deploy-node">
+              <strong>zuul-save.mv.db</strong>
+              路径 ./data/<br>
+              相对后端启动目录
+            </div>
+            <div class="deploy-node">
+              <strong>核心表</strong>
+              app_user · user_session<br>
+              game_save · clear_record
+            </div>
+            <div class="deploy-node">
+              <strong>静态资源</strong>
+              /assets/gui/rooms<br>
+              /assets/gui/items · npcs
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="deploy-legend">
+        <div class="mode-card">
+          <h4>单机模式 A</h4>
+          <p>Vue <code>/solo</code> → <code>POST /api/solo/command</code> → SinglePlayerGuiService → 内核 CommandManager → 返回 SoloViewStateDto</p>
+        </div>
+        <div class="mode-card">
+          <h4>联机模式 B</h4>
+          <p>Vue <code>/multiplayer</code> → <code>POST /api/game/command</code> + <code>GET /api/game/state</code> 轮询 → MultiplayerRoomService → 服务端权威 Game 状态</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 图5 -->
+    <section class="figure" id="fig5">
+      <div class="figure-header">
+        <div class="fig-label">FIGURE 5</div>
+        <div class="figure-title">命令处理时序图（Sequence Diagram）</div>
+        <div class="figure-caption">以「向北移动」为例；联机模式计时以服务端 LevelTimer 为准</div>
+      </div>
+
+      <div class="diagram seq-diagram">
+        <svg viewBox="0 0 720 420" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif">
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L7,3 z" fill="#64748b"/>
+            </marker>
+            <marker id="arrow-back" markerWidth="8" markerHeight="8" refX="0" refY="3" orient="auto">
+              <path d="M7,0 L7,6 L0,3 z" fill="#64748b"/>
+            </marker>
+          </defs>
+
+          <!-- 标题栏 -->
+          <rect x="10" y="10" width="700" height="36" rx="4" fill="#f1f5f9" stroke="#c5d0dc"/>
+          <text x="360" y="33" text-anchor="middle" font-size="12" font-weight="700" fill="#1a2332">命令执行时序 · go north（单机 / 联机通用 REST 路径）</text>
+
+          <!-- 参与者头 -->
+          <rect x="40" y="60" width="120" height="32" rx="4" fill="#ecf8f3" stroke="#9dd4bc"/>
+          <text x="100" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="#2d6a4f">Vue 客户端</text>
+
+          <rect x="220" y="60" width="140" height="32" rx="4" fill="#f0f7eb" stroke="#a8d48a"/>
+          <text x="290" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="#3d6b27">Spring Boot</text>
+
+          <rect x="420" y="60" width="120" height="32" rx="4" fill="#eef1fd" stroke="#a3b4f4"/>
+          <text x="480" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="#3349a8">游戏内核</text>
+
+          <rect x="580" y="60" width="100" height="32" rx="4" fill="#fdf3ea" stroke="#f0b27a"/>
+          <text x="630" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">H2（可选）</text>
+
+          <!-- 生命线 -->
+          <line x1="100" y1="92" x2="100" y2="400" stroke="#c5d0dc" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="290" y1="92" x2="290" y2="400" stroke="#c5d0dc" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="480" y1="92" x2="480" y2="400" stroke="#c5d0dc" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="630" y1="92" x2="630" y2="400" stroke="#c5d0dc" stroke-width="1" stroke-dasharray="4,4"/>
+
+          <!-- 消息 1 -->
+          <line x1="100" y1="120" x2="288" y2="120" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <text x="194" y="113" text-anchor="middle" font-size="10" fill="#5c6b7a">1. POST /api/solo/command 或 /api/game/command</text>
+          <rect x="130" y="125" width="160" height="18" rx="2" fill="#fafbfc" stroke="#e2e8f0"/>
+          <text x="210" y="137" text-anchor="middle" font-size="9" fill="#64748b" font-family="Consolas, monospace">{ cmd: "go", arg: "north" }</text>
+
+          <!-- 消息 2 -->
+          <line x1="290" y1="165" x2="478" y2="165" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <text x="384" y="158" text-anchor="middle" font-size="10" fill="#5c6b7a">2. Service → GameGuiController</text>
+
+          <!-- 激活条 -->
+          <rect x="474" y="165" width="12" height="90" fill="#eef1fd" stroke="#a3b4f4"/>
+
+          <!-- 消息 3 -->
+          <line x1="480" y1="185" x2="480" y2="205" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <text x="560" y="198" font-size="10" fill="#5c6b7a">3. CommandManager</text>
+          <text x="560" y="210" font-size="10" fill="#5c6b7a">   .execute("go north")</text>
+
+          <!-- 消息 4 -->
+          <line x1="480" y1="230" x2="480" y2="250" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <text x="560" y="243" font-size="10" fill="#5c6b7a">4. GoCommand + LevelTimer</text>
+
+          <!-- 消息 5 存档可选 -->
+          <line x1="480" y1="270" x2="628" y2="270" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="5,3"/>
+          <text x="554" y="263" text-anchor="middle" font-size="10" fill="#5c6b7a">5. 存档时写 H2（可选）</text>
+
+          <!-- 返回 6 -->
+          <line x1="478" y1="300" x2="292" y2="300" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow-back)"/>
+          <text x="385" y="293" text-anchor="middle" font-size="10" fill="#5c6b7a">6. 返回执行结果 / 视图状态</text>
+
+          <!-- 返回 7 -->
+          <line x1="288" y1="330" x2="102" y2="330" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow-back)"/>
+          <text x="195" y="323" text-anchor="middle" font-size="10" fill="#5c6b7a">7. JSON 响应 { code, data, message }</text>
+
+          <!-- 消息 8 联机轮询 -->
+          <line x1="100" y1="360" x2="288" y2="360" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <text x="194" y="353" text-anchor="middle" font-size="10" fill="#5c6b7a">8. 联机：GET /api/game/state（~1s 轮询）</text>
+
+          <!-- 返回 9 -->
+          <line x1="288" y1="385" x2="102" y2="385" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow-back)"/>
+          <text x="195" y="378" text-anchor="middle" font-size="10" fill="#5c6b7a">9. 更新多人房间状态 · 聊天 · 玩家列表</text>
+        </svg>
+      </div>
+
+      <div class="seq-legend">
+        <span class="l-vue">Vue 表现层（用户交互）</span>
+        <span class="l-spring">Spring 服务层（REST 路由与编排）</span>
+        <span class="l-core">Java 内核（规则与计时权威）</span>
+      </div>
+    </section>
+
+    <footer>单图截图：点导航「图1—图5」→ Win+Shift+S 或 QQ/微信截图 → 存入 docs/images/fig1-overall.png … fig5-sequence.png</footer>
+
+  </div>
+  <script>
+    function applyScreenshotMode() {
+      const id = (location.hash || '').replace('#', '')
+      document.body.classList.toggle('single-shot', /^fig[1-5]$/.test(id))
+    }
+    window.addEventListener('hashchange', applyScreenshotMode)
+    applyScreenshotMode()
+  </script>
+</body>
+</html>

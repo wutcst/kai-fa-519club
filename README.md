@@ -10,10 +10,10 @@
 
 | 姓名 | 角色 | 权重 | 主要负责 |
 |------|------|------|----------|
-| 肖梦琪 | 组长 | **约 32%** | 架构集成、`LevelManager` / `LevelTimer`、房间规则底层、H2/F7 对接层、第 4 关规则、发布 |
-| 刘晶 | 组员 | **约 30%** | 拓展命令 E1—E8（`use` / `submit` 等）、第 1—3 关配置、干扰物与命令测试 |
-| 彭慧星 | 组员 | **约 19%** | 第 4 关、西楼/黑暗联调、F6 服务端、第五关传送 |
-| 庞绮君 | 组员 | **约 19%** | 第 5 关数据、F7 界面、F8 DAO、文档与部分测试 |
+| 肖梦琪 | 组长 | **约 31%** | 架构 E9—E14、**F6 联机服务端**、**F8 数据库/认证**、Spring API 桥接、集成发布 |
+| 刘晶 | 组员 | **约 31%** | 核心拓展命令（E1—E4/E8 等）、**F7 Vue GUI**（经典/沉浸）、联机前端协作 |
+| 彭慧星 | 组员 | **约 19%** | E5 喂猫、E6 `sleep`、E17 传送、第 3—4 关与 E16（3—4 关） |
+| 庞绮君 | 组员 | **约 19%** | E15 房间解锁、E7 饼干加时、E14 西楼、第 1—2 关与 E16（1—2 关、5 关）、文档与测试 |
 
 > 肖梦琪、刘晶承担约 **62%** 核心开发量；详见 [docs/会议记录.md](docs/会议记录.md) 第三节。
 
@@ -33,7 +33,7 @@
 | F2 | 单步 `back` | 返回上一房间 |
 | F3 | 多步 `back` | 可连续回退至多步，直至起点 |
 | F4 | 随机传送房间 | `TeleportRoom`，进入后随机传送到其他房间 |
-| F5 | `Player` 与携带物 | 玩家姓名、当前房间、背包与负重上限；`take` / `drop` / `items`；魔法饼干 + `eat cookie` 增加负重 |
+| F5 | `Player` 与携带物 | 玩家姓名、当前房间、背包与负重上限；`take` / `drop` / `items`；`eat` 食用背包中的食物（魔法饼干增负重） |
 
 ### 二、拓展功能 E1—E17（⬜ 待实现，本作必做）
 
@@ -47,7 +47,7 @@
 | E4 | `unlock` | 密码解锁：体育馆值班室、第五关寝室八位密码 `20000527` |
 | E5 | `feed` | 喂猫学长：消耗火腿肠，耗时 1 分钟，获得魔法饼干 |
 | E6 | `sleep` | 关卡通关动作：在寝室执行，满足当关条件后过关 |
-| E7 | `eat`（饼干加时） | 食用魔法饼干，距熄灯 **+300 秒**（与 F5 负重饼干区分用途或共用物品双效果） |
+| E7 | `eat`（食物） | `eat` 食用背包中的食物，耗 **25 秒**；magic cookie 食用时同步 **+300 秒**并增负重（每关仅一块饼干）；其他食物仅扣时 |
 | E8 | NPC 对话 | 宿管阿姨换卡、志愿者 / 图书馆领归寝单；`talk` 或 `register` |
 | E9 | `LevelManager` | 五关进度、通关解锁下一关、失败重开本关 |
 | E10 | `LevelTimer` | 距熄灯 **（23:00）还有 XXX 秒**；归零失败 |
@@ -63,9 +63,9 @@
 
 | 编号 | 功能 | 说明 |
 |------|------|------|
-| F6 | 网络多人模式 | 简化联机：登录、服务端世界状态、命令同步、熄灯倒计时广播 |
-| F7 | 图形界面 | JavaFX 或 Swing：房间、背包、命令、关卡、**距熄灯秒数**、日志 |
-| F8 | 数据库 H2 | 存档：当前关卡、剩余秒数、通关记录、可选多人昵称 |
+| F6 | 网络多人模式 | Spring Boot `/api/game` + Vue `/multiplayer`；房间、同步、计时以服务端为准 |
+| F7 | 图形界面 | **Vue 3**（`vue-portal`）：**经典版 / 沉浸版**；单机 + 联机全部图形交互 |
+| F8 | 数据库 H2 | 用户账号、登录会话、存档（关卡/秒数）、通关记录、好友关系（`data/zuul-save`） |
 
 ---
 
@@ -73,11 +73,11 @@
 
 **基础（已完成）**
 
-- [x] F1 房间物品 + `look`
-- [x] F2 单步 `back`
-- [x] F3 多步 `back`
-- [x] F4 随机传送房间
-- [x] F5 `Player` / `take` / `drop` / `items` / `eat cookie`
+- [√] F1 房间物品 + `look`
+- [√] F2 单步 `back`
+- [√] F3 多步 `back`
+- [√] F4 随机传送房间
+- [√] F5 `Player` / `take` / `drop` / `items` / `eat`
 
 **拓展（待完成）**
 
@@ -105,51 +105,87 @@
 - [ ] F7 图形界面
 - [ ] F8 数据库 H2
 
+**测试与报告（GitHub #32—#38，详见 [docs/ISSUES.md](docs/ISSUES.md)）**
+
+- [ ] T1 单元测试 — 关卡与计时（#32）
+- [ ] T2 单元测试 — 拓展命令（#33）
+- [ ] T3 单元测试 — GUI 与 H2 存档（#34）
+- [ ] T4 集成测试（#35）
+- [ ] T5 系统测试（#36）
+- [ ] T6 联机与回归测试（#37）
+- [ ] T7 测试报告撰写（#38）
+
 ---
 
-## 分支模型
+## 分支模型（精简）
 
-| 分支 | 说明 |
-|------|------|
-| `master` | 稳定发布版，**仅**接受来自 `dev` 的 PR（组长发起） |
-| `dev` | 开发集成分支，合并所有已验收功能 |
-| `feature/xxx` | 个人功能分支，`xxx` 为简短描述，**不强制 Issue 号** |
-| `fix/xxx` | 缺陷修复分支 |
+**长期分支：** `master`（发布）、`dev`（集成）。
 
-示例：`feature/use-submit`、`feature/level-manager`、`feature/gui`、`feature/multiplayer`、`feature/h2-save`
+**辅助分支仅四类（个人开发统一为 `feature/姓名拼音`）：**
+
+| 类型 | 分支 | 说明 |
+|------|------|------|
+| 个人开发 | `feature/xmq` `feature/lj` `feature/phx` `feature/pqj` | 每人一个，日常写代码 |
+| 文档 | `feature/docs` | 会议记录、README 等 |
+| 调试 | `debug` | 临时实验，验证后合并或丢弃 |
+| 冲突解决 | `merge/conflict` | 仅合并冲突时用，解决后删除 |
 
 ## 开发流程（组员必读）
 
-1. 确认分工与验收标准（见 [docs/会议记录.md](docs/会议记录.md)）。
-2. 从 `dev` 拉取最新代码，创建分支，例如：
+1. 确认分工（见 [docs/会议记录.md](docs/会议记录.md)）。
+2. 同步并进入**自己的**个人分支，例如刘晶：
    ```powershell
    git checkout dev
    git pull origin dev
-   git checkout -b feature/use-submit
+   git checkout feature/lj
+   git merge dev
    ```
-3. 本地通过门禁后再推送：
-   ```powershell
-   mvn checkstyle:check
-   mvn test
-   ```
-4. 提交时写清描述，例如：`feat: 实现 submit 归寝单与寝室通关判定`。
-5. 推送后发起 PR → `dev`，等待 **CI Pipeline** 全部通过。
-6. 组长 Review 后合并；其他人 `git pull origin dev` 同步。
+3. 文档改动在 `feature/docs` 分支提交，再 PR → `dev`。
+4. 本地门禁：`mvn checkstyle:check`、`mvn test`；Vue 改动另跑 `cd vue-portal; npm run build`。
+5. 提交写清描述：`feat: 实现 submit 归寝单判定`。
+6. PR：`feature/你的分支` → `dev`，CI 通过后 Review 合并。
+7. 合并冲突用 `merge/conflict` 分支处理，**禁止** force push 到 `dev`/`master`。
 
 详细约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-## 技术栈
+## 架构与技术栈
 
-- Java 11
-- Maven 3.8+
-- JUnit 5
-- Checkstyle
-- GitHub Actions
-- H2 Database（F8）
-- JavaFX 或 Swing（F7）
-- Java Socket（F6）
+本项目采用 **混合架构**：Java 游戏内核 + **Spring Boot REST** + **Vue 3 唯一图形前端**（经典版 / 沉浸版）。详见 [docs/系统架构设计.md](docs/系统架构设计.md)
+
+| 层次 | 技术 | 说明 |
+|------|------|------|
+| 游戏内核 | Java 11、命令模式、JUnit 5、Checkstyle | 五关规则、计时、地图、命令 |
+| 服务后端 | Spring Boot、Spring MVC、RESTful API | `/api/solo`、`/api/game`、`/api/auth` 等 |
+| **主前端** | **Vue 3 + TypeScript**（`vue-portal`） | 经典版 / 沉浸版；单机 + 联机 |
+| 数据持久化 | H2 本地文件库 | `data/zuul-save`（账号、存档、记录） |
+| 备用入口 | 文本 `Parser`、`Main` | 课程原始控制台模式 |
+| 工程 | Maven 3.8+、Vite、GitHub Actions | Java CI + 本地 `npm run build` |
 
 ## 构建与运行
+
+**推荐答辩路径（Vue + Spring Boot）：**
+
+```powershell
+# 终端 1：后端
+cd D:\softwaretest\kai-fa-519club
+mvn spring-boot:run
+
+# 终端 2：前端
+cd vue-portal
+npm install
+npm run dev
+# 浏览器 http://localhost:5173
+```
+
+**本地门禁（合并 PR 前）：**
+
+```powershell
+mvn checkstyle:check
+mvn test
+cd vue-portal; npm run build
+```
+
+**控制台单机 JAR（备用）：**
 
 ```powershell
 mvn clean package
@@ -160,7 +196,7 @@ java -jar target/world-of-zuul-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 
 - [ ] E1—E17 拓展功能全部可玩（五关流程贯通）
 - [ ] F6 多人可演示
-- [ ] F7 图形界面可演示
+- [ ] F7 Vue 图形界面可演示（经典版 / 沉浸版）
 - [ ] F8 H2 存档与读档
 - [ ] 根目录 `REPORT.pdf` 或 `REPORT.docx`
 - [ ] B 站演示视频（标题前缀：**【武理26软工实践】**）
@@ -168,6 +204,9 @@ java -jar target/world-of-zuul-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 
 ## 参考文档
 
+- [系统架构设计](docs/系统架构设计.md)
+- [系统架构图（浏览器打开截图）](docs/系统架构图.html)
+- [GitHub Issue 清单与实施顺序](docs/ISSUES.md)
 - [软件工程实践说明（架构 / DevOps / 分支 / 评审 / CI）](docs/软件工程实践说明.md)
 - [会议记录与分工时间表](docs/会议记录.md)
 - [贡献指南与分支规范](CONTRIBUTING.md)

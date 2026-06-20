@@ -12,6 +12,29 @@ package cn.edu.whut.sept.zuul;
 import java.util.HashMap;
 import java.util.Map;
 
+import cn.edu.whut.sept.zuul.command.BackCommand;
+import cn.edu.whut.sept.zuul.command.CombineCommand;
+import cn.edu.whut.sept.zuul.command.CommandInterface;
+import cn.edu.whut.sept.zuul.command.DropCommand;
+import cn.edu.whut.sept.zuul.command.EatCookieCommand;
+import cn.edu.whut.sept.zuul.command.FeedCommand;
+import cn.edu.whut.sept.zuul.command.GoCommand;
+import cn.edu.whut.sept.zuul.command.HelpCommand;
+import cn.edu.whut.sept.zuul.command.InspectCommand;
+import cn.edu.whut.sept.zuul.command.ItemsCommand;
+import cn.edu.whut.sept.zuul.command.LookCommand;
+import cn.edu.whut.sept.zuul.command.QuitCommand;
+import cn.edu.whut.sept.zuul.command.RestartCommand;
+import cn.edu.whut.sept.zuul.command.SigninCommand;
+import cn.edu.whut.sept.zuul.command.SignoutCommand;
+import cn.edu.whut.sept.zuul.command.SignupCommand;
+import cn.edu.whut.sept.zuul.command.SleepCommand;
+import cn.edu.whut.sept.zuul.command.SubmitCommand;
+import cn.edu.whut.sept.zuul.command.TakeCommand;
+import cn.edu.whut.sept.zuul.command.TalkCommand;
+import cn.edu.whut.sept.zuul.command.UnlockCommand;
+import cn.edu.whut.sept.zuul.command.UseCommand;
+
 /**
  * 命令管理器，负责注册、存储和分发命令
  * 新增：核心管理类，实现命令的动态注册与分发，
@@ -22,6 +45,7 @@ import java.util.Map;
  */
 public class CommandManager {
     private Map<String, CommandInterface> commandMap; // 命令映射表
+    private final FeedCommand feedCommand = new FeedCommand();
 
     /**
      * 初始化命令管理器并注册默认命令
@@ -37,7 +61,18 @@ public class CommandManager {
         registerCommand(new TakeCommand());
         registerCommand(new DropCommand());
         registerCommand(new ItemsCommand());
+        registerCommand(new InspectCommand());
         registerCommand(new EatCookieCommand());
+        registerCommand(new UseCommand());
+        registerCommand(new TalkCommand());
+        registerCommand(new SignupCommand());
+        registerCommand(new SigninCommand());
+        registerCommand(new SignoutCommand());
+        registerCommand(new RestartCommand());
+        registerCommand(new CombineCommand());
+        registerCommand(new UnlockCommand());
+        registerCommand(new SubmitCommand());
+        registerCommand(new SleepCommand());
     }
 
     /**
@@ -46,6 +81,26 @@ public class CommandManager {
      */
     public void registerCommand(CommandInterface command) {
         commandMap.put(command.getCommandName(), command);
+    }
+
+    /**
+     * 按关卡启用或禁用 feed（猫学长第四关起现身）。
+     *
+     * @param level 当前关卡号
+     */
+    public void updateFeedCommandAvailability(int level) {
+        if (level >= FeedCommand.MIN_FEED_LEVEL) {
+            registerCommand(feedCommand);
+        } else {
+            commandMap.remove(feedCommand.getCommandName());
+        }
+    }
+
+    /**
+     * 当前关卡是否已开放 feed 命令。
+     */
+    public boolean isFeedCommandAvailable() {
+        return commandMap.containsKey(feedCommand.getCommandName());
     }
 
     /**

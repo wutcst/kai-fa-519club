@@ -1,8 +1,8 @@
 /**
- * 测试EatCookieCommand功能
+ * 测试 EatCookieCommand（eat）功能
  *
  * @author liujing
- * @version 1.5
+ * @version 1.6
  */
 package cn.edu.whut.sept.zuul;
 
@@ -12,7 +12,12 @@ import java.io.PrintStream;
 import org.junit.Before;
 import org.junit.Test;
 
+import cn.edu.whut.sept.zuul.FoodItems;
+import cn.edu.whut.sept.zuul.command.EatCookieCommand;
+import cn.edu.whut.sept.zuul.level.ActionTimeCost;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class EatCookieCommandTest {
@@ -23,7 +28,6 @@ public class EatCookieCommandTest {
 
     @Before
     public void setUp() throws Exception {
-        // 创建游戏实例
         game = new Game();
         player = game.getPlayer();
         eatCookieCommand = new EatCookieCommand();
@@ -31,116 +35,120 @@ public class EatCookieCommandTest {
         System.setOut(new PrintStream(outContent));
     }
 
-    /**
-     * 测试吃掉魔法饼干
-     */
     @Test
-    public void testEatCookie() {
-        // 玩家拾取魔法饼干
-        Item magicCookie = new Item("magic cookie", 100);
-        player.takeItem(magicCookie);
+    public void testEatMagicCookie() {
+        player.takeItem(new Item("magic cookie", 100));
 
         int initialMaxWeight = player.getMaxWeight();
         int initialCurrentWeight = player.getCurrentWeight();
+        int beforeTime = game.getLevelTimer().getRemainingSeconds();
 
-        // 清空输出
         outContent.reset();
-
-        // 执行eat cookie命令
-        eatCookieCommand.execute(game, "cookie");
-
-        // 验证输出
-        String output = outContent.toString();
-        assertTrue("应显示吃掉饼干信息", output.contains("你吃掉了 magic cookie"));
-        assertTrue("应显示负重增加", output.contains("最大负重增加了 1000g"));
-        assertTrue("应显示当前最大负重", output.contains("当前最大负重: " + (initialMaxWeight + 1000) + "g"));
-        assertTrue("应显示当前负重", output.contains("当前负重: " + (initialCurrentWeight - 100) + "g"));
-
-        // 验证玩家最大负重增加
-        assertEquals(initialMaxWeight + 1000, player.getMaxWeight());
-
-        // 验证饼干已从物品栏移除
-        assertEquals(0, player.getInventory().size());
-        assertEquals(initialCurrentWeight - 100, player.getCurrentWeight());
-    }
-
-    /**
-     * 测试没有魔法饼干时执行eat cookie命令
-     */
-    @Test
-    public void testEatCookieWithoutCookie() {
-        eatCookieCommand.execute(game, "cookie");
-
-        String output = outContent.toString();
-        assertTrue("应提示没有魔法饼干", output.contains("你没有magic cookie可以吃"));
-        assertTrue("应提示如何获取饼干", output.contains("使用 'take magic cookie' 命令拾取它"));
-
-        // 验证最大负重未改变
-        assertEquals(3000, player.getMaxWeight());
-    }
-
-    /**
-     * 测试不带参数的eat命令
-     */
-    @Test
-    public void testEatWithoutParameter() {
         eatCookieCommand.execute(game, null);
 
         String output = outContent.toString();
-        assertTrue("应提示需要指定参数", output.contains("Eat what? 请使用 'eat cookie' 命令"));
+        assertTrue(output.contains("你吃掉了 magic cookie"));
+        assertTrue(output.contains("食用耗时 " + ActionTimeCost.EAT + " 秒的同时"));
+        assertTrue(output.contains("魔法饼干让你多争取了 " + ActionTimeCost.COOKIE_BONUS + " 秒"));
+        assertEquals(
+                beforeTime - ActionTimeCost.EAT + ActionTimeCost.COOKIE_BONUS,
+                game.getLevelTimer().getRemainingSeconds());
+        assertTrue(output.contains("最大负重增加了 1000g"));
+        assertEquals(initialMaxWeight + 1000, player.getMaxWeight());
+        assertEquals(0, player.getInventory().size());
+        assertEquals(initialCurrentWeight - 100, player.getCurrentWeight());
     }
 
-    /**
-     * 测试带错误参数的eat命令
-     */
     @Test
-    public void testEatWithWrongParameter() {
-        eatCookieCommand.execute(game, "apple");
+    public void testEatWithoutFood() {
+        eatCookieCommand.execute(game, null);
 
         String output = outContent.toString();
-        assertTrue("应提示只能吃cookie", output.contains("Eat apple? 请使用 'eat cookie' 命令"));
+        assertTrue(output.contains("背包里没有可以吃的食物"));
+        assertEquals(3000, player.getMaxWeight());
     }
 
-    /**
-     * 测试带额外参数的eat命令
-     */
     @Test
-    public void testEatWithExtraParameter() {
-        // 玩家有魔法饼干
-        player.takeItem(new Item("magic cookie", 100));
+    public void testEatMilkTeaExtraDiarrheaPenalty() {
+        player.takeItem(new Item(FoodItems.MILK_TEA_ITEM, 100));
+        int beforeTime = game.getLevelTimer().getRemainingSeconds();
 
-        // 清空输出
         outContent.reset();
+        eatCookieCommand.execute(game, null);
 
-        // 执行eat命令，带额外参数
-        eatCookieCommand.execute(game, "cookie now");
-
-        // 应该仍然能吃掉饼干（只检查第一个参数）
         String output = outContent.toString();
-        assertTrue("应能吃掉饼干", output.contains("你吃掉了 magic cookie"));
+        assertTrue(output.contains("好像拉肚子了"));
+        assertEquals(beforeTime - ActionTimeCost.EAT - ActionTimeCost.MILK_TEA_DIARRHEA,
+                game.getLevelTimer().getRemainingSeconds());
+    }
 
-        // 验证饼干已吃掉
+    @Test
+    public void testEatOtherFoodDeductsTime() {
+        player.takeItem(new Item("一个辣椒包", 30));
+        int beforeTime = game.getLevelTimer().getRemainingSeconds();
+
+        outContent.reset();
+        eatCookieCommand.execute(game, null);
+
+        String output = outContent.toString();
+        assertTrue(output.contains("你吃掉了 一个辣椒包"));
+        assertTrue(output.contains("除了填饱肚子，似乎没什么特别的效果"));
+        assertEquals(beforeTime - ActionTimeCost.EAT, game.getLevelTimer().getRemainingSeconds());
         assertEquals(0, player.getInventory().size());
     }
 
-    /**
-     * 测试吃掉魔法饼干后的负重计算
-     */
     @Test
-    public void testWeightCalculationAfterEatingCookie() {
-        // 玩家携带一些物品
-        player.takeItem(new Item("重物", 2500));
+    public void testEatSpecificFoodByName() {
         player.takeItem(new Item("magic cookie", 100));
+        outContent.reset();
+        eatCookieCommand.execute(game, "magic cookie");
 
-        int initialMaxWeight = player.getMaxWeight();
-        int initialCurrentWeight = player.getCurrentWeight();
+        assertTrue(outContent.toString().contains("你吃掉了 magic cookie"));
+        assertEquals(0, player.getInventory().size());
+    }
 
-        // 吃掉饼干
+    @Test
+    public void testEatWrongSecondWordFails() {
+        player.takeItem(new Item("magic cookie", 100));
+        outContent.reset();
         eatCookieCommand.execute(game, "cookie");
 
-        // 验证负重计算正确
-        assertEquals(initialMaxWeight + 1000, player.getMaxWeight());
-        assertEquals(initialCurrentWeight - 100, player.getCurrentWeight());
-        assertEquals(player.getMaxWeight() - player.getCurrentWeight(), player.getRemainingCapacity());
+        assertTrue(outContent.toString().contains("背包里没有「cookie」或该物品不可食用"));
+        assertEquals(1, player.getInventory().size());
+    }
+
+    @Test
+    public void testEatCookieBonusOncePerLevel() {
+        player.takeItem(new Item("magic cookie", 100));
+        eatCookieCommand.execute(game, null);
+        int afterFirstEat = game.getLevelTimer().getRemainingSeconds();
+
+        player.takeItem(new Item("magic cookie", 100));
+        outContent.reset();
+        eatCookieCommand.execute(game, null);
+
+        String output = outContent.toString();
+        assertTrue(output.contains("本关魔法饼干加时已获得"));
+        assertEquals(afterFirstEat - ActionTimeCost.EAT, game.getLevelTimer().getRemainingSeconds());
+        assertFalse(game.getLevelManager().isMagicCookieBonusAvailable());
+    }
+
+    @Test
+    public void testEatCookieBonusResetsOnLevelRestart() {
+        player.takeItem(new Item("magic cookie", 100));
+        eatCookieCommand.execute(game, null);
+        assertFalse(game.getLevelManager().isMagicCookieBonusAvailable());
+
+        game.getLevelManager().restartCurrentLevel();
+        assertTrue(game.getLevelManager().isMagicCookieBonusAvailable());
+
+        int beforeTime = game.getLevelTimer().getRemainingSeconds();
+        player.takeItem(new Item("magic cookie", 100));
+        outContent.reset();
+        eatCookieCommand.execute(game, null);
+
+        assertEquals(
+                beforeTime - ActionTimeCost.EAT + ActionTimeCost.COOKIE_BONUS,
+                game.getLevelTimer().getRemainingSeconds());
     }
 }

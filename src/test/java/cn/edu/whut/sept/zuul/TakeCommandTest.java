@@ -14,6 +14,8 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import cn.edu.whut.sept.zuul.command.TakeCommand;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

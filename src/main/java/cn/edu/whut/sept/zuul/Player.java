@@ -49,6 +49,17 @@ public class Player {
     }
 
     /**
+     * 设置玩家昵称（读档或 GUI 存档时使用）。
+     *
+     * @param name 新昵称
+     */
+    public void setName(String name) {
+        if (name != null && !name.trim().isEmpty()) {
+            this.name = name.trim();
+        }
+    }
+
+    /**
      * 获取玩家当前所在房间
      *
      * @return 当前房间实例
@@ -165,6 +176,23 @@ public class Player {
         inventory.clear();
         currentWeight = 0;
         return droppedItems;
+    }
+
+    /**
+     * 从存档恢复背包（不校验负重上限，用于读档）。
+     *
+     * @param items 物品列表
+     */
+    public void restoreInventory(List<Item> items) {
+        inventory.clear();
+        currentWeight = 0;
+        if (items == null) {
+            return;
+        }
+        for (Item item : items) {
+            inventory.add(item);
+            currentWeight += item.getWeight();
+        }
     }
 
     /**
