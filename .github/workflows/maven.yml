@@ -7,10 +7,22 @@ on:
       - "feature/**"
       - debug
       - "merge/**"
+    paths-ignore:
+      - "**.pdf"
+      - "**.docx"
+      - "**.md"
+      - "docs/**"
+      - "REPORT.*"
   pull_request:
     branches:
       - master
       - dev
+    paths-ignore:
+      - "**.pdf"
+      - "**.docx"
+      - "**.md"
+      - "docs/**"
+      - "REPORT.*"
 
 env:
   JAVA_VERSION: "11"
